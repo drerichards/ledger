@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
+type SortKey = "due" | "name" | "cents" | "method" | "category";
+type SortDir = "asc" | "desc";
 import type { Bill, MonthlyIncome, MonthSnapshot, SavingsEntry } from "@/types";
 import { sumCents, calcShortfall, fmtMoney } from "@/lib/money";
 import { exportBillsCSV } from "@/lib/export";
@@ -38,16 +41,30 @@ export function BillChart({
 }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Bill | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("due");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const month = currentMonth();
+  const currentViewMonth = month;
+
+  const visibleBills = bills.filter((b) => b.month === currentViewMonth);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   // Split bills into the two groups
-  const kiasBills = bills.filter((b) => b.group === "kias_pay");
-  const otherBills = bills.filter((b) => b.group === "other_income");
+  const kiasBills = visibleBills.filter((b) => b.group === "kias_pay");
+  const otherBills = visibleBills.filter((b) => b.group === "other_income");
 
   // Totals
-  const totalCents = sumCents(bills.map((b) => b.cents));
-  const paidCents = sumCents(bills.filter((b) => b.paid).map((b) => b.cents));
+  const totalCents = sumCents(visibleBills.map((b) => b.cents));
+  const paidCents = sumCents(visibleBills.filter((b) => b.paid).map((b) => b.cents));
   const unpaidCents = totalCents - paidCents;
 
   // Income reconciliation
@@ -106,7 +123,7 @@ export function BillChart({
         <div className={styles.toolbarActions}>
           <button
             className={styles.btnGhost}
-            onClick={() => exportBillsCSV(bills)}
+            onClick={() => exportBillsCSV(visibleBills)}
           >
             Export CSV
           </button>
@@ -123,6 +140,9 @@ export function BillChart({
       <BillGroup
         label="From Kia's Pay"
         bills={kiasBills}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={handleSort}
         onEdit={handleEdit}
         onDelete={onDelete}
         onTogglePaid={onTogglePaid}
@@ -132,6 +152,9 @@ export function BillChart({
       <BillGroup
         label="From Other Income"
         bills={otherBills}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={handleSort}
         onEdit={handleEdit}
         onDelete={onDelete}
         onTogglePaid={onTogglePaid}
@@ -185,20 +208,40 @@ function SummaryCard({
   );
 }
 
+function sortBills(bills: Bill[], key: SortKey, dir: SortDir): Bill[] {
+  return [...bills].sort((a, b) => {
+    let comparison = 0;
+    switch (key) {
+      case "due":      comparison = a.due - b.due; break;
+      case "name":     comparison = a.name.localeCompare(b.name); break;
+      case "cents":    comparison = a.cents - b.cents; break;
+      case "method":   comparison = a.method.localeCompare(b.method); break;
+      case "category": comparison = a.category.localeCompare(b.category); break;
+    }
+    return dir === "asc" ? comparison : -comparison;
+  });
+}
+
 function BillGroup({
   label,
   bills,
+  sortKey,
+  sortDir,
+  onSort,
   onEdit,
   onDelete,
   onTogglePaid,
 }: {
   label: string;
   bills: Bill[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
   onEdit: (bill: Bill) => void;
   onDelete: (id: string) => void;
   onTogglePaid: (id: string) => void;
 }) {
-  const sorted = [...bills].sort((a, b) => a.due - b.due);
+  const sorted = sortBills(bills, sortKey, sortDir);
 
   return (
     <div className={styles.group}>
@@ -207,17 +250,17 @@ function BillGroup({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th scope="col" className={styles.th}>
-                Date
+              <th scope="col" className={`${styles.th} ${styles.thSortable}`} onClick={() => onSort("due")} aria-sort={sortKey === "due" ? (sortDir === "asc" ? "ascending" : "descending") : undefined}>
+                Date {sortKey === "due" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </th>
-              <th scope="col" className={styles.th}>
-                Method
+              <th scope="col" className={`${styles.th} ${styles.thSortable}`} onClick={() => onSort("method")} aria-sort={sortKey === "method" ? (sortDir === "asc" ? "ascending" : "descending") : undefined}>
+                Method {sortKey === "method" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </th>
-              <th scope="col" className={styles.th}>
-                Payee
+              <th scope="col" className={`${styles.th} ${styles.thSortable}`} onClick={() => onSort("name")} aria-sort={sortKey === "name" ? (sortDir === "asc" ? "ascending" : "descending") : undefined}>
+                Payee {sortKey === "name" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </th>
-              <th scope="col" className={`${styles.th} ${styles.thRight}`}>
-                Amount
+              <th scope="col" className={`${styles.th} ${styles.thRight} ${styles.thSortable}`} onClick={() => onSort("cents")} aria-sort={sortKey === "cents" ? (sortDir === "asc" ? "ascending" : "descending") : undefined}>
+                Amount {sortKey === "cents" ? (sortDir === "asc" ? "↑" : "↓") : ""}
               </th>
               <th scope="col" className={`${styles.th} ${styles.thCenter}`}>
                 Paid

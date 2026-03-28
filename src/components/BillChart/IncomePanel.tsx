@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { MonthlyIncome } from "@/types";
 import { toCents, fmtMoney, sumCents, calcShortfall } from "@/lib/money";
-import { generateId } from "@/lib/id";
 import styles from "./IncomePanel.module.css";
 
 type Props = {
@@ -22,6 +21,17 @@ const FIELDS: { key: Field; label: string }[] = [
   { key: "social_security", label: "Social Security" },
 ];
 
+const FIXED_DEFAULTS: Record<Field, number> = {
+  kias_pay: 0,
+  military_pay: 124190,
+  retirement: 33437,
+  social_security: 77500,
+};
+
+function fieldCents(income: MonthlyIncome | undefined, key: Field): number {
+  return income ? income[key] : FIXED_DEFAULTS[key];
+}
+
 export function IncomePanel({
   month,
   income,
@@ -31,19 +41,17 @@ export function IncomePanel({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<Field, string>>({
     kias_pay: income ? String(income.kias_pay / 100) : "",
-    military_pay: income ? String(income.military_pay / 100) : "",
-    retirement: income ? String(income.retirement / 100) : "",
-    social_security: income ? String(income.social_security / 100) : "",
+    military_pay: String(fieldCents(income, "military_pay") / 100),
+    retirement: String(fieldCents(income, "retirement") / 100),
+    social_security: String(fieldCents(income, "social_security") / 100),
   });
 
-  const totalIncomeCents = income
-    ? sumCents([
-        income.kias_pay,
-        income.military_pay,
-        income.retirement,
-        income.social_security,
-      ])
-    : 0;
+  const totalIncomeCents = sumCents([
+    fieldCents(income, "kias_pay"),
+    fieldCents(income, "military_pay"),
+    fieldCents(income, "retirement"),
+    fieldCents(income, "social_security"),
+  ]);
 
   const shortfall = calcShortfall(totalBillsCents, totalIncomeCents);
   const isShort = shortfall > 0;
@@ -111,7 +119,7 @@ export function IncomePanel({
               </span>
             </div>
             {FIELDS.map(({ key, label }) => {
-              const val = income?.[key] ?? 0;
+              const val = fieldCents(income, key);
               return val > 0 ? (
                 <div key={key} className={styles.reconRow}>
                   <span className={styles.reconLabel}>{label}</span>

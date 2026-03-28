@@ -5,23 +5,35 @@ import { useAppState } from "@/hooks/useAppState";
 import { BillChart } from "../BillChart/BillChart";
 import { AffirmGrid } from "@/components/AffirmGrid/AffirmGrid";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
+import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
 import styles from "./AppShell.module.css";
 
-type Tab = "bills" | "affirm" | "paycheck";
+type Tab = "bills" | "affirm" | "paycheck" | "savings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "bills", label: "Bill Chart" },
   { id: "affirm", label: "Affirm Plans" },
   { id: "paycheck", label: "Paycheck" },
+  { id: "savings", label: "Savings" },
 ];
 
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("bills");
+  const [printAll, setPrintAll] = useState(false);
   const appState = useAppState();
+
+  const handlePrintAll = () => {
+    setPrintAll(true);
+    // Give React one frame to render all tabs before printing
+    setTimeout(() => {
+      window.print();
+      setPrintAll(false);
+    }, 150);
+  };
 
   return (
     <div className={styles.shell}>
-      <Header />
+      <Header onPrintAll={handlePrintAll} />
       <nav className={styles.tabBar} data-print-hide>
         {TABS.map((tab) => (
           <button
@@ -36,63 +48,118 @@ export function AppShell() {
         ))}
       </nav>
       <main className={styles.content}>
-        {activeTab === "bills" && (
-          <BillChart
-            bills={appState.state.bills}
-            income={appState.state.income}
-            snapshots={appState.state.snapshots}
-            savingsLog={appState.state.savingsLog}
-            onAdd={appState.addBill}
-            onUpdate={appState.updateBill}
-            onDelete={appState.deleteBill}
-            onTogglePaid={appState.toggleBillPaid}
-            onUpdateIncome={appState.upsertIncome}
-            onSaveSnapshot={appState.addSnapshot}
-          />
-        )}
-        {activeTab === "affirm" && (
-          <AffirmGrid
-            plans={appState.state.plans}
-            onAdd={appState.addPlan}
-            onDelete={appState.deletePlan}
-          />
-        )}
-        {activeTab === "paycheck" && (
-          <PaycheckTab
-            paycheck={appState.state.paycheck}
-            plans={appState.state.plans}
-            checkLog={appState.state.checkLog}
-            savingsLog={appState.state.savingsLog}
-            viewScope={appState.state.paycheckViewScope}
-            onUpsertWeek={appState.upsertPaycheckWeek}
-            onAddCheckEntry={appState.addCheckEntry}
-            onAddSavings={appState.addSavingsEntry}
-            onSetViewScope={appState.setPaycheckViewScope}
-          />
+        {printAll ? (
+          <>
+            <BillChart
+              bills={appState.state.bills}
+              income={appState.state.income}
+              snapshots={appState.state.snapshots}
+              savingsLog={appState.state.savingsLog}
+              onAdd={appState.addBill}
+              onUpdate={appState.updateBill}
+              onDelete={appState.deleteBill}
+              onTogglePaid={appState.toggleBillPaid}
+              onUpdateIncome={appState.upsertIncome}
+              onSaveSnapshot={appState.addSnapshot}
+            />
+            <div className={styles.printPageBreak} />
+            <AffirmGrid
+              plans={appState.state.plans}
+              onAdd={appState.addPlan}
+              onDelete={appState.deletePlan}
+            />
+            <div className={styles.printPageBreak} />
+            <PaycheckTab
+              paycheck={appState.state.paycheck}
+              plans={appState.state.plans}
+              viewScope={appState.state.paycheckViewScope}
+              onUpsertWeek={appState.upsertPaycheckWeek}
+              onAddCheckEntry={appState.addCheckEntry}
+              onSetViewScope={appState.setPaycheckViewScope}
+            />
+            <div className={styles.printPageBreak} />
+            <SavingsTab
+              plans={appState.state.plans}
+              checking={appState.state.checkLog}
+              savingsLog={appState.state.savingsLog}
+              paycheck={appState.state.paycheck}
+              onAddCheckEntry={appState.addCheckEntry}
+              onAddSavings={appState.addSavingsEntry}
+            />
+          </>
+        ) : (
+          <>
+            {activeTab === "bills" && (
+              <BillChart
+                bills={appState.state.bills}
+                income={appState.state.income}
+                snapshots={appState.state.snapshots}
+                savingsLog={appState.state.savingsLog}
+                onAdd={appState.addBill}
+                onUpdate={appState.updateBill}
+                onDelete={appState.deleteBill}
+                onTogglePaid={appState.toggleBillPaid}
+                onUpdateIncome={appState.upsertIncome}
+                onSaveSnapshot={appState.addSnapshot}
+              />
+            )}
+            {activeTab === "affirm" && (
+              <AffirmGrid
+                plans={appState.state.plans}
+                onAdd={appState.addPlan}
+                onDelete={appState.deletePlan}
+              />
+            )}
+            {activeTab === "paycheck" && (
+              <PaycheckTab
+                paycheck={appState.state.paycheck}
+                plans={appState.state.plans}
+                viewScope={appState.state.paycheckViewScope}
+                onUpsertWeek={appState.upsertPaycheckWeek}
+                onAddCheckEntry={appState.addCheckEntry}
+                onSetViewScope={appState.setPaycheckViewScope}
+              />
+            )}
+            {activeTab === "savings" && (
+              <SavingsTab
+                plans={appState.state.plans}
+                checking={appState.state.checkLog}
+                savingsLog={appState.state.savingsLog}
+                paycheck={appState.state.paycheck}
+                onAddCheckEntry={appState.addCheckEntry}
+                onAddSavings={appState.addSavingsEntry}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
   );
 }
 
-function Header() {
+function Header({ onPrintAll }: { onPrintAll: () => void }) {
   return (
     <header className={styles.header}>
       <div>
         <h1 className={styles.appName}>Ledger</h1>
         <p className={styles.appSubtitle}>Household Finance Tracker</p>
       </div>
-      <div className={styles.headerRight}>
+      <div className={styles.headerRight} data-print-hide>
         <button
           className={styles.printBtn}
           onClick={() => window.print()}
-          data-print-hide
           aria-label="Print current view"
         >
-          Print
+          Print This Tab
+        </button>
+        <button className={styles.printBtn} onClick={onPrintAll}>
+          Print All
         </button>
         <time className={styles.currentMonth}>
-          {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+          {new Date().toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
         </time>
       </div>
     </header>

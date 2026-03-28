@@ -6,7 +6,6 @@ import type {
   KiasCheckEntry,
   PaycheckViewScope,
   PaycheckWeek,
-  SavingsEntry,
 } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
 import { fmtMoney, sumCents, toCents } from "@/lib/money";
@@ -16,22 +15,14 @@ import {
   getMondaysInMonth,
   advanceMonth,
 } from "@/lib/dates";
-import { calcCheckBaseline } from "@/lib/projection";
-import { generateId } from "@/lib/id";
-import { CheckLog } from "./CheckLog";
-import { SavingsTracker } from "./SavingsTracker";
-import { SavingsProjection } from "./SavingsProjection";
 import styles from "./PaycheckTab.module.css";
 
 type Props = {
   paycheck: PaycheckWeek[];
   plans: InstallmentPlan[];
-  checkLog: KiasCheckEntry[];
-  savingsLog: SavingsEntry[];
   viewScope: PaycheckViewScope;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
-  onAddSavings: (entry: SavingsEntry) => void;
   onSetViewScope: (scope: PaycheckViewScope) => void;
 };
 
@@ -58,25 +49,19 @@ type CategoryKey = (typeof CATEGORIES)[number]["key"];
 export function PaycheckTab({
   paycheck,
   plans,
-  checkLog,
-  savingsLog,
   viewScope,
   onUpsertWeek,
   onAddCheckEntry,
-  onAddSavings,
   onSetViewScope,
 }: Props) {
   const [currentMonthStr, setCurrentMonthStr] = useState(currentMonth);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const toggleMonth = (month: string) =>
+    setCollapsed((prev) => ({ ...prev, [month]: !prev[month] }));
 
   // Derive the months shown based on the view scope
   const visibleMonths = getVisibleMonths(currentMonthStr, viewScope);
-
-  // All Mondays across all visible months
-  const allWeeks = visibleMonths.flatMap((m) =>
-    getMondaysInMonth(m).map((weekOf) => weekOf),
-  );
-
-  const baseline = calcCheckBaseline(checkLog);
 
   return (
     <div className={styles.container}>
@@ -177,6 +162,8 @@ export function PaycheckTab({
                   paycheck={paycheck}
                   affirmPerWeek={affirmPerWeek}
                   affirmMonthTotal={affirmTotal}
+                  isCollapsed={!!collapsed[month]}
+                  onToggle={() => toggleMonth(month)}
                   onUpsertWeek={onUpsertWeek}
                   onAddCheckEntry={onAddCheckEntry}
                 />
@@ -186,17 +173,6 @@ export function PaycheckTab({
         </table>
       </div>
 
-      {/* ── Bottom panels ─────────────────────────────────────────── */}
-      <div className={styles.panels}>
-        <CheckLog log={checkLog} baseline={baseline} onAdd={onAddCheckEntry} />
-        <SavingsTracker log={savingsLog} onAdd={onAddSavings} />
-      </div>
-
-      <SavingsProjection
-        plans={plans}
-        checkLog={checkLog}
-        paycheck={paycheck}
-      />
     </div>
   );
 }
@@ -209,6 +185,8 @@ function MonthBlock({
   paycheck,
   affirmPerWeek,
   affirmMonthTotal,
+  isCollapsed,
+  onToggle,
   onUpsertWeek,
   onAddCheckEntry,
 }: {
@@ -217,6 +195,8 @@ function MonthBlock({
   paycheck: PaycheckWeek[];
   affirmPerWeek: number;
   affirmMonthTotal: number;
+  isCollapsed: boolean;
+  onToggle: () => void;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
 }) {
@@ -238,47 +218,52 @@ function MonthBlock({
   return (
     <>
       {/* Month label row */}
-      <tr className={styles.monthLabelRow}>
+      <tr className={styles.monthLabelRow} onClick={onToggle} style={{ cursor: "pointer" }}>
         <td colSpan={3 + CATEGORIES.length + 1} className={styles.monthLabel}>
+          <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
           {fmtMonthFull(month)}
         </td>
       </tr>
 
-      {/* Week rows */}
-      {mondays.map((weekOf) => {
-        const week =
-          paycheck.find((p) => p.weekOf === weekOf) ?? emptyWeek(weekOf);
-        return (
-          <WeekRow
-            key={weekOf}
-            week={week}
-            affirmPerWeek={affirmPerWeek}
-            onUpsertWeek={onUpsertWeek}
-            onAddCheckEntry={onAddCheckEntry}
-          />
-        );
-      })}
+      {!isCollapsed && (
+        <>
+          {/* Week rows */}
+          {mondays.map((weekOf) => {
+            const week =
+              paycheck.find((p) => p.weekOf === weekOf) ?? emptyWeek(weekOf);
+            return (
+              <WeekRow
+                key={weekOf}
+                week={week}
+                affirmPerWeek={affirmPerWeek}
+                onUpsertWeek={onUpsertWeek}
+                onAddCheckEntry={onAddCheckEntry}
+              />
+            );
+          })}
 
-      {/* Monthly totals footer */}
-      <tr className={styles.monthTotalRow}>
-        <td className={styles.monthTotalLabel}>Total</td>
-        <td className={`${styles.td} ${styles.mono}`}>
-          {fmtMoney(monthKiaTotal)}
-        </td>
-        <td className={`${styles.td} ${styles.mono}`}>
-          {fmtMoney(affirmMonthTotal)}
-        </td>
-        {CATEGORIES.map((c) => (
-          <td key={c.key} className={`${styles.td} ${styles.mono}`}>
-            {fmtMoney(monthCatTotals[c.key])}
-          </td>
-        ))}
-        <td
-          className={`${styles.td} ${styles.mono} ${monthPayLeft < 0 ? styles.negative : styles.positive}`}
-        >
-          {fmtMoney(monthPayLeft)}
-        </td>
-      </tr>
+          {/* Monthly totals footer */}
+          <tr className={styles.monthTotalRow}>
+            <td className={styles.monthTotalLabel}>Total</td>
+            <td className={`${styles.td} ${styles.mono}`}>
+              {fmtMoney(monthKiaTotal)}
+            </td>
+            <td className={`${styles.td} ${styles.mono}`}>
+              {fmtMoney(affirmMonthTotal)}
+            </td>
+            {CATEGORIES.map((c) => (
+              <td key={c.key} className={`${styles.td} ${styles.mono}`}>
+                {fmtMoney(monthCatTotals[c.key])}
+              </td>
+            ))}
+            <td
+              className={`${styles.td} ${styles.mono} ${monthPayLeft < 0 ? styles.negative : styles.positive}`}
+            >
+              {fmtMoney(monthPayLeft)}
+            </td>
+          </tr>
+        </>
+      )}
     </>
   );
 }

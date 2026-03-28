@@ -9,7 +9,7 @@ import type {
   PaymentMethod,
 } from "@/types";
 import { toCents } from "@/lib/money";
-import { today } from "@/lib/dates";
+import { currentMonth } from "@/lib/dates";
 import { generateId } from "@/lib/id";
 import styles from "./BillForm.module.css";
 
@@ -85,6 +85,7 @@ export function BillForm({ initial, onSave, onClose }: Props) {
 
     const bill: Bill = {
       id: initial?.id ?? generateId(),
+      month: initial?.month ?? currentMonth(),
       name: form.name.trim(),
       cents: toCents(form.amountStr),
       due: parseInt(form.due, 10),
@@ -103,9 +104,8 @@ export function BillForm({ initial, onSave, onClose }: Props) {
 
   return (
     // Backdrop
-    <div className={styles.backdrop} onClick={onClose}>
-      {/* Modal — stop propagation so clicks inside don't close */}
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.backdrop} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>
             {initial ? "Edit Bill" : "Add Bill"}

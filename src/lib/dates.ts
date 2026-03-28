@@ -54,16 +54,23 @@ export function monthsBetween(start: string, end: string): number {
 
 /**
  * Returns an ordered array of YYYY-MM strings from start to end, inclusive.
- * Used to build the Affirm grid columns.
+ * Uses integer arithmetic only — no Date objects — to avoid timezone drift.
  */
 export function getMonthRange(start: string, end: string): string[] {
   const months: string[] = [];
-  const endDate = new Date(end + "-01");
-  let cursor = new Date(start + "-01");
+  const [sy, sm] = start.split("-").map(Number);
+  const [ey, em] = end.split("-").map(Number);
 
-  while (cursor <= endDate) {
-    months.push(cursor.toISOString().slice(0, 7));
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  let year = sy;
+  let month = sm;
+
+  while (year < ey || (year === ey && month <= em)) {
+    months.push(`${year}-${String(month).padStart(2, "0")}`);
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
   }
 
   return months;
@@ -109,10 +116,12 @@ export function getMondaysInMonth(ym: string): string[] {
 
 /**
  * Advances a YYYY-MM string by n months.
- * Example: advanceMonth("2026-11", 2) → "2027-01"
+ * Uses integer arithmetic to avoid timezone drift.
  */
 export function advanceMonth(ym: string, n: number): string {
   const [year, month] = ym.split("-").map(Number);
-  const date = new Date(year, month - 1 + n, 1);
-  return date.toISOString().slice(0, 7);
+  const totalMonths = year * 12 + (month - 1) + n;
+  const newYear = Math.floor(totalMonths / 12);
+  const newMonth = (totalMonths % 12) + 1;
+  return `${newYear}-${String(newMonth).padStart(2, "0")}`;
 }

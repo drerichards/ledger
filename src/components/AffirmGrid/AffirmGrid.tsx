@@ -75,7 +75,7 @@ export function AffirmGrid({ plans, onAdd, onDelete }: Props) {
                 <th scope="col" className={`${styles.th} ${styles.thTotal}`}>
                   Total Owed
                 </th>
-                <th scope="col" className={styles.th} />
+                <th scope="col" className={`${styles.th} ${styles.thDelete}`} />
               </tr>
             </thead>
 
@@ -99,7 +99,7 @@ export function AffirmGrid({ plans, onAdd, onDelete }: Props) {
                     {fmtMoney(getAffirmTotalForMonth(plans, m))}
                   </td>
                 ))}
-                <td className={styles.totalCell}>
+                <td className={`${styles.totalCell} ${styles.totalCellRight}`}>
                   {fmtMoney(
                     plans.reduce((sum, p) => {
                       const planMonths = getAffirmGridMonths([p]);
@@ -107,7 +107,7 @@ export function AffirmGrid({ plans, onAdd, onDelete }: Props) {
                     }, 0),
                   )}
                 </td>
-                <td />
+                <td className={styles.totalCellEnd} />
               </tr>
             </tfoot>
           </table>
@@ -182,7 +182,7 @@ function PlanRow({
       </td>
 
       {/* Delete */}
-      <td className={styles.td}>
+      <td className={`${styles.td} ${styles.tdDelete}`}>
         <button
           className={styles.btnDanger}
           onClick={() => onDelete(plan.id)}

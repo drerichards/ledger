@@ -133,6 +133,16 @@
     text-align: center;
 }
 
+.thSortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.thSortable:hover {
+    color: var(--color-navy);
+    background: #E8EDF5;
+}
+
 .td {
     padding: 10px 12px;
     font-size: var(--text-base);

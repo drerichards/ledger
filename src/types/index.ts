@@ -26,6 +26,7 @@ export type BillCategory =
 
 export type Bill = {
   id: string;
+  month: string; // YYYY-MM — which month this bill instance belongs to
   name: string;
   cents: number; // always stored in cents — never float
   due: number; // day of month (1–31)

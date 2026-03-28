@@ -78,11 +78,30 @@
 
 .thPlan {
     text-align: left;
-    min-width: 200px;
+    min-width: 160px;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--color-cream);
+    border-right: 2px solid var(--color-border);
 }
 
 .thTotal {
     color: var(--color-navy);
+    position: sticky;
+    right: 60px;
+    z-index: 2;
+    background: var(--color-cream);
+    min-width: 110px;
+    border-left: 2px solid var(--color-border);
+}
+
+.thDelete {
+    position: sticky;
+    right: 0;
+    z-index: 2;
+    width: 60px;
+    background: var(--color-cream);
 }
 
 /* Highlight the current month column header */
@@ -116,6 +135,11 @@
 .tdPlan {
     text-align: left;
     padding: 10px 14px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--color-white);
+    border-right: 2px solid var(--color-border);
 }
 
 .planLabel {
@@ -187,6 +211,19 @@
     font-weight: 700;
     color: var(--color-navy);
     white-space: nowrap;
+    position: sticky;
+    right: 60px;
+    z-index: 1;
+    background: var(--color-white);
+    border-left: 2px solid var(--color-border);
+}
+
+.tdDelete {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: 60px;
+    background: var(--color-white);
 }
 
 /* ── Footer totals row ───────────────────────────────────────────────────── */
@@ -203,6 +240,24 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--color-navy);
+    border-right: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.totalCellRight {
+    position: sticky;
+    right: 60px;
+    background: var(--color-navy);
+    border-left: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.totalCellEnd {
+    position: sticky;
+    right: 0;
+    width: 60px;
+    background: var(--color-navy);
 }
 
 .totalCell {

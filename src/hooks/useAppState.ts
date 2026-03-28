@@ -14,6 +14,7 @@ import type {
 } from "@/types";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
 import { today } from "@/lib/dates";
+import { generateId } from "@/lib/id";
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
 
@@ -30,7 +31,8 @@ type Action =
   | { type: "UPSERT_INCOME"; payload: MonthlyIncome }
   | { type: "UPSERT_PAYCHECK_WEEK"; payload: PaycheckWeek }
   | { type: "SET_PAYCHECK_VIEW_SCOPE"; payload: PaycheckViewScope }
-  | { type: "ADD_SNAPSHOT"; payload: MonthSnapshot };
+  | { type: "ADD_SNAPSHOT"; payload: MonthSnapshot }
+  | { type: "ROLLOVER_BILLS"; payload: { fromMonth: string; toMonth: string } };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
@@ -126,6 +128,25 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
 
+    case "ROLLOVER_BILLS": {
+      const { fromMonth, toMonth } = action.payload;
+      // Check if toMonth already has bills — don't double-copy
+      const alreadyExists = state.bills.some((b) => b.month === toMonth);
+      if (alreadyExists) return state;
+
+      const recurringBills = state.bills
+        .filter((b) => b.month === fromMonth && b.entry === "recurring")
+        .map((b) => ({
+          ...b,
+          id: generateId(),
+          month: toMonth,
+          paid: false,       // reset paid status for new month
+          amountHistory: [], // fresh history for new month
+        }));
+
+      return { ...state, bills: [...state.bills, ...recurringBills] };
+    }
+
     default:
       return state;
   }
@@ -214,6 +235,12 @@ export function useAppState() {
     [],
   );
 
+  const rolloverBills = useCallback(
+    (fromMonth: string, toMonth: string) =>
+      dispatch({ type: "ROLLOVER_BILLS", payload: { fromMonth, toMonth } }),
+    [],
+  );
+
   return {
     state,
     addBill,
@@ -228,5 +255,6 @@ export function useAppState() {
     upsertPaycheckWeek,
     setPaycheckViewScope,
     addSnapshot,
+    rolloverBills,
   };
 }
