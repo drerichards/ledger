@@ -50,6 +50,8 @@
 
 .tableWrapper {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 260px);
     background: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -64,6 +66,9 @@
 /* ── Header ──────────────────────────────────────────────────────────────── */
 
 .th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     padding: 8px 10px;
     font-size: var(--text-xs);
     font-weight: 700;
@@ -230,6 +235,9 @@
 
 .totalRow {
     background: var(--color-navy);
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
 }
 
 .totalLabel {

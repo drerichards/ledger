@@ -26,6 +26,22 @@ export function calcCheckBaseline(log: KiasCheckEntry[]): CheckBaseline | null {
   };
 }
 
+export type ProjectionScenario = "conservative" | "average" | "optimistic";
+
+export function getWeeklyBaseline(
+  baseline: CheckBaseline,
+  scenario: ProjectionScenario,
+): number {
+  switch (scenario) {
+    case "conservative":
+      return baseline.low;
+    case "average":
+      return baseline.average;
+    case "optimistic":
+      return baseline.high;
+  }
+}
+
 /**
  * Projects monthly income from Kia's pay given a weekly baseline.
  * Defaults to 4 weeks — the conservative floor.

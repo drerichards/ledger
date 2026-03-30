@@ -8,21 +8,20 @@ import styles from "./IncomePanel.module.css";
 type Props = {
   month: string;
   income: MonthlyIncome | undefined;
+  kiasPayCents: number;
   totalBillsCents: number;
   onUpdate: (income: MonthlyIncome) => void;
 };
 
-type Field = "kias_pay" | "military_pay" | "retirement" | "social_security";
+type Field = "military_pay" | "retirement" | "social_security";
 
 const FIELDS: { key: Field; label: string }[] = [
-  { key: "kias_pay", label: "Kia's Pay" },
   { key: "military_pay", label: "Military Pay" },
   { key: "retirement", label: "Retirement" },
   { key: "social_security", label: "Social Security" },
 ];
 
 const FIXED_DEFAULTS: Record<Field, number> = {
-  kias_pay: 0,
   military_pay: 124190,
   retirement: 33437,
   social_security: 77500,
@@ -35,19 +34,19 @@ function fieldCents(income: MonthlyIncome | undefined, key: Field): number {
 export function IncomePanel({
   month,
   income,
+  kiasPayCents,
   totalBillsCents,
   onUpdate,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<Field, string>>({
-    kias_pay: income ? String(income.kias_pay / 100) : "",
     military_pay: String(fieldCents(income, "military_pay") / 100),
     retirement: String(fieldCents(income, "retirement") / 100),
     social_security: String(fieldCents(income, "social_security") / 100),
   });
 
   const totalIncomeCents = sumCents([
-    fieldCents(income, "kias_pay"),
+    kiasPayCents,
     fieldCents(income, "military_pay"),
     fieldCents(income, "retirement"),
     fieldCents(income, "social_security"),
@@ -59,7 +58,7 @@ export function IncomePanel({
   const handleSave = () => {
     const updated: MonthlyIncome = {
       month,
-      kias_pay: toCents(draft.kias_pay),
+      kias_pay: 0, // derived from paycheck — not stored manually
       military_pay: toCents(draft.military_pay),
       retirement: toCents(draft.retirement),
       social_security: toCents(draft.social_security),
@@ -118,6 +117,14 @@ export function IncomePanel({
                 {fmtMoney(totalBillsCents)}
               </span>
             </div>
+            {kiasPayCents > 0 && (
+              <div className={styles.reconRow}>
+                <span className={styles.reconLabel}>Kia&apos;s Pay</span>
+                <span className={`${styles.reconValue} ${styles.reconIncome}`}>
+                  − {fmtMoney(kiasPayCents)}
+                </span>
+              </div>
+            )}
             {FIELDS.map(({ key, label }) => {
               const val = fieldCents(income, key);
               return val > 0 ? (

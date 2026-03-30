@@ -13,6 +13,7 @@ type Props = {
   savingsLog: SavingsEntry[];
   paycheck: PaycheckWeek[];
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
+  onDeleteCheckEntry: (weekOf: string) => void;
   onAddSavings: (entry: SavingsEntry) => void;
 };
 
@@ -22,6 +23,7 @@ export function SavingsTab({
   savingsLog,
   paycheck,
   onAddCheckEntry,
+  onDeleteCheckEntry,
   onAddSavings,
 }: Props) {
   const baseline = calcCheckBaseline(checking);
@@ -40,6 +42,7 @@ export function SavingsTab({
           log={checking}
           baseline={baseline}
           onAdd={onAddCheckEntry}
+          onDelete={onDeleteCheckEntry}
         />
         <SavingsTracker
           log={savingsLog}

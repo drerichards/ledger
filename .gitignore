@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Project docs — local only
+AGENTS.md
+CLAUDE.md
+docs/PROJECTION_SPEC.md

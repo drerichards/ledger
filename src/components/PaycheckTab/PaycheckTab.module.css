@@ -114,6 +114,9 @@
     background: var(--color-cream);
     text-align: right;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .thWeek {
@@ -355,6 +358,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    max-height: 220px;
+    overflow-y: auto;
 }
 
 .logRow {
@@ -412,9 +417,65 @@
     border-radius: var(--radius-md);
 }
 
+.projTableWrapper {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
 .projTable {
     width: 100%;
     border-collapse: collapse;
+}
+
+.projTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-cream);
+}
+
+/* ── Scenario toggle ─────────────────────────────────────────────────────── */
+
+.scenarioToggle {
+    display: flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    align-self: flex-start;
+}
+
+.scenarioBtn {
+    padding: 6px 14px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border: none;
+    border-right: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-text-mid);
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.12s;
+}
+
+.scenarioBtn:last-child {
+    border-right: none;
+}
+
+.scenarioBtnActive {
+    background: var(--color-navy);
+    color: var(--color-white);
+}
+
+.warning {
+    padding: 8px 12px;
+    background: var(--color-rust-light);
+    border: 1px solid var(--color-rust);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--color-rust);
+    font-weight: 500;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
@@ -443,4 +504,16 @@
     color: var(--color-white);
     font-family: var(--font-body);
     white-space: nowrap;
+}
+
+.btnDanger {
+    padding: 3px 8px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-rust-light);
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-rust);
+    font-family: var(--font-body);
 }

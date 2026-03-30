@@ -115,6 +115,13 @@ export function getMondaysInMonth(ym: string): string[] {
 }
 
 /**
+ * Returns the Monday of the week containing the given date string, as YYYY-MM-DD.
+ */
+export function mondayOf(dateStr: string): string {
+  return getMondayOf(new Date(dateStr + "T12:00:00")).toISOString().slice(0, 10);
+}
+
+/**
  * Advances a YYYY-MM string by n months.
  * Uses integer arithmetic to avoid timezone drift.
  */

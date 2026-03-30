@@ -13,7 +13,7 @@ import type {
   SavingsEntry,
 } from "@/types";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
-import { today } from "@/lib/dates";
+import { today, mondayOf } from "@/lib/dates";
 import { generateId } from "@/lib/id";
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
@@ -27,6 +27,7 @@ type Action =
   | { type: "ADD_PLAN"; payload: InstallmentPlan }
   | { type: "DELETE_PLAN"; payload: { id: string } }
   | { type: "ADD_CHECK_ENTRY"; payload: KiasCheckEntry }
+  | { type: "DELETE_CHECK_ENTRY"; payload: { weekOf: string } }
   | { type: "ADD_SAVINGS_ENTRY"; payload: SavingsEntry }
   | { type: "UPSERT_INCOME"; payload: MonthlyIncome }
   | { type: "UPSERT_PAYCHECK_WEEK"; payload: PaycheckWeek }
@@ -87,6 +88,16 @@ function reducer(state: AppState, action: Action): AppState {
 
     case "ADD_CHECK_ENTRY":
       return { ...state, checkLog: [...state.checkLog, action.payload] };
+
+    case "DELETE_CHECK_ENTRY": {
+      // Delete all check + savings entries that fall in the same week
+      const monday = mondayOf(action.payload.weekOf);
+      return {
+        ...state,
+        checkLog: state.checkLog.filter((e) => mondayOf(e.weekOf) !== monday),
+        savingsLog: state.savingsLog.filter((e) => mondayOf(e.weekOf) !== monday),
+      };
+    }
 
     case "ADD_SAVINGS_ENTRY":
       return { ...state, savingsLog: [...state.savingsLog, action.payload] };
@@ -206,6 +217,12 @@ export function useAppState() {
     [],
   );
 
+  const deleteCheckEntry = useCallback(
+    (weekOf: string) =>
+      dispatch({ type: "DELETE_CHECK_ENTRY", payload: { weekOf } }),
+    [],
+  );
+
   const addSavingsEntry = useCallback(
     (entry: SavingsEntry) =>
       dispatch({ type: "ADD_SAVINGS_ENTRY", payload: entry }),
@@ -250,6 +267,7 @@ export function useAppState() {
     addPlan,
     deletePlan,
     addCheckEntry,
+    deleteCheckEntry,
     addSavingsEntry,
     upsertIncome,
     upsertPaycheckWeek,

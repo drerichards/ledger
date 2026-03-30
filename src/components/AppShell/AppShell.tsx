@@ -6,15 +6,17 @@ import { BillChart } from "../BillChart/BillChart";
 import { AffirmGrid } from "@/components/AffirmGrid/AffirmGrid";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
 import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
+import { HistoryTab } from "@/components/HistoryTab/HistoryTab";
 import styles from "./AppShell.module.css";
 
-type Tab = "bills" | "affirm" | "paycheck" | "savings";
+type Tab = "bills" | "affirm" | "paycheck" | "savings" | "history";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "bills", label: "Bill Chart" },
   { id: "affirm", label: "Affirm Plans" },
   { id: "paycheck", label: "Paycheck" },
   { id: "savings", label: "Savings" },
+  { id: "history", label: "History" },
 ];
 
 export function AppShell() {
@@ -33,34 +35,37 @@ export function AppShell() {
 
   return (
     <div className={styles.shell}>
-      <Header onPrintAll={handlePrintAll} />
-      <nav className={styles.tabBar} data-print-hide>
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-            onClick={() => setActiveTab(tab.id)}
-            aria-selected={activeTab === tab.id}
-            role="tab"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <div className={styles.stickyTop} data-print-hide>
+        <Header onPrintAll={handlePrintAll} />
+        <nav className={styles.tabBar}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+              aria-selected={activeTab === tab.id}
+              role="tab"
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
       <main className={styles.content}>
         {printAll ? (
           <>
             <BillChart
               bills={appState.state.bills}
               income={appState.state.income}
-              snapshots={appState.state.snapshots}
               savingsLog={appState.state.savingsLog}
+              paycheck={appState.state.paycheck}
               onAdd={appState.addBill}
               onUpdate={appState.updateBill}
               onDelete={appState.deleteBill}
               onTogglePaid={appState.toggleBillPaid}
               onUpdateIncome={appState.upsertIncome}
               onSaveSnapshot={appState.addSnapshot}
+              onRollover={appState.rolloverBills}
             />
             <div className={styles.printPageBreak} />
             <AffirmGrid
@@ -71,10 +76,13 @@ export function AppShell() {
             <div className={styles.printPageBreak} />
             <PaycheckTab
               paycheck={appState.state.paycheck}
+              checkLog={appState.state.checkLog}
+              savingsLog={appState.state.savingsLog}
               plans={appState.state.plans}
               viewScope={appState.state.paycheckViewScope}
               onUpsertWeek={appState.upsertPaycheckWeek}
               onAddCheckEntry={appState.addCheckEntry}
+              onDeleteCheckEntry={appState.deleteCheckEntry}
               onSetViewScope={appState.setPaycheckViewScope}
             />
             <div className={styles.printPageBreak} />
@@ -84,8 +92,11 @@ export function AppShell() {
               savingsLog={appState.state.savingsLog}
               paycheck={appState.state.paycheck}
               onAddCheckEntry={appState.addCheckEntry}
+              onDeleteCheckEntry={appState.deleteCheckEntry}
               onAddSavings={appState.addSavingsEntry}
             />
+            <div className={styles.printPageBreak} />
+            <HistoryTab snapshots={appState.state.snapshots} />
           </>
         ) : (
           <>
@@ -93,14 +104,15 @@ export function AppShell() {
               <BillChart
                 bills={appState.state.bills}
                 income={appState.state.income}
-                snapshots={appState.state.snapshots}
                 savingsLog={appState.state.savingsLog}
+                paycheck={appState.state.paycheck}
                 onAdd={appState.addBill}
                 onUpdate={appState.updateBill}
                 onDelete={appState.deleteBill}
                 onTogglePaid={appState.toggleBillPaid}
                 onUpdateIncome={appState.upsertIncome}
                 onSaveSnapshot={appState.addSnapshot}
+                onRollover={appState.rolloverBills}
               />
             )}
             {activeTab === "affirm" && (
@@ -113,10 +125,13 @@ export function AppShell() {
             {activeTab === "paycheck" && (
               <PaycheckTab
                 paycheck={appState.state.paycheck}
+                checkLog={appState.state.checkLog}
+                savingsLog={appState.state.savingsLog}
                 plans={appState.state.plans}
                 viewScope={appState.state.paycheckViewScope}
                 onUpsertWeek={appState.upsertPaycheckWeek}
                 onAddCheckEntry={appState.addCheckEntry}
+                onDeleteCheckEntry={appState.deleteCheckEntry}
                 onSetViewScope={appState.setPaycheckViewScope}
               />
             )}
@@ -127,8 +142,12 @@ export function AppShell() {
                 savingsLog={appState.state.savingsLog}
                 paycheck={appState.state.paycheck}
                 onAddCheckEntry={appState.addCheckEntry}
+                onDeleteCheckEntry={appState.deleteCheckEntry}
                 onAddSavings={appState.addSavingsEntry}
               />
+            )}
+            {activeTab === "history" && (
+              <HistoryTab snapshots={appState.state.snapshots} />
             )}
           </>
         )}

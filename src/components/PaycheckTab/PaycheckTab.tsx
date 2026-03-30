@@ -6,7 +6,9 @@ import type {
   KiasCheckEntry,
   PaycheckViewScope,
   PaycheckWeek,
+  SavingsEntry,
 } from "@/types";
+import { mondayOf } from "@/lib/dates";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
 import { fmtMoney, sumCents, toCents } from "@/lib/money";
 import {
@@ -19,10 +21,13 @@ import styles from "./PaycheckTab.module.css";
 
 type Props = {
   paycheck: PaycheckWeek[];
+  checkLog: KiasCheckEntry[];
+  savingsLog: SavingsEntry[];
   plans: InstallmentPlan[];
   viewScope: PaycheckViewScope;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
+  onDeleteCheckEntry: (weekOf: string) => void;
   onSetViewScope: (scope: PaycheckViewScope) => void;
 };
 
@@ -39,7 +44,6 @@ const CATEGORIES = [
   { key: "rent", label: "Rent" },
   { key: "jazmin", label: "Jazmin" },
   { key: "dre", label: "Dre" },
-  { key: "savings", label: "Savings" },
   { key: "paypalCC", label: "PayPal CC" },
   { key: "deductions", label: "Deductions" },
 ] as const;
@@ -48,14 +52,19 @@ type CategoryKey = (typeof CATEGORIES)[number]["key"];
 
 export function PaycheckTab({
   paycheck,
+  checkLog,
+  savingsLog,
   plans,
   viewScope,
   onUpsertWeek,
   onAddCheckEntry,
+  onDeleteCheckEntry,
   onSetViewScope,
 }: Props) {
-  const [currentMonthStr, setCurrentMonthStr] = useState(currentMonth);
+  const [currentMonthStr, setCurrentMonthStr] = useState(() => advanceMonth(currentMonth(), 1));
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const template = [...paycheck].sort((a, b) => b.weekOf.localeCompare(a.weekOf))[0];
 
   const toggleMonth = (month: string) =>
     setCollapsed((prev) => ({ ...prev, [month]: !prev[month] }));
@@ -92,7 +101,7 @@ export function PaycheckTab({
             </button>
             <button
               className={styles.navBtn}
-              onClick={() => setCurrentMonthStr(currentMonth())}
+              onClick={() => setCurrentMonthStr(advanceMonth(currentMonth(), 1))}
             >
               Today
             </button>
@@ -138,6 +147,9 @@ export function PaycheckTab({
                   {c.label}
                 </th>
               ))}
+              <th scope="col" className={styles.th}>
+                Savings
+              </th>
               <th scope="col" className={`${styles.th} ${styles.thPay}`}>
                 Pay Left
               </th>
@@ -160,12 +172,16 @@ export function PaycheckTab({
                   month={month}
                   mondays={mondays}
                   paycheck={paycheck}
+                  checkLog={checkLog}
+                  savingsLog={savingsLog}
                   affirmPerWeek={affirmPerWeek}
                   affirmMonthTotal={affirmTotal}
                   isCollapsed={!!collapsed[month]}
                   onToggle={() => toggleMonth(month)}
                   onUpsertWeek={onUpsertWeek}
                   onAddCheckEntry={onAddCheckEntry}
+                  onDeleteCheckEntry={onDeleteCheckEntry}
+                  template={template}
                 />
               );
             })}
@@ -183,43 +199,82 @@ function MonthBlock({
   month,
   mondays,
   paycheck,
+  checkLog,
+  savingsLog,
   affirmPerWeek,
   affirmMonthTotal,
   isCollapsed,
   onToggle,
   onUpsertWeek,
   onAddCheckEntry,
+  onDeleteCheckEntry,
+  template,
 }: {
   month: string;
   mondays: string[];
   paycheck: PaycheckWeek[];
+  checkLog: KiasCheckEntry[];
+  savingsLog: SavingsEntry[];
   affirmPerWeek: number;
   affirmMonthTotal: number;
   isCollapsed: boolean;
   onToggle: () => void;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
+  onDeleteCheckEntry: (weekOf: string) => void;
+  template: PaycheckWeek | undefined;
 }) {
+  // If check log has entries for this month, use them as rows (shows actual payday dates).
+  // Otherwise fall back to Monday-anchored weeks.
+  const monthCheckEntries = checkLog
+    .filter((e) => e.weekOf.startsWith(month))
+    .sort((a, b) => a.weekOf.localeCompare(b.weekOf));
+
+  const rows: { week: PaycheckWeek; displayDate: string }[] =
+    monthCheckEntries.length > 0
+      ? monthCheckEntries.map((entry) => {
+          const monday = mondayOf(entry.weekOf);
+          const week =
+            paycheck.find((p) => p.weekOf === monday) ??
+            emptyWeek(monday, template, entry.amount);
+          return { week, displayDate: entry.weekOf };
+        })
+      : mondays.map((monday) => {
+          const logAmount =
+            checkLog.find((e) => mondayOf(e.weekOf) === monday)?.amount ?? 0;
+          const week =
+            paycheck.find((p) => p.weekOf === monday) ??
+            emptyWeek(monday, template, logAmount);
+          return { week, displayDate: monday };
+        });
+
+  // Build per-week savings map from savingsLog (actual date → its Monday)
+  const savingsByWeek = new Map<string, number>();
+  savingsLog
+    .filter((e) => e.weekOf.startsWith(month))
+    .forEach((e) => {
+      const monday = mondayOf(e.weekOf);
+      savingsByWeek.set(monday, (savingsByWeek.get(monday) ?? 0) + e.amount);
+    });
+
   // Monthly totals for footer
-  const monthWeeks = mondays.map(
-    (w) => paycheck.find((p) => p.weekOf === w) ?? emptyWeek(w),
-  );
-  const monthKiaTotal = sumCents(monthWeeks.map((w) => w.kiasPay));
+  const monthKiaTotal = sumCents(rows.map((r) => r.week.kiasPay));
   const monthCatTotals = CATEGORIES.reduce(
     (acc, c) => {
-      acc[c.key] = sumCents(monthWeeks.map((w) => w[c.key]));
+      acc[c.key] = sumCents(rows.map((r) => r.week[c.key]));
       return acc;
     },
     {} as Record<CategoryKey, number>,
   );
+  const monthSavingsTotal = sumCents([...savingsByWeek.values()]);
   const monthPayLeft =
-    monthKiaTotal - affirmMonthTotal - sumCents(Object.values(monthCatTotals));
+    monthKiaTotal - affirmMonthTotal - sumCents(Object.values(monthCatTotals)) - monthSavingsTotal;
 
   return (
     <>
       {/* Month label row */}
       <tr className={styles.monthLabelRow} onClick={onToggle} style={{ cursor: "pointer" }}>
-        <td colSpan={3 + CATEGORIES.length + 1} className={styles.monthLabel}>
+        <td colSpan={3 + CATEGORIES.length + 2} className={styles.monthLabel}>
           <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
           {fmtMonthFull(month)}
         </td>
@@ -228,19 +283,18 @@ function MonthBlock({
       {!isCollapsed && (
         <>
           {/* Week rows */}
-          {mondays.map((weekOf) => {
-            const week =
-              paycheck.find((p) => p.weekOf === weekOf) ?? emptyWeek(weekOf);
-            return (
-              <WeekRow
-                key={weekOf}
-                week={week}
-                affirmPerWeek={affirmPerWeek}
-                onUpsertWeek={onUpsertWeek}
-                onAddCheckEntry={onAddCheckEntry}
-              />
-            );
-          })}
+          {rows.map(({ week, displayDate }) => (
+            <WeekRow
+              key={week.weekOf}
+              week={week}
+              displayDate={displayDate}
+              affirmPerWeek={affirmPerWeek}
+              savingsForWeek={savingsByWeek.get(week.weekOf) ?? 0}
+              onUpsertWeek={onUpsertWeek}
+              onAddCheckEntry={onAddCheckEntry}
+              onDeleteCheckEntry={onDeleteCheckEntry}
+            />
+          ))}
 
           {/* Monthly totals footer */}
           <tr className={styles.monthTotalRow}>
@@ -256,6 +310,9 @@ function MonthBlock({
                 {fmtMoney(monthCatTotals[c.key])}
               </td>
             ))}
+            <td className={`${styles.td} ${styles.mono}`}>
+              {fmtMoney(monthSavingsTotal)}
+            </td>
             <td
               className={`${styles.td} ${styles.mono} ${monthPayLeft < 0 ? styles.negative : styles.positive}`}
             >
@@ -272,30 +329,39 @@ function MonthBlock({
 
 function WeekRow({
   week,
+  displayDate,
   affirmPerWeek,
+  savingsForWeek,
   onUpsertWeek,
   onAddCheckEntry,
+  onDeleteCheckEntry,
 }: {
   week: PaycheckWeek;
+  displayDate: string;
   affirmPerWeek: number;
+  savingsForWeek: number;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
+  onDeleteCheckEntry: (weekOf: string) => void;
 }) {
   const updateField = (key: CategoryKey | "kiasPay", raw: string) => {
     const cents = toCents(raw);
     const updated = { ...week, [key]: cents };
     onUpsertWeek(updated);
-    // Log Kia's pay entry automatically when she enters it
-    if (key === "kiasPay" && cents > 0) {
-      onAddCheckEntry({ weekOf: week.weekOf, amount: cents });
+    if (key === "kiasPay") {
+      // Always clear the old entry first, then re-add if amount > 0
+      onDeleteCheckEntry(week.weekOf);
+      if (cents > 0) {
+        onAddCheckEntry({ weekOf: week.weekOf, amount: cents });
+      }
     }
   };
 
   const totalAllocated =
-    affirmPerWeek + sumCents(CATEGORIES.map((c) => week[c.key]));
+    affirmPerWeek + savingsForWeek + sumCents(CATEGORIES.map((c) => week[c.key]));
   const payLeft = week.kiasPay - totalAllocated;
 
-  const weekLabel = new Date(week.weekOf + "T12:00:00").toLocaleDateString(
+  const weekLabel = new Date(displayDate + "T12:00:00").toLocaleDateString(
     "en-US",
     {
       month: "numeric",
@@ -334,6 +400,11 @@ function WeekRow({
           />
         </td>
       ))}
+
+      {/* Savings — derived from Savings Tab, not editable */}
+      <td className={`${styles.td} ${styles.tdAfirm}`}>
+        <span className={styles.mono}>{savingsForWeek > 0 ? fmtMoney(savingsForWeek) : <span className={styles.zero}>—</span>}</span>
+      </td>
 
       {/* Pay left — calculated */}
       <td
@@ -393,18 +464,18 @@ function AmountInput({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function emptyWeek(weekOf: string): PaycheckWeek {
+function emptyWeek(weekOf: string, template?: PaycheckWeek, kiasPay = 0): PaycheckWeek {
   return {
     weekOf,
-    kiasPay: 0,
-    storage: 0,
-    rent: 0,
+    kiasPay,
+    storage: template?.storage ?? 0,
+    rent: template?.rent ?? 0,
     rentWeek: false,
-    jazmin: 0,
-    dre: 0,
+    jazmin: template?.jazmin ?? 0,
+    dre: template?.dre ?? 0,
     savings: 0,
-    paypalCC: 0,
-    deductions: 0,
+    paypalCC: template?.paypalCC ?? 0,
+    deductions: template?.deductions ?? 0,
   };
 }
 

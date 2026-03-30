@@ -1,4 +1,6 @@
 import type { AppState } from "@/types";
+import { SEED_STATE } from "./seed";
+import { currentMonth } from "./dates";
 
 const STORAGE_KEY = "ledger-v1";
 
@@ -22,10 +24,17 @@ export const INITIAL_STATE: AppState = {
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return INITIAL_STATE;
-    return JSON.parse(raw) as AppState;
+    if (!raw) return SEED_STATE; // ← use seed instead of INITIAL_STATE
+    const parsed = JSON.parse(raw) as AppState;
+    // Migration: stamp bills missing month field
+    return {
+      ...parsed,
+      bills: parsed.bills.map((b) =>
+        b.month ? b : { ...b, month: currentMonth() },
+      ),
+    };
   } catch {
-    return INITIAL_STATE;
+    return SEED_STATE;
   }
 }
 

@@ -11,9 +11,10 @@ type Props = {
   log: KiasCheckEntry[];
   baseline: CheckBaseline | null;
   onAdd: (entry: KiasCheckEntry) => void;
+  onDelete: (weekOf: string) => void;
 };
 
-export function CheckLog({ log, baseline, onAdd }: Props) {
+export function CheckLog({ log, baseline, onAdd, onDelete }: Props) {
   const [amtStr, setAmtStr] = useState("");
 
   const handleAdd = () => {
@@ -23,7 +24,7 @@ export function CheckLog({ log, baseline, onAdd }: Props) {
     setAmtStr("");
   };
 
-  const recent = [...log].reverse().slice(0, 8);
+  const recent = [...log].reverse();
 
   return (
     <div className={styles.panel}>
@@ -57,6 +58,13 @@ export function CheckLog({ log, baseline, onAdd }: Props) {
             <div key={i} className={styles.logRow}>
               <span className={styles.logDate}>{e.weekOf}</span>
               <span className={styles.mono}>{fmtMoney(e.amount)}</span>
+              <button
+                className={styles.btnDanger}
+                onClick={() => onDelete(e.weekOf)}
+                aria-label="Delete entry"
+              >
+                Del
+              </button>
             </div>
           ))}
         </div>

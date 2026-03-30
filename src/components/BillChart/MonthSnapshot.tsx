@@ -3,32 +3,29 @@
 import { useState } from "react";
 import type { Bill, MonthlyIncome, MonthSnapshot, SavingsEntry } from "@/types";
 import { fmtMoney, sumCents, calcShortfall } from "@/lib/money";
-import { currentMonth, fmtMonthFull } from "@/lib/dates";
-import { generateId } from "@/lib/id";
-import { today } from "@/lib/dates";
+import { fmtMonthFull } from "@/lib/dates";
 import styles from "./MonthSnapshot.module.css";
 
 type Props = {
+  month: string;
   bills: Bill[];
   income: MonthlyIncome[];
   savingsLog: SavingsEntry[];
-  snapshots: MonthSnapshot[];
   onSave: (snap: MonthSnapshot) => void;
 };
 
 export function MonthSnapshot({
+  month,
   bills,
   income,
   savingsLog,
-  snapshots,
   onSave,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
-
-  const month = currentMonth();
+  const monthBills = bills.filter((b) => b.month === month);
   const thisMonthIncome = income.find((i) => i.month === month);
-  const totalBilled = sumCents(bills.map((b) => b.cents));
-  const totalPaid = sumCents(bills.filter((b) => b.paid).map((b) => b.cents));
+  const totalBilled = sumCents(monthBills.map((b) => b.cents));
+  const totalPaid = sumCents(monthBills.filter((b) => b.paid).map((b) => b.cents));
   const totalIncome = thisMonthIncome
     ? sumCents([
         thisMonthIncome.kias_pay,
@@ -44,8 +41,6 @@ export function MonthSnapshot({
     savingsLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
   );
 
-  const existingSnap = snapshots.find((s) => s.month === month);
-
   const handleClose = () => {
     const snap: MonthSnapshot = {
       month,
@@ -58,18 +53,20 @@ export function MonthSnapshot({
     setConfirming(false);
   };
 
-  const sorted = [...snapshots].sort((a, b) => b.month.localeCompare(a.month));
-
   return (
     <div className={styles.container}>
+      {/* Saving a snapshot is optional and does not trigger month rollover.
+          Rollover is handled separately by the Bill Chart month nav bar. */}
       <div className={styles.header}>
         <h3 className={styles.title}>Month-End Snapshot</h3>
-        <button
-          className={styles.btnPrimary}
-          onClick={() => setConfirming(true)}
-        >
-          Close Out {fmtMonthFull(month)}
-        </button>
+        {!confirming && (
+          <button
+            className={styles.btnPrimary}
+            onClick={() => setConfirming(true)}
+          >
+            Save Month Summary
+          </button>
+        )}
       </div>
 
       {/* Confirmation panel */}
@@ -106,55 +103,6 @@ export function MonthSnapshot({
         </div>
       )}
 
-      {/* Snapshot history */}
-      {sorted.length > 0 && (
-        <div className={styles.history}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.th}>Month</th>
-                <th className={styles.th}>Billed</th>
-                <th className={styles.th}>Paid</th>
-                <th className={styles.th}>Short / Surplus</th>
-                <th className={styles.th}>Saved</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((snap) => {
-                const isShort = snap.shortfall > 0;
-                return (
-                  <tr key={snap.month} className={styles.row}>
-                    <td className={styles.td}>{fmtMonthFull(snap.month)}</td>
-                    <td className={`${styles.td} ${styles.mono}`}>
-                      {fmtMoney(snap.totalBilled)}
-                    </td>
-                    <td className={`${styles.td} ${styles.mono}`}>
-                      {fmtMoney(snap.totalPaid)}
-                    </td>
-                    <td
-                      className={`${styles.td} ${styles.mono} ${isShort ? styles.rust : styles.olive}`}
-                    >
-                      {isShort ? "−" : "+"}
-                      {fmtMoney(Math.abs(snap.shortfall))}
-                    </td>
-                    <td
-                      className={`${styles.td} ${styles.mono} ${styles.olive}`}
-                    >
-                      {fmtMoney(snap.savingsMoved)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {sorted.length === 0 && !confirming && (
-        <p className={styles.empty}>
-          No snapshots yet. Close out a month to start your history.
-        </p>
-      )}
     </div>
   );
 }

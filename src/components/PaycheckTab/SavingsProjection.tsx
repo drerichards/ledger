@@ -1,7 +1,13 @@
+import { useState } from "react";
 import type { InstallmentPlan, KiasCheckEntry, PaycheckWeek } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
-import { fmtMoney, sumCents } from "@/lib/money";
-import { calcCheckBaseline, projectMonthlyKiasPay } from "@/lib/projection";
+import { fmtMoney } from "@/lib/money";
+import {
+  calcCheckBaseline,
+  projectMonthlyKiasPay,
+  getWeeklyBaseline,
+  type ProjectionScenario,
+} from "@/lib/projection";
 import { currentMonth, advanceMonth, fmtMonthLabel } from "@/lib/dates";
 import styles from "./PaycheckTab.module.css";
 
@@ -12,6 +18,7 @@ type Props = {
 };
 
 export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
+  const [scenario, setScenario] = useState<ProjectionScenario>("conservative");
   const baseline = calcCheckBaseline(checkLog);
   if (!baseline) {
     return (
@@ -36,16 +43,41 @@ export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
       latestWeek.deductions
     : 0;
   const monthlyFixed = weeklyFixed * 4;
+  const affirmMonthlyTotal = getAffirmTotalForMonth(plans, months[0]);
 
   return (
     <div className={styles.projection}>
       <h3 className={styles.panelTitle}>12-Month Savings Projection</h3>
+
+      <div className={styles.scenarioToggle}>
+        {(["conservative", "average", "optimistic"] as ProjectionScenario[]).map((s) => (
+          <button
+            key={s}
+            className={`${styles.scenarioBtn} ${scenario === s ? styles.scenarioBtnActive : ""}`}
+            onClick={() => setScenario(s)}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)}
+          </button>
+        ))}
+      </div>
+
       <p className={styles.projectionNote}>
-        Based on Kia&apos;s average check of {fmtMoney(baseline.average)}/week
-        (low: {fmtMoney(baseline.low)}).
+        {scenario === "conservative" &&
+          `Conservative: based on Kia's lowest check of ${fmtMoney(baseline.low)}/week.`}
+        {scenario === "average" &&
+          `Average: based on Kia's mean check of ${fmtMoney(baseline.average)}/week.`}
+        {scenario === "optimistic" &&
+          `Optimistic: based on Kia's highest check of ${fmtMoney(baseline.high)}/week.`}
       </p>
 
-      <div className={styles.tableWrapper}>
+      {scenario === "conservative" &&
+        baseline.low < affirmMonthlyTotal + monthlyFixed && (
+          <div className={styles.warning}>
+            ⚠️ On a low week, Kia&apos;s check may not cover all allocations.
+          </div>
+        )}
+
+      <div className={styles.projTableWrapper}>
         <table className={styles.projTable}>
           <thead>
             <tr>
@@ -58,7 +90,8 @@ export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
           </thead>
           <tbody>
             {months.map((month) => {
-              const projIncome = projectMonthlyKiasPay(baseline.average);
+              const weeklyBaseline = getWeeklyBaseline(baseline, scenario);
+              const projIncome = projectMonthlyKiasPay(weeklyBaseline);
               const affirmTotal = getAffirmTotalForMonth(plans, month);
               const remainder = projIncome - affirmTotal - monthlyFixed;
 
