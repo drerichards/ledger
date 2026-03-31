@@ -1,6 +1,6 @@
 import type { Bill } from "@/types";
 import { fmtMoney } from "@/lib/money";
-import styles from "./BillChart.module.css";
+import styles from "./BillRow.module.css";
 
 type Props = {
   bill: Bill;

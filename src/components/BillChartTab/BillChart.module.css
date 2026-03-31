@@ -63,6 +63,23 @@
     color: var(--color-rust);
 }
 
+.summaryRow2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.summarySubLabel {
+    font-size: var(--text-xs);
+    color: var(--color-text-mid);
+}
+
+.summaryRow2 .summaryValue {
+    font-size: 15px;
+}
+
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
 
 .toolbar {
@@ -335,6 +352,9 @@
 
 .totalRow {
     background: var(--color-navy);
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
 }
 
 .totalLabel {

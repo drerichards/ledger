@@ -1,6 +1,11 @@
 "use client";
 
-import type { InstallmentPlan, KiasCheckEntry, PaycheckWeek, SavingsEntry } from "@/types";
+import type {
+  InstallmentPlan,
+  KiasCheckEntry,
+  PaycheckWeek,
+  SavingsEntry,
+} from "@/types";
 import { calcCheckBaseline } from "@/lib/projection";
 import { CheckLog } from "@/components/PaycheckTab/CheckLog";
 import { SavingsTracker } from "@/components/PaycheckTab/SavingsTracker";
@@ -11,6 +16,7 @@ type Props = {
   plans: InstallmentPlan[];
   checking: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
+  checkLog: KiasCheckEntry[];
   paycheck: PaycheckWeek[];
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
   onDeleteCheckEntry: (weekOf: string) => void;
@@ -33,7 +39,8 @@ export function SavingsTab({
       <div>
         <h2 className={styles.heading}>Savings &amp; Projections</h2>
         <p className={styles.subheading}>
-          Check Kia&apos;s checks, log savings moves, and see your 12-month outlook.
+          Check Kia&apos;s checks, log savings moves, and see your 12-month
+          outlook.
         </p>
       </div>
 
@@ -44,10 +51,7 @@ export function SavingsTab({
           onAdd={onAddCheckEntry}
           onDelete={onDeleteCheckEntry}
         />
-        <SavingsTracker
-          log={savingsLog}
-          onAdd={onAddSavings}
-        />
+        <SavingsTracker log={savingsLog} onAdd={onAddSavings} />
       </div>
 
       <SavingsProjection

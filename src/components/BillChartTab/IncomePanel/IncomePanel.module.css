@@ -1,0 +1,150 @@
+.panel {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.panelHeader {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.panelTitle {
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--color-navy);
+}
+
+.editBtn {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-navy);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: var(--font-body);
+}
+
+.editForm {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.editRow {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.editLabel {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-mid);
+}
+
+.editInput {
+    padding: 6px 10px;
+    font-size: var(--text-base);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    font-family: var(--font-mono);
+    color: var(--color-text);
+}
+
+.editActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.reconciliation {
+    padding: 16px;
+}
+
+.reconciliationRows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.reconRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--text-base);
+}
+
+.reconLabel {
+    color: var(--color-text-mid);
+}
+
+.reconValue {
+    font-family: var(--font-mono);
+    font-weight: 500;
+}
+
+.reconIncome {
+    color: var(--color-olive);
+}
+
+.reconDivider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--space-3) 0;
+}
+
+.reconTotalLabel {
+    font-weight: 700;
+    font-size: var(--text-md);
+    color: var(--color-text);
+}
+
+.reconTotalValue {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: var(--text-lg);
+}
+
+.reconShort {
+    color: var(--color-rust);
+}
+
+.reconSurplus {
+    color: var(--color-olive);
+}
+
+.btnPrimary {
+    padding: 6px 14px;
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    background: var(--color-rust);
+    color: var(--color-white);
+    font-family: var(--font-body);
+}
+
+.btnGhost {
+    padding: 6px 14px;
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-navy);
+    font-family: var(--font-body);
+}

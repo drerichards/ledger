@@ -27,11 +27,18 @@ export function loadState(): AppState {
     if (!raw) return SEED_STATE; // ← use seed instead of INITIAL_STATE
     const parsed = JSON.parse(raw) as AppState;
     // Migration: stamp bills missing month field
+    // Migration: guard against keys missing from older persisted state shapes
     return {
       ...parsed,
-      bills: parsed.bills.map((b) =>
+      bills: (parsed.bills ?? []).map((b) =>
         b.month ? b : { ...b, month: currentMonth() },
       ),
+      checkLog: parsed.checkLog ?? [],
+      savingsLog: parsed.savingsLog ?? [],
+      snapshots: parsed.snapshots ?? [],
+      plans: parsed.plans ?? [],
+      paycheck: parsed.paycheck ?? [],
+      income: parsed.income ?? [],
     };
   } catch {
     return SEED_STATE;

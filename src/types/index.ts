@@ -86,6 +86,7 @@ export type MonthSnapshot = {
   totalPaid: number; // cents
   shortfall: number; // cents — positive = short, negative = surplus
   savingsMoved: number; // cents
+  kiasPayActual: number; // cents — sum of checkLog entries for that month
 };
 
 // ─── Kia's Check Log ─────────────────────────────────────────────────────────

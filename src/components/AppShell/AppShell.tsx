@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { advanceMonth, currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
-import { BillChart } from "../BillChart/BillChart";
-import { AffirmGrid } from "@/components/AffirmGrid/AffirmGrid";
+import { withErrorBoundary } from "@/components/ui/withErrorBoundary/withErrorBoundary";
+import { BillChart } from "@/components/BillChartTab/BillChart";
+import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
 import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
 import { HistoryTab } from "@/components/HistoryTab/HistoryTab";
@@ -19,24 +21,79 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "history", label: "History" },
 ];
 
+// Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
+const SafeBillChart    = withErrorBoundary(BillChart,    "BillChart");
+const SafeAffirmTab    = withErrorBoundary(AffirmTab,    "AffirmTab");
+const SafePaycheckTab  = withErrorBoundary(PaycheckTab,  "PaycheckTab");
+const SafeSavingsTab   = withErrorBoundary(SavingsTab,   "SavingsTab");
+const SafeHistoryTab   = withErrorBoundary(HistoryTab,   "HistoryTab");
+
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("bills");
   const [printAll, setPrintAll] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() =>
+    advanceMonth(currentMonth(), 1),
+  );
   const appState = useAppState();
 
   const handlePrintAll = () => {
     setPrintAll(true);
-    // Give React one frame to render all tabs before printing
     setTimeout(() => {
       window.print();
       setPrintAll(false);
     }, 150);
   };
 
+  const billChartProps = {
+    bills: appState.state.bills,
+    income: appState.state.income,
+    savingsLog: appState.state.savingsLog,
+    checkLog: appState.state.checkLog,
+    paycheck: appState.state.paycheck,
+    viewMonth,
+    onViewMonthChange: setViewMonth,
+    onAdd: appState.addBill,
+    onUpdate: appState.updateBill,
+    onDelete: appState.deleteBill,
+    onTogglePaid: appState.toggleBillPaid,
+    onUpdateIncome: appState.upsertIncome,
+    onSaveSnapshot: appState.addSnapshot,
+    onRollover: appState.rolloverBills,
+  };
+
+  const affirmTabProps = {
+    plans: appState.state.plans,
+    onAdd: appState.addPlan,
+    onDelete: appState.deletePlan,
+  };
+
+  const paycheckTabProps = {
+    paycheck: appState.state.paycheck,
+    checkLog: appState.state.checkLog,
+    savingsLog: appState.state.savingsLog,
+    plans: appState.state.plans,
+    viewScope: appState.state.paycheckViewScope,
+    onUpsertWeek: appState.upsertPaycheckWeek,
+    onAddCheckEntry: appState.addCheckEntry,
+    onDeleteCheckEntry: appState.deleteCheckEntry,
+    onSetViewScope: appState.setPaycheckViewScope,
+  };
+
+  const savingsTabProps = {
+    plans: appState.state.plans,
+    checking: appState.state.checkLog,
+    savingsLog: appState.state.savingsLog,
+    checkLog: appState.state.checkLog,
+    paycheck: appState.state.paycheck,
+    onAddCheckEntry: appState.addCheckEntry,
+    onDeleteCheckEntry: appState.deleteCheckEntry,
+    onAddSavings: appState.addSavingsEntry,
+  };
+
   return (
     <div className={styles.shell}>
       <div className={styles.stickyTop} data-print-hide>
-        <Header onPrintAll={handlePrintAll} />
+        <Header onPrintAll={handlePrintAll} viewMonth={viewMonth} />
         <nav className={styles.tabBar}>
           {TABS.map((tab) => (
             <button
@@ -51,104 +108,27 @@ export function AppShell() {
           ))}
         </nav>
       </div>
+
       <main className={styles.content}>
         {printAll ? (
           <>
-            <BillChart
-              bills={appState.state.bills}
-              income={appState.state.income}
-              savingsLog={appState.state.savingsLog}
-              paycheck={appState.state.paycheck}
-              onAdd={appState.addBill}
-              onUpdate={appState.updateBill}
-              onDelete={appState.deleteBill}
-              onTogglePaid={appState.toggleBillPaid}
-              onUpdateIncome={appState.upsertIncome}
-              onSaveSnapshot={appState.addSnapshot}
-              onRollover={appState.rolloverBills}
-            />
+            <SafeBillChart {...billChartProps} />
             <div className={styles.printPageBreak} />
-            <AffirmGrid
-              plans={appState.state.plans}
-              onAdd={appState.addPlan}
-              onDelete={appState.deletePlan}
-            />
+            <SafeAffirmTab {...affirmTabProps} />
             <div className={styles.printPageBreak} />
-            <PaycheckTab
-              paycheck={appState.state.paycheck}
-              checkLog={appState.state.checkLog}
-              savingsLog={appState.state.savingsLog}
-              plans={appState.state.plans}
-              viewScope={appState.state.paycheckViewScope}
-              onUpsertWeek={appState.upsertPaycheckWeek}
-              onAddCheckEntry={appState.addCheckEntry}
-              onDeleteCheckEntry={appState.deleteCheckEntry}
-              onSetViewScope={appState.setPaycheckViewScope}
-            />
+            <SafePaycheckTab {...paycheckTabProps} />
             <div className={styles.printPageBreak} />
-            <SavingsTab
-              plans={appState.state.plans}
-              checking={appState.state.checkLog}
-              savingsLog={appState.state.savingsLog}
-              paycheck={appState.state.paycheck}
-              onAddCheckEntry={appState.addCheckEntry}
-              onDeleteCheckEntry={appState.deleteCheckEntry}
-              onAddSavings={appState.addSavingsEntry}
-            />
+            <SafeSavingsTab {...savingsTabProps} />
             <div className={styles.printPageBreak} />
-            <HistoryTab snapshots={appState.state.snapshots} />
+            <SafeHistoryTab snapshots={appState.state.snapshots} />
           </>
         ) : (
           <>
-            {activeTab === "bills" && (
-              <BillChart
-                bills={appState.state.bills}
-                income={appState.state.income}
-                savingsLog={appState.state.savingsLog}
-                paycheck={appState.state.paycheck}
-                onAdd={appState.addBill}
-                onUpdate={appState.updateBill}
-                onDelete={appState.deleteBill}
-                onTogglePaid={appState.toggleBillPaid}
-                onUpdateIncome={appState.upsertIncome}
-                onSaveSnapshot={appState.addSnapshot}
-                onRollover={appState.rolloverBills}
-              />
-            )}
-            {activeTab === "affirm" && (
-              <AffirmGrid
-                plans={appState.state.plans}
-                onAdd={appState.addPlan}
-                onDelete={appState.deletePlan}
-              />
-            )}
-            {activeTab === "paycheck" && (
-              <PaycheckTab
-                paycheck={appState.state.paycheck}
-                checkLog={appState.state.checkLog}
-                savingsLog={appState.state.savingsLog}
-                plans={appState.state.plans}
-                viewScope={appState.state.paycheckViewScope}
-                onUpsertWeek={appState.upsertPaycheckWeek}
-                onAddCheckEntry={appState.addCheckEntry}
-                onDeleteCheckEntry={appState.deleteCheckEntry}
-                onSetViewScope={appState.setPaycheckViewScope}
-              />
-            )}
-            {activeTab === "savings" && (
-              <SavingsTab
-                plans={appState.state.plans}
-                checking={appState.state.checkLog}
-                savingsLog={appState.state.savingsLog}
-                paycheck={appState.state.paycheck}
-                onAddCheckEntry={appState.addCheckEntry}
-                onDeleteCheckEntry={appState.deleteCheckEntry}
-                onAddSavings={appState.addSavingsEntry}
-              />
-            )}
-            {activeTab === "history" && (
-              <HistoryTab snapshots={appState.state.snapshots} />
-            )}
+            {activeTab === "bills"    && <SafeBillChart    {...billChartProps} />}
+            {activeTab === "affirm"   && <SafeAffirmTab    {...affirmTabProps} />}
+            {activeTab === "paycheck" && <SafePaycheckTab  {...paycheckTabProps} />}
+            {activeTab === "savings"  && <SafeSavingsTab   {...savingsTabProps} />}
+            {activeTab === "history"  && <SafeHistoryTab   snapshots={appState.state.snapshots} />}
           </>
         )}
       </main>
@@ -156,7 +136,13 @@ export function AppShell() {
   );
 }
 
-function Header({ onPrintAll }: { onPrintAll: () => void }) {
+function Header({
+  onPrintAll,
+  viewMonth,
+}: {
+  onPrintAll: () => void;
+  viewMonth: string;
+}) {
   return (
     <header className={styles.header}>
       <div>
@@ -174,12 +160,7 @@ function Header({ onPrintAll }: { onPrintAll: () => void }) {
         <button className={styles.printBtn} onClick={onPrintAll}>
           Print All
         </button>
-        <time className={styles.currentMonth}>
-          {new Date().toLocaleDateString("en-US", {
-            month: "long",
-            year: "numeric",
-          })}
-        </time>
+        <time className={styles.currentMonth}>{fmtMonthFull(viewMonth)}</time>
       </div>
     </header>
   );

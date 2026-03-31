@@ -1,0 +1,121 @@
+/* ── Group wrapper ───────────────────────────────────────────────────────── */
+
+.group {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.groupHeader {
+    padding: 8px 16px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-white);
+    background: var(--color-navy-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    user-select: none;
+}
+
+.groupHeader:hover {
+    background: var(--color-navy);
+}
+
+.collapseIcon {
+    font-size: 9px;
+    opacity: 0.75;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+
+.tableWrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 380px;
+    transition: max-height 0.25s ease;
+}
+
+.tableWrapperCollapsed {
+    max-height: 0 !important;
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.th {
+    padding: 8px 12px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 2px solid var(--color-border);
+    background: var(--color-cream);
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.thRight {
+    text-align: right;
+}
+
+.thCenter {
+    text-align: center;
+}
+
+.thSortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.thSortable:hover {
+    color: var(--color-navy);
+    background: #E8EDF5;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.emptyState {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-text-mid);
+    font-size: var(--text-base);
+}
+
+/* ── Footer totals row ───────────────────────────────────────────────────── */
+
+.totalRow {
+    background: var(--color-navy);
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+}
+
+.totalLabel {
+    padding: 10px 12px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.totalValue {
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: var(--text-md);
+    color: var(--color-white);
+}

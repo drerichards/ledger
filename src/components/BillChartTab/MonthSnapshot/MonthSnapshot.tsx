@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Bill, MonthlyIncome, MonthSnapshot, SavingsEntry } from "@/types";
+import type { Bill, KiasCheckEntry, MonthlyIncome, MonthSnapshot, SavingsEntry } from "@/types";
 import { fmtMoney, sumCents, calcShortfall } from "@/lib/money";
 import { fmtMonthFull } from "@/lib/dates";
 import styles from "./MonthSnapshot.module.css";
@@ -11,6 +11,7 @@ type Props = {
   bills: Bill[];
   income: MonthlyIncome[];
   savingsLog: SavingsEntry[];
+  checkLog: KiasCheckEntry[];
   onSave: (snap: MonthSnapshot) => void;
 };
 
@@ -19,6 +20,7 @@ export function MonthSnapshot({
   bills,
   income,
   savingsLog,
+  checkLog = [],
   onSave,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
@@ -36,9 +38,12 @@ export function MonthSnapshot({
     : 0;
   const shortfall = calcShortfall(totalBilled, totalIncome);
 
-  // Savings moved this month — sum entries from this month only
   const savingsMoved = sumCents(
     savingsLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
+  );
+
+  const kiasPayActual = sumCents(
+    checkLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
   );
 
   const handleClose = () => {
@@ -48,6 +53,7 @@ export function MonthSnapshot({
       totalPaid,
       shortfall,
       savingsMoved,
+      kiasPayActual,
     };
     onSave(snap);
     setConfirming(false);
@@ -55,21 +61,15 @@ export function MonthSnapshot({
 
   return (
     <div className={styles.container}>
-      {/* Saving a snapshot is optional and does not trigger month rollover.
-          Rollover is handled separately by the Bill Chart month nav bar. */}
       <div className={styles.header}>
         <h3 className={styles.title}>Month-End Snapshot</h3>
         {!confirming && (
-          <button
-            className={styles.btnPrimary}
-            onClick={() => setConfirming(true)}
-          >
+          <button className={styles.btnPrimary} onClick={() => setConfirming(true)}>
             Save Month Summary
           </button>
         )}
       </div>
 
-      {/* Confirmation panel */}
       {confirming && (
         <div className={styles.confirmation}>
           <p className={styles.confirmHeading}>
@@ -83,17 +83,11 @@ export function MonthSnapshot({
               value={fmtMoney(Math.abs(shortfall))}
               color={shortfall > 0 ? "rust" : "olive"}
             />
-            <Stat
-              label="Moved to Savings"
-              value={fmtMoney(savingsMoved)}
-              color="olive"
-            />
+            <Stat label="Moved to Savings" value={fmtMoney(savingsMoved)} color="olive" />
+            <Stat label="Kia's Pay (actual)" value={fmtMoney(kiasPayActual)} />
           </div>
           <div className={styles.confirmActions}>
-            <button
-              className={styles.btnGhost}
-              onClick={() => setConfirming(false)}
-            >
+            <button className={styles.btnGhost} onClick={() => setConfirming(false)}>
               Cancel
             </button>
             <button className={styles.btnPrimary} onClick={handleClose}>
@@ -102,7 +96,6 @@ export function MonthSnapshot({
           </div>
         </div>
       )}
-
     </div>
   );
 }
