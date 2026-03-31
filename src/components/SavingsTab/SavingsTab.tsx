@@ -7,9 +7,9 @@ import type {
   SavingsEntry,
 } from "@/types";
 import { calcCheckBaseline } from "@/lib/projection";
-import { CheckLog } from "@/components/PaycheckTab/CheckLog";
-import { SavingsTracker } from "@/components/PaycheckTab/SavingsTracker";
-import { SavingsProjection } from "@/components/PaycheckTab/SavingsProjection";
+import { CheckLog } from "./CheckLog";
+import { SavingsTracker } from "./SavingsTracker";
+import { SavingsProjection } from "./SavingsProjection";
 import styles from "./SavingsTab.module.css";
 
 type Props = {
