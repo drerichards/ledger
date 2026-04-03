@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BillForm } from "../BillForm";
 import type { Bill } from "@/types";
@@ -31,10 +31,14 @@ function makeBill(overrides: Partial<Bill> = {}): Bill {
 }
 
 function setup(initial: Bill | null = null) {
+  // userEvent.setup() must be called before render. It returns a user instance
+  // bound to a single test — this ensures pointer/keyboard state is isolated
+  // between tests. Do NOT call userEvent.type() directly in v14 (old API).
+  const user = userEvent.setup();
   const onSave = jest.fn();
   const onClose = jest.fn();
   render(<BillForm initial={initial} onSave={onSave} onClose={onClose} />);
-  return { onSave, onClose };
+  return { user, onSave, onClose };
 }
 
 describe("BillForm", () => {
@@ -65,27 +69,27 @@ describe("BillForm", () => {
 
   describe("validation", () => {
     it("shows error when name is empty on submit", async () => {
-      setup(null);
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user } = setup(null);
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => {
         expect(screen.getByText("Name is required")).toBeInTheDocument();
       });
     });
 
     it("shows error when amount is empty on submit", async () => {
-      setup(null);
-      await userEvent.type(screen.getByLabelText(/payee name/i), "T-Mobile");
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user } = setup(null);
+      await user.type(screen.getByLabelText(/payee name/i), "T-Mobile");
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => {
         expect(screen.getByText("Amount is required")).toBeInTheDocument();
       });
     });
 
     it("shows error when due day is empty on submit", async () => {
-      setup(null);
-      await userEvent.type(screen.getByLabelText(/payee name/i), "T-Mobile");
-      await userEvent.type(screen.getByLabelText(/amount/i), "50.00");
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user } = setup(null);
+      await user.type(screen.getByLabelText(/payee name/i), "T-Mobile");
+      await user.type(screen.getByLabelText(/amount/i), "50.00");
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       // When due is empty: parseInt("", 10) = NaN → isNaN check fires and
       // overwrites "Due date is required" with the range error. This is the
       // actual component behavior — both conditions fire, second one wins.
@@ -95,30 +99,30 @@ describe("BillForm", () => {
     });
 
     it("shows error when due day is 0", async () => {
-      setup(null);
-      await userEvent.type(screen.getByLabelText(/payee name/i), "T-Mobile");
-      await userEvent.type(screen.getByLabelText(/amount/i), "50.00");
-      await userEvent.type(screen.getByLabelText(/due day/i), "0");
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user } = setup(null);
+      await user.type(screen.getByLabelText(/payee name/i), "T-Mobile");
+      await user.type(screen.getByLabelText(/amount/i), "50.00");
+      await user.type(screen.getByLabelText(/due day/i), "0");
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => {
         expect(screen.getByText("Enter a day (1–31)")).toBeInTheDocument();
       });
     });
 
     it("shows error when due day is 32", async () => {
-      setup(null);
-      await userEvent.type(screen.getByLabelText(/payee name/i), "T-Mobile");
-      await userEvent.type(screen.getByLabelText(/amount/i), "50.00");
-      await userEvent.type(screen.getByLabelText(/due day/i), "32");
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user } = setup(null);
+      await user.type(screen.getByLabelText(/payee name/i), "T-Mobile");
+      await user.type(screen.getByLabelText(/amount/i), "50.00");
+      await user.type(screen.getByLabelText(/due day/i), "32");
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => {
         expect(screen.getByText("Enter a day (1–31)")).toBeInTheDocument();
       });
     });
 
     it("does not call onSave when validation fails", async () => {
-      const { onSave } = setup(null);
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user, onSave } = setup(null);
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => {
         expect(screen.getByText("Name is required")).toBeInTheDocument();
       });
@@ -128,11 +132,11 @@ describe("BillForm", () => {
 
   describe("submission", () => {
     it("calls onSave with correct bill data when form is valid", async () => {
-      const { onSave } = setup(null);
-      await userEvent.type(screen.getByLabelText(/payee name/i), "T-Mobile");
-      await userEvent.type(screen.getByLabelText(/amount/i), "108.00");
-      await userEvent.type(screen.getByLabelText(/due day/i), "15");
-      fireEvent.click(screen.getByRole("button", { name: /add bill/i }));
+      const { user, onSave } = setup(null);
+      await user.type(screen.getByLabelText(/payee name/i), "T-Mobile");
+      await user.type(screen.getByLabelText(/amount/i), "108.00");
+      await user.type(screen.getByLabelText(/due day/i), "15");
+      await user.click(screen.getByRole("button", { name: /add bill/i }));
       await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
       const saved: Bill = onSave.mock.calls[0][0];
       expect(saved.name).toBe("T-Mobile");
@@ -143,23 +147,23 @@ describe("BillForm", () => {
     });
 
     it("preserves existing id when editing", async () => {
-      const { onSave } = setup(makeBill({ id: "existing-id", name: "Netflix" }));
-      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+      const { user, onSave } = setup(makeBill({ id: "existing-id", name: "Netflix" }));
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
       await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
       expect(onSave.mock.calls[0][0].id).toBe("existing-id");
     });
   });
 
   describe("close behavior", () => {
-    it("calls onClose when Cancel is clicked", () => {
-      const { onClose } = setup(null);
-      fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
+    it("calls onClose when Cancel is clicked", async () => {
+      const { user, onClose } = setup(null);
+      await user.click(screen.getByRole("button", { name: /cancel/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    it("calls onClose when the × button is clicked", () => {
-      const { onClose } = setup(null);
-      fireEvent.click(screen.getByRole("button", { name: /close/i }));
+    it("calls onClose when the × button is clicked", async () => {
+      const { user, onClose } = setup(null);
+      await user.click(screen.getByRole("button", { name: /close/i }));
       expect(onClose).toHaveBeenCalledTimes(1);
     });
   });

@@ -6,7 +6,7 @@ const DEFAULT_INCOME: MonthlyIncome = {
   month: "2026-04",
   kias_pay: 0,
   military_pay: 124190,
-  retirement: 33437,
+  retirement: 33447,
   social_security: 77500,
 };
 
@@ -44,8 +44,8 @@ describe("IncomePanel", () => {
     });
 
     it("shows 'Surplus' when bills equal income (no shortfall)", () => {
-      // Total default income = 124190 + 33437 + 77500 = 235127 cents
-      setup({ totalBillsCents: 235127 });
+      // Total default income = 124190 + 33447 + 77500 = 235137 cents
+      setup({ totalBillsCents: 235137 });
       // calcShortfall returns 0 → isShort is false → "Surplus"
       expect(screen.getByText("Surplus")).toBeInTheDocument();
     });
@@ -122,7 +122,7 @@ describe("IncomePanel", () => {
           month="2026-04"
           income={undefined}
           kiasPayCents={0}
-          // Default income total = 124190 + 33437 + 77500 = 235127 cents ($2,351.27)
+          // Default income total = 124190 + 33447 + 77500 = 235137 cents ($2,351.37)
           // Bills at $3000 → short
           totalBillsCents={300000}
           onUpdate={jest.fn()}

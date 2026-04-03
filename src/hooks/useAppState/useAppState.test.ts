@@ -95,7 +95,7 @@ function makeIncome(overrides: Partial<MonthlyIncome> = {}): MonthlyIncome {
     month: "2026-04",
     kias_pay: 0,
     military_pay: 124190,
-    retirement: 33437,
+    retirement: 33447,
     social_security: 77500,
     ...overrides,
   };
@@ -120,9 +120,11 @@ function makeWeek(overrides: Partial<PaycheckWeek> = {}): PaycheckWeek {
 function makeSnapshot(overrides: Partial<MonthSnapshot> = {}): MonthSnapshot {
   return {
     month: "2026-04",
-    totalBills: 259863,
-    totalIncome: 235137,
-    shortfall: 24726,
+    totalBilled: 259863, // total cents billed that month
+    totalPaid: 0,        // cents marked paid
+    shortfall: 24726,    // positive = short, negative = surplus
+    savingsMoved: 0,     // cents moved to savings
+    kiasPayActual: 0,    // sum of checkLog entries for the month
     ...overrides,
   };
 }
@@ -363,11 +365,11 @@ describe("useAppState — ADD_SNAPSHOT", () => {
 
   it("replaces an existing snapshot for the same month", () => {
     const { result } = setup();
-    act(() => { result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBills: 100000 })); });
-    act(() => { result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBills: 200000 })); });
+    act(() => { result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBilled: 100000 })); });
+    act(() => { result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBilled: 200000 })); });
 
     expect(result.current.state.snapshots).toHaveLength(1);
-    expect(result.current.state.snapshots[0].totalBills).toBe(200000);
+    expect(result.current.state.snapshots[0].totalBilled).toBe(200000);
   });
 });
 
