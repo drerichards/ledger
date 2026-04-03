@@ -1,5 +1,5 @@
 import type { Bill } from "@/types";
-import { fmtMoney } from "./money";
+import { fmtMoney } from "@/lib/money";
 
 /**
  * Triggers a browser download of the bill list as a CSV file.

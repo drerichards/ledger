@@ -1,6 +1,6 @@
 import type { AppState } from "@/types";
-import { SEED_STATE } from "./seed";
-import { currentMonth } from "./dates";
+import { SEED_STATE } from "@/lib/seed";
+import { currentMonth } from "@/lib/dates";
 
 const STORAGE_KEY = "ledger-v1";
 

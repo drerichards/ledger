@@ -9,7 +9,7 @@ import type {
   MonthlyIncome,
   PaycheckWeek,
 } from "@/types";
-import { generateId } from "./id";
+import { generateId } from "@/lib/id";
 
 const APRIL = "2026-04";
 

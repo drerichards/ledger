@@ -1,6 +1,6 @@
 import type { InstallmentPlan } from "@/types";
-import { getMonthRange } from "./dates";
-import { sumCents } from "./money";
+import { getMonthRange } from "@/lib/dates";
+import { sumCents } from "@/lib/money";
 
 /**
  * Returns the total Affirm payment owed in a given month (YYYY-MM).

@@ -23,7 +23,7 @@ const FIELDS: { key: Field; label: string }[] = [
 
 const FIXED_DEFAULTS: Record<Field, number> = {
   military_pay: 124190,
-  retirement: 33437,
+  retirement: 33447,
   social_security: 77500,
 };
 
@@ -45,14 +45,16 @@ export function IncomePanel({
     social_security: String(fieldCents(income, "social_security") / 100),
   });
 
-  const totalIncomeCents = sumCents([
-    kiasPayCents,
+  // Shortfall is only against fixed "Other Income" sources — military pay,
+  // retirement, social security. Kia's pay covers a separate bill group
+  // (kias_pay) and must never enter this calculation or the math is wrong.
+  const otherIncomeCents = sumCents([
     fieldCents(income, "military_pay"),
     fieldCents(income, "retirement"),
     fieldCents(income, "social_security"),
   ]);
 
-  const shortfall = calcShortfall(totalBillsCents, totalIncomeCents);
+  const shortfall = calcShortfall(totalBillsCents, otherIncomeCents);
   const isShort = shortfall > 0;
 
   const handleSave = () => {
