@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { advanceMonth, currentMonth } from "@/lib/dates";
+import { advanceMonth, currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
 import { useAffirmNotifications } from "@/hooks/useAffirmNotifications";
 import { createClient } from "@/lib/supabase/client";
@@ -44,9 +44,26 @@ export function AppShell() {
   const [viewMonth, setViewMonth] = useState(() =>
     advanceMonth(currentMonth(), 1),
   );
+  const [userName, setUserName] = useState<string | null>(null);
   const appState = useAppState();
   const router = useRouter();
   const printTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch logged-in user's first name
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const fullName =
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split("@")[0] ||
+          null;
+        const firstName = fullName?.split(" ")[0] ?? null;
+        setUserName(firstName);
+      }
+    });
+  }, []);
 
   const handlePrintTab = () => window.print();
 
@@ -92,7 +109,7 @@ export function AppShell() {
     <div className={styles.shell}>
       <div className={styles.stickyTop} data-print-hide>
         <Header
-          viewMonth={viewMonth}
+          userName={userName}
           notifications={notifications}
           seenNotificationIds={s.seenNotificationIds ?? []}
           onMarkNotificationsSeen={actions.markNotificationsSeen}
@@ -114,6 +131,9 @@ export function AppShell() {
               {tab.label}
             </button>
           ))}
+          <time className={styles.viewMonth} dateTime={viewMonth}>
+            {fmtMonthFull(viewMonth)}
+          </time>
         </nav>
       </div>
 

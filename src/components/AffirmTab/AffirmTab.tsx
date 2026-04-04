@@ -6,7 +6,6 @@ import { fmtMoney } from "@/lib/money";
 import { fmtMonthLabel } from "@/lib/dates";
 import { useAffirmTabState } from "@/hooks/useAffirmTabState";
 import { AffirmForm } from "./AffirmForm";
-import { PayoffMilestone } from "./PayoffMilestone";
 import { PlanRow } from "./PlanRow/PlanRow";
 import styles from "./AffirmTab.module.css";
 
@@ -18,16 +17,11 @@ type Props = {
 
 export function AffirmTab({ plans, onAdd, onDelete }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const { now, months, milestonePlans, totalOwedByPlan, grandTotalOwed, monthlyTotals } =
+  const { now, months, totalOwedByPlan, grandTotalOwed, monthlyTotals } =
     useAffirmTabState(plans);
 
   return (
     <div className={styles.container}>
-      {/* ── Payoff Milestones ──────────────────────────────────────── */}
-      {milestonePlans.map((plan) => (
-        <PayoffMilestone key={plan.id} plan={plan} />
-      ))}
-
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className={styles.toolbar}>
         <h2 className={styles.heading}>Affirm Plans</h2>

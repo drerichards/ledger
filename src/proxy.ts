@@ -2,13 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Middleware runs on every request. Two responsibilities:
+ * Proxy runs on every request. Two responsibilities:
  * 1. Refresh the Supabase session (extends cookie expiry on activity)
  * 2. Redirect unauthenticated users to /login
  *
  * Public paths (no auth required): /login, /auth/callback
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

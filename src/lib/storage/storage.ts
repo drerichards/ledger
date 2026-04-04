@@ -36,10 +36,20 @@ export function loadState(): AppState {
       bills: (parsed.bills ?? []).map((b) =>
         b.month ? b : { ...b, month: currentMonth() },
       ),
-      checkLog: parsed.checkLog ?? [],
+      // If stored check log has fewer than 12 entries, merge seed entries (deduped by weekOf)
+      checkLog: (() => {
+        const stored = parsed.checkLog ?? [];
+        if (stored.length >= 12) return stored;
+        const byWeek = new Map(stored.map((e) => [e.weekOf, e]));
+        SEED_STATE.checkLog.forEach((e) => {
+          if (!byWeek.has(e.weekOf)) byWeek.set(e.weekOf, e);
+        });
+        return [...byWeek.values()];
+      })(),
       savingsLog: parsed.savingsLog ?? [],
       snapshots: parsed.snapshots ?? [],
-      plans: parsed.plans ?? [],
+      // If stored state has no plans, backfill from seed
+      plans: (parsed.plans ?? []).length > 0 ? parsed.plans : SEED_STATE.plans,
       // Stamp missing extra field on older paycheck weeks
       paycheck: (parsed.paycheck ?? []).map((w) =>
         w.extra ? w : { ...w, extra: {} },

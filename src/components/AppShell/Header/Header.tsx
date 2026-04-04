@@ -1,13 +1,12 @@
 "use client";
 
 import type { AppNotification } from "@/types";
-import { fmtMonthFull } from "@/lib/dates";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { HeaderMenu } from "./HeaderMenu/HeaderMenu";
 import styles from "./Header.module.css";
 
 type Props = {
-  viewMonth: string;
+  userName: string | null;
   notifications: AppNotification[];
   seenNotificationIds: string[];
   onMarkNotificationsSeen: (ids: string[]) => void;
@@ -19,7 +18,7 @@ type Props = {
 };
 
 export function Header({
-  viewMonth,
+  userName,
   notifications,
   seenNotificationIds,
   onMarkNotificationsSeen,
@@ -36,11 +35,8 @@ export function Header({
         <p className={styles.appSubtitle}>Household Finance Tracker</p>
       </div>
 
-      <time className={styles.currentMonth} dateTime={viewMonth}>
-        {fmtMonthFull(viewMonth)}
-      </time>
-
       <div className={styles.actions}>
+        {userName && <span className={styles.userName}>{userName}</span>}
         <NotificationBell
           notifications={notifications}
           seenIds={seenNotificationIds}

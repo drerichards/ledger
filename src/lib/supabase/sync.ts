@@ -58,7 +58,6 @@ type PlanRow = {
 };
 
 type IncomeRow = {
-  id: string;
   user_id: string;
   month: string;
   kias_pay: number;
@@ -68,7 +67,6 @@ type IncomeRow = {
 };
 
 type SnapshotRow = {
-  id: string;
   user_id: string;
   month: string;
   total_billed: number;
@@ -79,7 +77,6 @@ type SnapshotRow = {
 };
 
 type PaycheckRow = {
-  id: string;
   user_id: string;
   week_of: string;
   kias_pay: number;
@@ -93,14 +90,12 @@ type PaycheckRow = {
 };
 
 type CheckLogRow = {
-  id: string;
   user_id: string;
   week_of: string;
   amount: number;
 };
 
 type SavingsLogRow = {
-  id: string;
   user_id: string;
   week_of: string;
   amount: number;
@@ -135,8 +130,6 @@ const planToRow = (p: InstallmentPlan, userId: string): PlanRow => ({
 });
 
 const incomeToRow = (i: MonthlyIncome, userId: string): IncomeRow => ({
-  // income table uses (user_id, month) as the unique key — id derived from month
-  id: `${userId}-${i.month}`,
   user_id: userId,
   month: i.month,
   kias_pay: i.kias_pay,
@@ -146,7 +139,6 @@ const incomeToRow = (i: MonthlyIncome, userId: string): IncomeRow => ({
 });
 
 const snapshotToRow = (s: MonthSnapshot, userId: string): SnapshotRow => ({
-  id: `${userId}-${s.month}`,
   user_id: userId,
   month: s.month,
   total_billed: s.totalBilled,
@@ -157,7 +149,6 @@ const snapshotToRow = (s: MonthSnapshot, userId: string): SnapshotRow => ({
 });
 
 const paycheckToRow = (w: PaycheckWeek, userId: string): PaycheckRow => ({
-  id: `${userId}-${w.weekOf}`,
   user_id: userId,
   week_of: w.weekOf,
   kias_pay: w.kiasPay,
@@ -171,14 +162,12 @@ const paycheckToRow = (w: PaycheckWeek, userId: string): PaycheckRow => ({
 });
 
 const checkEntryToRow = (e: KiasCheckEntry, userId: string): CheckLogRow => ({
-  id: `${userId}-${e.weekOf}`,
   user_id: userId,
   week_of: e.weekOf,
   amount: e.amount,
 });
 
 const savingsEntryToRow = (e: SavingsEntry, userId: string): SavingsLogRow => ({
-  id: `${userId}-${e.weekOf}`,
   user_id: userId,
   week_of: e.weekOf,
   amount: e.amount,
