@@ -4,7 +4,7 @@
     gap: var(--space-3);
     padding: 14px 18px;
     background: var(--color-olive-light);
-    border: 1px solid #C8D8A8;
+    border: 1px solid var(--color-olive-border);
     border-left: 4px solid var(--color-olive);
     border-radius: var(--radius-md);
     font-size: var(--text-base);
@@ -12,7 +12,7 @@
 }
 
 .milestoneIcon {
-    font-size: 20px;
+    font-size: var(--text-lg);
     flex-shrink: 0;
 }
 

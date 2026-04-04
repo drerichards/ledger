@@ -10,7 +10,7 @@
 
 .rowFlagged {
     border-left: 3px solid var(--color-rust);
-    background: rgba(196, 82, 42, 0.07);
+    background: var(--color-rust-alpha-7);
 }
 
 /* ── Cells ───────────────────────────────────────────────────────────────── */
@@ -62,7 +62,7 @@
 /* ── Badges ──────────────────────────────────────────────────────────────── */
 
 .methodBadge {
-    font-size: 10px;
+    font-size: var(--text-mini);
     font-weight: 700;
     font-family: var(--font-mono);
     color: var(--color-text-mid);
@@ -74,14 +74,14 @@
 
 .recurringBadge {
     margin-left: 6px;
-    font-size: 15px;
+    font-size: var(--text-base);
     color: var(--color-olive);
     cursor: default;
 }
 
 .flagBadge {
     margin-left: 6px;
-    font-size: 13px;
+    font-size: var(--text-xs);
     font-weight: 800;
     color: var(--color-white);
     background: var(--color-rust);

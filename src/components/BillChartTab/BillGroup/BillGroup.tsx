@@ -2,10 +2,11 @@ import React from "react";
 import type { Bill } from "@/types";
 import { fmtMoney, sumCents } from "@/lib/money";
 import { BillRow } from "../BillRow";
+import { SortableHeader } from "./SortableHeader/SortableHeader";
 import styles from "./BillGroup.module.css";
 
-type SortKey = "due" | "name" | "cents" | "method" | "category";
-type SortDir = "asc" | "desc";
+export type SortKey = "due" | "name" | "cents" | "method" | "category";
+export type SortDir = "asc" | "desc";
 
 type Props = {
   label: string;
@@ -19,6 +20,19 @@ type Props = {
   onDelete: (id: string) => void;
   onTogglePaid: (id: string) => void;
 };
+
+const sortBills = (bills: Bill[], key: SortKey, dir: SortDir): Bill[] =>
+  [...bills].sort((a, b) => {
+    let comparison = 0;
+    switch (key) {
+      case "due":      comparison = a.due - b.due; break;
+      case "name":     comparison = a.name.localeCompare(b.name); break;
+      case "cents":    comparison = a.cents - b.cents; break;
+      case "method":   comparison = a.method.localeCompare(b.method); break;
+      case "category": comparison = a.category.localeCompare(b.category); break;
+    }
+    return dir === "asc" ? comparison : -comparison;
+  });
 
 /**
  * Collapsible, sortable bill group (presenter).
@@ -51,20 +65,20 @@ export const BillGroup = React.memo(function BillGroup({
       >
         <table className={styles.table}>
           <colgroup>
-            <col style={{ width: "70px" }} />
-            <col style={{ width: "100px" }} />
-            <col />
-            <col style={{ width: "100px" }} />
-            <col style={{ width: "60px" }} />
-            <col style={{ width: "220px" }} />
-            <col style={{ width: "110px" }} />
+            <col className={styles.colDue} />
+            <col className={styles.colMethod} />
+            <col className={styles.colPayee} />
+            <col className={styles.colAmount} />
+            <col className={styles.colPaid} />
+            <col className={styles.colCategory} />
+            <col className={styles.colActions} />
           </colgroup>
           <thead>
             <tr>
-              <SortableHeader label="Date"   sortKey="due"      activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Method" sortKey="method"   activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Payee"  sortKey="name"     activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Amount" sortKey="cents"    activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} alignRight />
+              <SortableHeader label="Date"   sortKey="due"    activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Method" sortKey="method" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Payee"  sortKey="name"   activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortableHeader label="Amount" sortKey="cents"  activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} alignRight />
               <th scope="col" className={`${styles.th} ${styles.thCenter}`}>Paid</th>
               <th scope="col" className={styles.th}>Notes</th>
               <th scope="col" className={`${styles.th} ${styles.thCenter}`}>Actions</th>
@@ -104,45 +118,3 @@ export const BillGroup = React.memo(function BillGroup({
     </div>
   );
 });
-
-function SortableHeader({
-  label,
-  sortKey,
-  activeSortKey,
-  sortDir,
-  onSort,
-  alignRight = false,
-}: {
-  label: string;
-  sortKey: SortKey;
-  activeSortKey: SortKey;
-  sortDir: SortDir;
-  onSort: (key: SortKey) => void;
-  alignRight?: boolean;
-}) {
-  const isActive = activeSortKey === sortKey;
-  return (
-    <th
-      scope="col"
-      className={`${styles.th} ${styles.thSortable} ${alignRight ? styles.thRight : ""}`}
-      onClick={() => onSort(sortKey)}
-      aria-sort={isActive ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
-    >
-      {label} {isActive ? (sortDir === "asc" ? "↑" : "↓") : ""}
-    </th>
-  );
-}
-
-function sortBills(bills: Bill[], key: SortKey, dir: SortDir): Bill[] {
-  return [...bills].sort((a, b) => {
-    let comparison = 0;
-    switch (key) {
-      case "due":       comparison = a.due - b.due; break;
-      case "name":      comparison = a.name.localeCompare(b.name); break;
-      case "cents":     comparison = a.cents - b.cents; break;
-      case "method":    comparison = a.method.localeCompare(b.method); break;
-      case "category":  comparison = a.category.localeCompare(b.category); break;
-    }
-    return dir === "asc" ? comparison : -comparison;
-  });
-}

@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# 1. ESLint on staged files (fast — only what changed)
+pnpm lint-staged
+
+# 2. TypeScript — whole project (can't scope to staged files)
+pnpm type-check
+
+# 3. Unit tests (fast with --bail so first failure stops the run)
+pnpm test --bail --ci

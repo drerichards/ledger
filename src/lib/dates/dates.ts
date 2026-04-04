@@ -122,6 +122,62 @@ export function mondayOf(dateStr: string): string {
 }
 
 /**
+ * Returns all Friday dates (YYYY-MM-DD) that fall within a given YYYY-MM month.
+ * Uses the Date constructor with numeric args — not string parsing — so there
+ * is no timezone drift risk.
+ */
+export function getFridaysInMonth(ym: string): string[] {
+  const [year, month] = ym.split("-").map(Number);
+  const fridays: string[] = [];
+
+  // new Date(year, monthIndex, day) — numeric args, no string parse = no timezone bug
+  const firstOfMonth = new Date(year, month - 1, 1);
+  const dayOfWeek = firstOfMonth.getDay(); // 0=Sun … 5=Fri … 6=Sat
+  // Days until Friday: (5 - dayOfWeek + 7) % 7
+  const daysToFirst = (5 - dayOfWeek + 7) % 7;
+  const firstFridayDay = 1 + daysToFirst;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  for (let day = firstFridayDay; day <= daysInMonth; day += 7) {
+    fridays.push(
+      `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+    );
+  }
+
+  return fridays;
+}
+
+/**
+ * Returns all Friday dates from fromMonth through toMonth, inclusive, newest first.
+ */
+export function getFridaysUpToMonth(toMonth: string, fromMonth?: string): string[] {
+  const start = fromMonth ?? advanceMonth(toMonth, -5); // default: 6-month window
+  const months = getMonthRange(start, toMonth);
+  const fridays: string[] = [];
+  for (const ym of months) {
+    fridays.push(...getFridaysInMonth(ym));
+  }
+  // Newest first
+  return fridays.reverse();
+}
+
+/**
+ * Returns all Monday dates (YYYY-MM-DD) from fromMonth through toMonth, inclusive, newest first.
+ * Mirrors getFridaysUpToMonth — used by CheckLog after weekOf normalization to Monday.
+ */
+export function getMondaysUpToMonth(toMonth: string, fromMonth?: string): string[] {
+  const start = fromMonth ?? advanceMonth(toMonth, -5); // default: 6-month window
+  const months = getMonthRange(start, toMonth);
+  const mondays: string[] = [];
+  for (const ym of months) {
+    mondays.push(...getMondaysInMonth(ym));
+  }
+  // Newest first
+  return mondays.reverse();
+}
+
+/**
  * Advances a YYYY-MM string by n months.
  * Uses integer arithmetic to avoid timezone drift.
  */

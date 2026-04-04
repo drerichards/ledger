@@ -7,23 +7,21 @@ import type {
   MonthlyIncome,
   MonthSnapshot,
   PaycheckWeek,
-  SavingsEntry,
 } from "@/types";
 
 // ─── Mock storage ──────────────────────────────────────────────────────────────
 // useAppState hydrates from localStorage on mount and persists on every change.
 // We mock the entire storage module so tests are isolated and don't touch disk.
 
-const CLEAN_STATE = {
-  bills: [],
-  plans: [],
-  checkLog: [],
-  savingsLog: [],
-  income: [],
-  paycheck: [],
-  snapshots: [],
-  paycheckViewScope: "monthly" as const,
-};
+// Mock Supabase sync — tests are unit tests; no network calls allowed.
+// All functions resolve immediately as no-ops. Silent-fail behavior mirrors production.
+jest.mock("@/lib/supabase/sync", () => ({
+  loadFromSupabase: jest.fn(() => Promise.resolve(null)),
+  syncStateToSupabase: jest.fn(() => Promise.resolve()),
+  deleteBillRemote: jest.fn(() => Promise.resolve()),
+  deletePlanRemote: jest.fn(() => Promise.resolve()),
+  deleteCheckEntryRemote: jest.fn(() => Promise.resolve()),
+}));
 
 jest.mock("@/lib/storage", () => ({
   INITIAL_STATE: {
@@ -86,10 +84,6 @@ function makeCheckEntry(overrides: Partial<KiasCheckEntry> = {}): KiasCheckEntry
   return { weekOf: "2026-04-06", amount: 76423, ...overrides };
 }
 
-function makeSavingsEntry(overrides: Partial<SavingsEntry> = {}): SavingsEntry {
-  return { weekOf: "2026-04-06", amount: 5000, ...overrides };
-}
-
 function makeIncome(overrides: Partial<MonthlyIncome> = {}): MonthlyIncome {
   return {
     month: "2026-04",
@@ -106,7 +100,7 @@ function makeWeek(overrides: Partial<PaycheckWeek> = {}): PaycheckWeek {
     weekOf: "2026-04-06",
     kiasPay: 76423,
     storage: 14000,
-    affirm: 37652,
+    // affirm is derived from InstallmentPlan[] at render time — not stored on PaycheckWeek
     rent: 0,
     jazmin: 20000,
     dre: 20000,

@@ -10,6 +10,7 @@ import type {
   PaycheckWeek,
 } from "@/types";
 import { generateId } from "@/lib/id";
+import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 
 const APRIL = "2026-04";
 
@@ -160,24 +161,14 @@ const BILLS: Bill[] = [
     "TRSF",
   ),
   bill(
-    "USALLV",
-    0,
-    23,
-    "other_income",
-    "autopay",
-    "Other",
-    "manual",
-    "// TODO: verify April amount",
-  ),
-  bill(
     "SVCH Sav",
-    0,
+    12.0,
     19,
     "other_income",
     "transfer",
     "Savings",
     "recurring",
-    "TRSF — // TODO: verify April amount",
+    "TRSF",
   ),
   bill(
     "Old Navy",
@@ -196,13 +187,13 @@ const BILLS: Bill[] = [
   bill("Google", 0.99, 22, "other_income", "autopay", "Subscriptions"),
   bill(
     "Capone Kia",
-    0,
+    29.99,
     22,
     "other_income",
     "transfer",
     "Credit Cards",
     "recurring",
-    "TRSF to Capone (22nd) — // TODO: verify April amount",
+    "TRSF to Capone (22nd)",
   ),
   bill("USAA LV", 100.0, 23, "other_income", "autopay", "Other"),
   bill("Prime", 15.89, 28, "other_income", "autopay", "Subscriptions"),
@@ -266,14 +257,12 @@ const INCOME: MonthlyIncome[] = [
 // kiasPay back-calculated from: PAY = kiasPay - (all allocations)
 // 4/3 & 4/10: PAY=768.20, allocations=714.50 → kiasPay=1482.70
 // 4/17 & 4/24: PAY=768.20, rent changes to 271.00 → kiasPay=1536.90
-// rentWeek=true on 4/10 — the week the full $1,084 rent draft hits.
 
 const pw = (
   weekOf: string,
   kiasPay: number,
   storage: number,
   rent: number,
-  rentWeek: boolean,
   jazmin: number,
   dre: number,
   savings: number,
@@ -284,20 +273,20 @@ const pw = (
   kiasPay: Math.round(kiasPay * 100),
   storage: Math.round(storage * 100),
   rent: Math.round(rent * 100),
-  rentWeek,
   jazmin: Math.round(jazmin * 100),
   dre: Math.round(dre * 100),
   savings: Math.round(savings * 100),
   paypalCC: Math.round(paypalCC * 100),
   deductions: Math.round(deductions * 100),
+  extra: {},
 });
 
 const PAYCHECK_WEEKS: PaycheckWeek[] = [
-  //           weekOf        kiasPay   storage  rent    rentWk  jaz    dre    sav    ppal  deduct
-  pw("2026-04-07", 1482.7, 58.95, 216.8, false, 31.25, 22.5, 250.0, 50.0, 0),
-  pw("2026-04-14", 1482.7, 58.95, 216.8, true, 31.25, 22.5, 250.0, 50.0, 0),
-  pw("2026-04-21", 1536.9, 58.95, 271.0, false, 31.25, 22.5, 250.0, 50.0, 0),
-  pw("2026-04-28", 1536.9, 58.95, 271.0, false, 31.25, 22.5, 250.0, 50.0, 0),
+  //           weekOf        kiasPay   storage  rent    jaz    dre    sav    ppal  deduct
+  pw("2026-04-07", 1482.7, 58.95, 216.8, 31.25, 22.5, 250.0, 50.0, 0),
+  pw("2026-04-14", 1482.7, 58.95, 216.8, 31.25, 22.5, 250.0, 50.0, 0),
+  pw("2026-04-21", 1536.9, 58.95, 271.0, 31.25, 22.5, 250.0, 50.0, 0),
+  pw("2026-04-28", 1536.9, 58.95, 271.0, 31.25, 22.5, 250.0, 50.0, 0),
 ];
 
 // ─── Kia's Check Log — recent history for baseline calculation ────────────────
@@ -334,4 +323,6 @@ export const SEED_STATE: AppState = {
   checkLog: CHECK_LOG,
   savingsLog: [],
   paycheckViewScope: "monthly",
+  paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
+  seenNotificationIds: [],
 };

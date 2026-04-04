@@ -1,12 +1,12 @@
-/* ── Layout ──────────────────────────────────────────────────────────────── */
+/* ── Root layout ──────────────────────────────────────────────────────────── */
 
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
+    gap: var(--space-4);
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
+/* ── Header ───────────────────────────────────────────────────────────────── */
 
 .header {
     display: flex;
@@ -17,9 +17,10 @@
 }
 
 .heading {
-    font-family: var(--font-display);
     font-size: var(--text-lg);
     color: var(--color-navy);
+    font-family: var(--font-body);
+    font-weight: 700;
 }
 
 .subheading {
@@ -28,13 +29,16 @@
     margin-top: 2px;
 }
 
-/* ── Controls ────────────────────────────────────────────────────────────── */
+/* ── Controls row ─────────────────────────────────────────────────────────── */
 
 .controls {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
+    flex-wrap: wrap;
 }
+
+/* ── Month navigation ─────────────────────────────────────────────────────── */
 
 .nav {
     display: flex;
@@ -43,7 +47,7 @@
 }
 
 .navBtn {
-    padding: 5px 10px;
+    padding: 6px 11px;
     font-size: var(--text-sm);
     font-weight: 600;
     border: 1px solid var(--color-border);
@@ -52,11 +56,15 @@
     color: var(--color-navy);
     cursor: pointer;
     font-family: var(--font-body);
+    transition: background 0.1s, border-color 0.1s;
 }
 
 .navBtn:hover {
     background: var(--color-cream);
+    border-color: var(--color-navy);
 }
+
+/* ── Scope toggle ─────────────────────────────────────────────────────────── */
 
 .scopeToggle {
     display: flex;
@@ -66,7 +74,7 @@
 }
 
 .scopeBtn {
-    padding: 6px 14px;
+    padding: 6px 13px;
     font-size: var(--text-xs);
     font-weight: 600;
     border: none;
@@ -75,7 +83,7 @@
     color: var(--color-text-mid);
     cursor: pointer;
     font-family: var(--font-body);
-    transition: all 0.12s;
+    transition: background 0.1s, color 0.1s;
 }
 
 .scopeBtn:last-child {
@@ -87,433 +95,204 @@
     color: var(--color-white);
 }
 
-/* ── Table ───────────────────────────────────────────────────────────────── */
+/* ── Tool buttons (Columns, Check Log) ────────────────────────────────────── */
 
-.tableWrapper {
-    background: var(--color-white);
+.toolBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    font-size: var(--text-xs);
+    font-weight: 600;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow-x: auto;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px;
-    table-layout: fixed;
-}
-
-.th {
-    padding: 8px 10px;
-    font-size: var(--text-xs);
-    font-weight: 700;
-    color: var(--color-text-mid);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    border-bottom: 2px solid var(--color-border);
-    background: var(--color-cream);
-    text-align: right;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.thWeek {
-    text-align: left;
-    width: 90px;
-}
-
-.thKias {
-    color: var(--color-navy);
-    width: 100px;
-}
-
-.thPay {
-    color: var(--color-olive);
-    width: 100px;
-}
-
-.td {
-    padding: 6px 10px;
-    font-size: var(--text-sm);
-    border-bottom: 1px solid var(--color-border);
-    vertical-align: middle;
-    text-align: right;
-}
-
-.tdWeek {
-    text-align: left;
-    padding-left: 14px;
-}
-
-.tdAfirm {
-    color: var(--color-text-mid);
-}
-
-.tdPayLeft {
-    font-weight: 700;
-}
-
-/* ── Month label row ─────────────────────────────────────────────────────── */
-
-.monthLabelRow {
-    background: var(--color-navy-dark);
-}
-
-.monthLabel {
-    padding: 6px 14px;
-    font-size: var(--text-xs);
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.55);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.collapseIcon {
-    font-size: 9px;
-    margin-right: var(--space-2);
-    color: rgba(255, 255, 255, 0.4);
-}
-
-/* ── Month total row ─────────────────────────────────────────────────────── */
-
-.monthTotalRow {
-    background: #E8EDF5;
-    border-top: 2px solid var(--color-border);
-    border-bottom: 2px solid var(--color-border);
-}
-
-.monthTotalLabel {
-    padding: 8px 14px;
-    font-size: var(--text-xs);
-    font-weight: 700;
-    color: var(--color-navy);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-/* ── Week rows ───────────────────────────────────────────────────────────── */
-
-.row {
-    background: var(--color-white);
-}
-
-.row:hover {
-    background: #FAFAF8;
-}
-
-.rowRentWeek {
-    background: #F5EDE8;
-}
-
-.weekLabel {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--color-text-mid);
-}
-
-.rentTag {
-    margin-left: 6px;
-    font-size: 9px;
-    font-weight: 800;
-    color: var(--color-rust);
-    letter-spacing: 0.08em;
-    vertical-align: middle;
-}
-
-/* ── Amount cells ────────────────────────────────────────────────────────── */
-
-.amountInput {
-    width: 90px;
-    padding: 4px 6px;
-    font-size: var(--text-sm);
-    font-family: var(--font-mono);
-    text-align: right;
-    border: 1px solid var(--color-navy);
     border-radius: var(--radius-sm);
     background: var(--color-white);
+    color: var(--color-text-mid);
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.1s;
+    white-space: nowrap;
+}
+
+.toolBtn:hover {
+    border-color: var(--color-navy);
+    color: var(--color-navy);
+}
+
+.toolBtnActive {
+    background: var(--color-navy-tint);
+    border-color: var(--color-navy);
+    color: var(--color-navy);
+}
+
+/* ── Column manager panel ─────────────────────────────────────────────────── */
+
+.colMgrPanel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 12px 14px;
+    background: var(--color-cream);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.colMgrHint {
+    font-size: var(--text-xs);
+    color: var(--color-text-mid);
+}
+
+.colPills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+.colPill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-navy);
+}
+
+.colPillCustom {
+    border-color: var(--color-olive);
+    color: var(--color-olive);
+}
+
+.colPillLabel {
+    cursor: pointer;
+    transition: color 0.1s;
+}
+
+.colPillLabel:hover {
+    text-decoration: underline;
+}
+
+.colPillInput {
+    width: 100px;
+    padding: 1px 4px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    font-family: var(--font-body);
+    border: 1px solid var(--color-navy);
+    border-radius: var(--radius-xs);
+    background: var(--color-white);
+    color: var(--color-navy);
     outline: none;
 }
 
-.amountInputHighlight {
-    border-color: var(--color-rust);
-}
-
-.amountDisplay {
-    display: inline-block;
-    min-width: 80px;
-    text-align: right;
+.colPillDelete {
+    background: none;
+    border: none;
+    color: var(--color-rust);
+    font-size: var(--text-md);
     cursor: pointer;
-    padding: 3px 4px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 2px;
+}
+
+.addColPillBtn {
+    padding: 4px 10px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    border: 1px dashed var(--color-border);
     border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-mid);
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: border-color 0.1s, color 0.1s;
 }
 
-.amountDisplay:hover {
-    background: var(--color-cream);
-}
-
-.amountDisplayHighlight {
-    font-weight: 600;
+.addColPillBtn:hover {
+    border-color: var(--color-navy);
     color: var(--color-navy);
 }
 
-.zero {
-    color: var(--color-border);
+/* ── Content area: accordion + slide panel ────────────────────────────────── */
+
+.contentArea {
+    display: flex;
+    align-items: flex-start;
+    overflow: hidden; /* clips the slide panel during animation */
 }
 
-.mono {
-    font-family: var(--font-mono);
-}
-
-.positive {
-    color: var(--color-olive);
-    font-weight: 700;
-}
-
-.negative {
-    color: var(--color-rust);
-    font-weight: 700;
-}
-
-/* ── Bottom panels ───────────────────────────────────────────────────────── */
-
-.panels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-}
-
-.panel {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 16px;
+.accordion {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
 }
 
-.panelSavings {
-    border-left: 3px solid var(--color-olive);
+/* ── Slide-in check log panel ─────────────────────────────────────────────── */
+/*
+ * Push effect: panel width animates 0 → 336px.
+ * .accordion (flex:1) naturally shrinks by that amount.
+ * Left edge of accordion stays fixed — right edge moves left.
+ * Gutter lives as padding-left inside .slidePanelInner.
+ */
+
+.slidePanel {
+    flex-shrink: 0;
+    width: 0;
+    overflow: hidden;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.panelTitle {
-    font-family: var(--font-display);
-    font-size: var(--text-md);
-    font-weight: 700;
-    color: var(--color-navy);
+.slidePanelOpen {
+    width: 352px; /* 320px card + 32px gutter (padding-left in inner) */
 }
 
-/* ── Baseline stats ──────────────────────────────────────────────────────── */
-
-.baselineRow {
-    display: flex;
-    gap: var(--space-4);
-    flex-wrap: wrap;
+.slidePanelInner {
+    width: 320px;
+    padding-left: 32px; /* gutter between accordion and panel */
+    box-sizing: content-box;
 }
 
-.stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.statLabel {
-    font-size: var(--text-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--color-text-mid);
-}
-
-.statValue {
-    font-family: var(--font-mono);
-    font-size: var(--text-md);
-    font-weight: 700;
-    color: var(--color-navy);
-}
-
-/* ── Add row ─────────────────────────────────────────────────────────────── */
-
-.addRow {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.panelInput {
-    flex: 1;
-    padding: 6px 10px;
-    font-size: var(--text-base);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+.checkLogCard {
     background: var(--color-white);
-    font-family: var(--font-body);
-    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
 }
 
-/* ── Log list ────────────────────────────────────────────────────────────── */
-
-.logList {
+.checkLogHeader {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    max-height: 220px;
-    overflow-y: auto;
-}
-
-.logRow {
-    display: flex;
+    align-items: center;
     justify-content: space-between;
-    font-size: var(--text-sm);
-    color: var(--color-text-mid);
-    padding: 3px 0;
+    padding: 10px 14px;
+    background: var(--color-navy);
     border-bottom: 1px solid var(--color-border);
 }
 
-.logDate {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-}
-
-/* ── Savings total ───────────────────────────────────────────────────────── */
-
-.savingsTotal {
-    font-family: var(--font-mono);
-    font-size: 28px;
+.checkLogTitle {
+    font-size: var(--text-sm);
     font-weight: 700;
-    color: var(--color-olive);
-}
-
-.savingsEntry {
-    color: var(--color-olive);
-    font-weight: 600;
-}
-
-/* ── Projection ──────────────────────────────────────────────────────────── */
-
-.projection {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-}
-
-.projectionNote {
-    font-size: var(--text-sm);
-    color: var(--color-text-mid);
-}
-
-.projectionEmpty {
-    padding: var(--space-6);
-    text-align: center;
-    font-size: var(--text-sm);
-    color: var(--color-text-mid);
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-}
-
-.projTableWrapper {
-    max-height: 320px;
-    overflow-y: auto;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-}
-
-.projTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.projTable thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: var(--color-cream);
-}
-
-/* ── Scenario toggle ─────────────────────────────────────────────────────── */
-
-.scenarioToggle {
-    display: flex;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    align-self: flex-start;
-}
-
-.scenarioBtn {
-    padding: 6px 14px;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    border: none;
-    border-right: 1px solid var(--color-border);
-    background: var(--color-white);
-    color: var(--color-text-mid);
-    cursor: pointer;
-    font-family: var(--font-body);
-    transition: all 0.12s;
-}
-
-.scenarioBtn:last-child {
-    border-right: none;
-}
-
-.scenarioBtnActive {
-    background: var(--color-navy);
     color: var(--color-white);
+    letter-spacing: 0.01em;
 }
 
-.warning {
-    padding: 8px 12px;
-    background: var(--color-rust-light);
-    border: 1px solid var(--color-rust);
-    border-radius: var(--radius-sm);
-    font-size: var(--text-sm);
-    color: var(--color-rust);
-    font-weight: 500;
-}
-
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
-
-.btnPrimary {
-    padding: 6px 14px;
-    font-size: var(--text-base);
-    font-weight: 600;
-    border-radius: var(--radius-sm);
+.checkLogClose {
+    background: none;
     border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: var(--text-lg);
     cursor: pointer;
-    background: var(--color-rust);
-    color: var(--color-white);
-    font-family: var(--font-body);
-    white-space: nowrap;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.1s;
 }
 
-.btnOlive {
-    padding: 6px 14px;
-    font-size: var(--text-base);
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    border: none;
-    cursor: pointer;
-    background: var(--color-olive);
+.checkLogClose:hover {
     color: var(--color-white);
-    font-family: var(--font-body);
-    white-space: nowrap;
-}
-
-.btnDanger {
-    padding: 3px 8px;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-rust-light);
-    cursor: pointer;
-    background: transparent;
-    color: var(--color-rust);
-    font-family: var(--font-body);
 }

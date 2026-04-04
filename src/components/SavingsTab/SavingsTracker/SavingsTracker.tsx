@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SavingsEntry } from "@/types";
 import { fmtMoney, sumCents, toCents } from "@/lib/money";
 import { today } from "@/lib/dates";
+import { LogRow } from "@/components/ui/LogRow";
 import styles from "./SavingsTracker.module.css";
 
 type Props = {
@@ -25,7 +26,7 @@ export function SavingsTracker({ log, onAdd }: Props) {
   const recent = [...log].reverse().slice(0, 6);
 
   return (
-    <div className={`${styles.panel} ${styles.panelSavings}`}>
+    <div className={styles.panel}>
       <h3 className={styles.panelTitle}>Savings Balance</h3>
 
       <div className={styles.savingsTotal}>{fmtMoney(runningTotal)}</div>
@@ -46,12 +47,12 @@ export function SavingsTracker({ log, onAdd }: Props) {
       {recent.length > 0 && (
         <div className={styles.logList}>
           {recent.map((e, i) => (
-            <div key={i} className={styles.logRow}>
-              <span className={styles.logDate}>{e.weekOf}</span>
-              <span className={`${styles.mono} ${styles.savingsEntry}`}>
-                + {fmtMoney(e.amount)}
-              </span>
-            </div>
+            <LogRow
+              key={i}
+              date={e.weekOf}
+              value={`+ ${fmtMoney(e.amount)}`}
+              variant="savings"
+            />
           ))}
         </div>
       )}

@@ -14,6 +14,7 @@ import { exportBillsCSV } from "@/lib/export";
 import { currentMonth, advanceMonth, fmtMonthFull } from "@/lib/dates";
 import { useBillChartState } from "@/hooks/useBillChartState";
 import { StatCard } from "@/components/ui/StatCard";
+import { Modal } from "@/components/ui/Modal";
 import { BillGroup } from "./BillGroup";
 import { BillForm } from "./BillForm";
 import { IncomePanel } from "./IncomePanel";
@@ -57,6 +58,7 @@ export function BillChart({
   onRollover,
 }: Props) {
   const [showForm, setShowForm] = useState(false);
+  const [showSnapshot, setShowSnapshot] = useState(false);
   const [editing, setEditing] = useState<Bill | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("due");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -190,6 +192,12 @@ export function BillChart({
             Export CSV
           </button>
           <button
+            className={styles.btnGhost}
+            onClick={() => setShowSnapshot(true)}
+          >
+            Month Summary
+          </button>
+          <button
             className={styles.btnPrimary}
             onClick={() => setShowForm(true)}
           >
@@ -261,15 +269,24 @@ export function BillChart({
         onUpdate={onUpdateIncome}
       />
 
-      {/* ── Month Snapshot ────────────────────────────────────────── */}
-      <MonthSnapshotPanel
-        month={viewMonth}
-        bills={bills}
-        income={income}
-        savingsLog={savingsLog}
-        checkLog={checkLog}
-        onSave={onSaveSnapshot}
-      />
+      {/* ── Month Snapshot Modal ──────────────────────────────────── */}
+      {showSnapshot && (
+        <Modal
+          title="Month-End Snapshot"
+          onClose={() => setShowSnapshot(false)}
+          footer={null}
+        >
+          <MonthSnapshotPanel
+            month={viewMonth}
+            bills={bills}
+            income={income}
+            savingsLog={savingsLog}
+            checkLog={checkLog}
+            onSave={onSaveSnapshot}
+            onClose={() => setShowSnapshot(false)}
+          />
+        </Modal>
+      )}
 
       {/* ── Add / Edit Modal ──────────────────────────────────────── */}
       {showForm && (

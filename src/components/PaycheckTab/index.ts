@@ -1,5 +1,4 @@
 export { PaycheckTab } from "./PaycheckTab";
-export { MonthBlock } from "./MonthBlock";
-export { WeekRow, CATEGORIES } from "./WeekRow";
-export type { CategoryKey } from "./WeekRow";
+export { MonthAccordion } from "./MonthAccordion";
+export { WeekAccordion } from "./WeekAccordion";
 export { AmountInput } from "./AmountInput";

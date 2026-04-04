@@ -8,7 +8,6 @@ import type {
 } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
 import { getMondaysInMonth, advanceMonth, mondayOf } from "@/lib/dates";
-import { sumCents } from "@/lib/money";
 
 /**
  * Derives per-month computed values for the Paycheck tab.
@@ -58,7 +57,7 @@ export function usePaycheckTabState(
         savingsByWeek,
       };
     });
-  }, [paycheck, checkLog, savingsLog, plans, visibleMonths]);
+  }, [checkLog, savingsLog, plans, visibleMonths]);
 
   return { template, monthData };
 }
@@ -90,11 +89,11 @@ export function emptyWeek(
     kiasPay,
     storage: template?.storage ?? 0,
     rent: template?.rent ?? 0,
-    rentWeek: false,
     jazmin: template?.jazmin ?? 0,
     dre: template?.dre ?? 0,
     savings: 0,
     paypalCC: template?.paypalCC ?? 0,
     deductions: template?.deductions ?? 0,
+    extra: template?.extra ? { ...template.extra } : {},
   };
 }

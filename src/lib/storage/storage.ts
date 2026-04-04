@@ -1,4 +1,5 @@
 import type { AppState } from "@/types";
+import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 import { SEED_STATE } from "@/lib/seed";
 import { currentMonth } from "@/lib/dates";
 
@@ -14,6 +15,8 @@ export const INITIAL_STATE: AppState = {
   checkLog: [],
   savingsLog: [],
   paycheckViewScope: "monthly",
+  paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
+  seenNotificationIds: [],
 };
 
 /**
@@ -37,8 +40,14 @@ export function loadState(): AppState {
       savingsLog: parsed.savingsLog ?? [],
       snapshots: parsed.snapshots ?? [],
       plans: parsed.plans ?? [],
-      paycheck: parsed.paycheck ?? [],
+      // Stamp missing extra field on older paycheck weeks
+      paycheck: (parsed.paycheck ?? []).map((w) =>
+        w.extra ? w : { ...w, extra: {} },
+      ),
       income: parsed.income ?? [],
+      // Fall back to defaults if columns not yet persisted (first time after upgrade)
+      paycheckColumns: parsed.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS,
+      seenNotificationIds: parsed.seenNotificationIds ?? [],
     };
   } catch {
     return SEED_STATE;

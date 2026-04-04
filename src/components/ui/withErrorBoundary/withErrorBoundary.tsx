@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import styles from "./withErrorBoundary.module.css";
 
 type State = { hasError: boolean; message: string };
 
@@ -20,16 +21,9 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          padding: "32px",
-          textAlign: "center",
-          color: "var(--color-rust)",
-          fontFamily: "var(--font-body)",
-        }}>
+        <div className={styles.fallback}>
           <strong>{this.props.name} failed to render.</strong>
-          <pre style={{ marginTop: 8, fontSize: 12, color: "var(--color-text-mid)" }}>
-            {this.state.message}
-          </pre>
+          <pre className={styles.message}>{this.state.message}</pre>
         </div>
       );
     }

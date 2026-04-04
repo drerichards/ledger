@@ -12,6 +12,18 @@ export type BillEntry = "recurring" | "manual";
 /** Granularity of the paycheck tab view toggle. */
 export type PaycheckViewScope = "weekly" | "monthly" | "quarterly" | "yearly";
 
+/**
+ * One configurable column in the paycheck grid.
+ * Fixed columns map 1:1 to typed fields on PaycheckWeek (cannot be deleted, only renamed).
+ * Custom columns (fixed: false) store their values in PaycheckWeek.extra[key].
+ */
+export type PaycheckColumn = {
+  key: string;
+  label: string;
+  /** true = backed by a typed PaycheckWeek field; cannot be deleted, only renamed. */
+  fixed: boolean;
+};
+
 // ─── Core Entities ────────────────────────────────────────────────────────────
 export type BillCategory =
   | "Credit Cards"
@@ -59,13 +71,14 @@ export type PaycheckWeek = {
   kiasPay: number; // cents — entered by her each week (fluctuates)
   storage: number; // cents
   rent: number; // cents
-  rentWeek: boolean; // true = the week the full rent draft hits
   jazmin: number; // cents — weekly family transfer
   dre: number; // cents — weekly family transfer
   savings: number; // cents — intentional savings move
   paypalCC: number; // cents
   deductions: number; // cents
   // affirm is not stored here — it is derived from InstallmentPlan[] at render time
+  /** Data for user-added custom columns (non-fixed PaycheckColumns). Key = column key. */
+  extra?: Record<string, number>;
 };
 
 // ─── Income & Reconciliation ──────────────────────────────────────────────────
@@ -103,6 +116,21 @@ export type SavingsEntry = {
   amount: number; // cents
 };
 
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+/**
+ * A derived notification surfaced when an Affirm installment plan is paid off.
+ * Not stored directly — derived from InstallmentPlan[] at runtime.
+ * The id (`${planId}-payoff`) is stable and used to track seen/unseen state.
+ */
+export type AppNotification = {
+  id: string;         // `${planId}-payoff`
+  planId: string;
+  planLabel: string;
+  month: string;      // YYYY-MM — the final payment month
+  mc: number;         // monthly payment in cents (the freed-up amount)
+};
+
 // ─── Root State ───────────────────────────────────────────────────────────────
 
 /**
@@ -118,4 +146,11 @@ export type AppState = {
   checkLog: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
   paycheckViewScope: PaycheckViewScope;
+  /** Ordered list of paycheck grid columns. Fixed columns can only be renamed. */
+  paycheckColumns: PaycheckColumn[];
+  /**
+   * IDs of AppNotifications the user has already seen (opened the dropdown).
+   * Notifications themselves are derived — only seen state is persisted.
+   */
+  seenNotificationIds: string[];
 };

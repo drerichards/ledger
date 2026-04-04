@@ -27,7 +27,7 @@
 }
 
 .collapseIcon {
-    font-size: 9px;
+    font-size: var(--text-xxs);
     opacity: 0.75;
 }
 
@@ -50,6 +50,15 @@
     border-collapse: collapse;
     table-layout: fixed;
 }
+
+/* ── Column widths (mirrors <col> elements in BillGroup.tsx) ──────────────── */
+.colDue      { width: 70px; }
+.colMethod   { width: 100px; }
+.colPayee    { /* flex */ }
+.colAmount   { width: 100px; }
+.colPaid     { width: 60px; }
+.colCategory { width: 220px; }
+.colActions  { width: 110px; }
 
 .th {
     padding: 8px 12px;
@@ -82,7 +91,7 @@
 
 .thSortable:hover {
     color: var(--color-navy);
-    background: #E8EDF5;
+    background: var(--color-navy-tint);
 }
 
 /* ── Empty state ─────────────────────────────────────────────────────────── */

@@ -1,1 +1,5 @@
-export { usePaycheckTabState } from "./usePaycheckTabState";
+export {
+  usePaycheckTabState,
+  getVisibleMonths,
+  emptyWeek,
+} from "./usePaycheckTabState";

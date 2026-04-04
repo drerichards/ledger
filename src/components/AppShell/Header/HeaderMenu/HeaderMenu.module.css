@@ -1,0 +1,76 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dot {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 168px;
+  background: var(--color-cream);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-dropdown);
+  padding: 4px 0;
+  z-index: 100;
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-navy);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.item:hover {
+  background: var(--color-navy-alpha-6);
+}
+
+.itemDanger {
+  color: var(--color-rust);
+}
+
+.itemDanger:hover {
+  background: var(--color-rust-alpha-7);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 4px 0;
+}

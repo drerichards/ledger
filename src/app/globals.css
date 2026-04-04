@@ -17,7 +17,7 @@ button:active:not(:disabled) {
 /* Hover states — [class*] matches CSS Modules generated names app-wide */
 
 [class*="btnPrimary"]:hover {
-    background: #B04826;
+    background: var(--color-rust-border);
 }
 
 [class*="btnGhost"]:hover,
@@ -31,7 +31,7 @@ button:active:not(:disabled) {
 }
 
 [class*="btnOlive"]:hover {
-    background: #4E5C27;
+    background: var(--color-olive);
 }
 
 [class*="scopeBtn"]:not([class*="scopeBtnActive"]):hover,
@@ -70,7 +70,7 @@ body {
 h1,
 h2,
 h3 {
-    font-family: var(--font-display);
+    font-family: var(--font-body);
     font-weight: 700;
     color: var(--color-navy);
 }

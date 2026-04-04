@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import type {
   AppState,
   Bill,
@@ -8,13 +8,22 @@ import type {
   KiasCheckEntry,
   MonthlyIncome,
   MonthSnapshot,
+  PaycheckColumn,
   PaycheckViewScope,
   PaycheckWeek,
   SavingsEntry,
 } from "@/types";
+import { DEFAULT_PAYCHECK_COLUMNS, newColumnKey } from "@/lib/paycheck";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
 import { today, mondayOf } from "@/lib/dates";
 import { generateId } from "@/lib/id";
+import {
+  loadFromSupabase,
+  syncStateToSupabase,
+  deleteBillRemote,
+  deletePlanRemote,
+  deleteCheckEntryRemote,
+} from "@/lib/supabase/sync";
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
 
@@ -33,7 +42,11 @@ type Action =
   | { type: "UPSERT_PAYCHECK_WEEK"; payload: PaycheckWeek }
   | { type: "SET_PAYCHECK_VIEW_SCOPE"; payload: PaycheckViewScope }
   | { type: "ADD_SNAPSHOT"; payload: MonthSnapshot }
-  | { type: "ROLLOVER_BILLS"; payload: { fromMonth: string; toMonth: string } };
+  | { type: "ROLLOVER_BILLS"; payload: { fromMonth: string; toMonth: string } }
+  | { type: "RENAME_PAYCHECK_COLUMN"; payload: { key: string; label: string } }
+  | { type: "ADD_PAYCHECK_COLUMN"; payload: { label: string } }
+  | { type: "DELETE_PAYCHECK_COLUMN"; payload: { key: string } }
+  | { type: "MARK_NOTIFICATIONS_SEEN"; payload: { ids: string[] } };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
@@ -51,7 +64,6 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         bills: state.bills.map((bill) => {
           if (bill.id !== updated.id) return bill;
-          // Silently log the old amount before applying the update
           const amountChanged = bill.cents !== updated.cents;
           return {
             ...updated,
@@ -86,16 +98,26 @@ function reducer(state: AppState, action: Action): AppState {
         plans: state.plans.filter((p) => p.id !== action.payload.id),
       };
 
-    case "ADD_CHECK_ENTRY":
-      return { ...state, checkLog: [...state.checkLog, action.payload] };
+    case "ADD_CHECK_ENTRY": {
+      // Upsert: if an entry with the same weekOf already exists, replace it.
+      const entry = action.payload;
+      const exists = state.checkLog.some((e) => e.weekOf === entry.weekOf);
+      return {
+        ...state,
+        checkLog: exists
+          ? state.checkLog.map((e) => (e.weekOf === entry.weekOf ? entry : e))
+          : [...state.checkLog, entry],
+      };
+    }
 
     case "DELETE_CHECK_ENTRY": {
-      // Delete all check + savings entries that fall in the same week
       const monday = mondayOf(action.payload.weekOf);
       return {
         ...state,
         checkLog: state.checkLog.filter((e) => mondayOf(e.weekOf) !== monday),
-        savingsLog: state.savingsLog.filter((e) => mondayOf(e.weekOf) !== monday),
+        savingsLog: state.savingsLog.filter(
+          (e) => mondayOf(e.weekOf) !== monday,
+        ),
       };
     }
 
@@ -129,7 +151,6 @@ function reducer(state: AppState, action: Action): AppState {
 
     case "ADD_SNAPSHOT": {
       const snap = action.payload;
-      // Replace if one already exists for this month, append if not
       const exists = state.snapshots.some((s) => s.month === snap.month);
       return {
         ...state,
@@ -141,7 +162,6 @@ function reducer(state: AppState, action: Action): AppState {
 
     case "ROLLOVER_BILLS": {
       const { fromMonth, toMonth } = action.payload;
-      // Check if toMonth already has bills — don't double-copy
       const alreadyExists = state.bills.some((b) => b.month === toMonth);
       if (alreadyExists) return state;
 
@@ -151,11 +171,56 @@ function reducer(state: AppState, action: Action): AppState {
           ...b,
           id: generateId(),
           month: toMonth,
-          paid: false,       // reset paid status for new month
-          amountHistory: [], // fresh history for new month
+          paid: false,
+          amountHistory: [],
         }));
 
       return { ...state, bills: [...state.bills, ...recurringBills] };
+    }
+
+    case "RENAME_PAYCHECK_COLUMN": {
+      const { key, label } = action.payload;
+      return {
+        ...state,
+        paycheckColumns: (state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS).map(
+          (c) => (c.key === key ? { ...c, label } : c),
+        ),
+      };
+    }
+
+    case "ADD_PAYCHECK_COLUMN": {
+      const newCol: PaycheckColumn = {
+        key: newColumnKey(),
+        label: action.payload.label,
+        fixed: false,
+      };
+      return {
+        ...state,
+        paycheckColumns: [...(state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS), newCol],
+      };
+    }
+
+    case "DELETE_PAYCHECK_COLUMN": {
+      const { key } = action.payload;
+      const cols = state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS;
+      // Guard: never delete a fixed column
+      if (cols.find((c) => c.key === key)?.fixed) return state;
+      return {
+        ...state,
+        paycheckColumns: cols.filter((c) => c.key !== key),
+        // Zero out the deleted column's data across all weeks
+        paycheck: state.paycheck.map((w) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [key]: _removed, ...rest } = w.extra ?? {};
+          return { ...w, extra: rest };
+        }),
+      };
+    }
+
+    case "MARK_NOTIFICATIONS_SEEN": {
+      const existing = new Set(state.seenNotificationIds ?? []);
+      action.payload.ids.forEach((id) => existing.add(id));
+      return { ...state, seenNotificationIds: Array.from(existing) };
     }
 
     default:
@@ -167,19 +232,65 @@ function reducer(state: AppState, action: Action): AppState {
 
 /**
  * Central state manager for the entire app.
- * Hydrates from localStorage on mount. Persists on every change.
- * Exposes named action functions — no raw dispatch outside this hook.
+ *
+ * Hydration order:
+ *   1. localStorage loads synchronously (fast — avoids flash of empty state)
+ *   2. Supabase loads asynchronously — if remote data exists, HYDRATE replaces state
+ *   3. If no remote data (first login), seed/localStorage state is synced up to Supabase
+ *
+ * Persistence:
+ *   - Every state change writes to localStorage (synchronous, instant)
+ *   - Every state change also syncs to Supabase (debounced 1.5s, async, silent-fail)
+ *   - Deletes are targeted (immediate remote delete, no wait for debounce)
  */
 export function useAppState() {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
+  // Debounce timer ref — prevents hammering Supabase on rapid state changes
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track whether the initial remote hydration has been attempted
+  const remoteHydrated = useRef(false);
+
+  // ── Step 1: localStorage hydrate (synchronous, runs once on mount) ──────────
   useEffect(() => {
     dispatch({ type: "HYDRATE", payload: loadState() });
   }, []);
 
+  // ── Step 2: Supabase hydrate (async, runs once after mount) ─────────────────
   useEffect(() => {
+    if (remoteHydrated.current) return;
+    remoteHydrated.current = true;
+
+    loadFromSupabase().then((remoteState) => {
+      if (remoteState) {
+        // Remote data exists — replace state with authoritative server data
+        dispatch({ type: "HYDRATE", payload: remoteState });
+      } else {
+        // First login or no remote data — push local/seed state up to Supabase
+        syncStateToSupabase(state);
+      }
+    });
+    // state intentionally excluded from deps — we want the snapshot at mount time
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Step 3: Persist on every state change ───────────────────────────────────
+  useEffect(() => {
+    // localStorage: synchronous, always
     saveState(state);
+
+    // Supabase: debounced 1.5s — batches rapid consecutive changes into one write
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      syncStateToSupabase(state);
+    }, 1500);
+
+    return () => {
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+    };
   }, [state]);
+
+  // ─── Action creators ─────────────────────────────────────────────────────────
 
   const addBill = useCallback(
     (bill: Bill) => dispatch({ type: "ADD_BILL", payload: bill }),
@@ -191,10 +302,10 @@ export function useAppState() {
     [],
   );
 
-  const deleteBill = useCallback(
-    (id: string) => dispatch({ type: "DELETE_BILL", payload: { id } }),
-    [],
-  );
+  const deleteBill = useCallback((id: string) => {
+    dispatch({ type: "DELETE_BILL", payload: { id } });
+    deleteBillRemote(id); // targeted immediate delete — don't wait for debounce
+  }, []);
 
   const toggleBillPaid = useCallback(
     (id: string) => dispatch({ type: "TOGGLE_BILL_PAID", payload: { id } }),
@@ -206,10 +317,10 @@ export function useAppState() {
     [],
   );
 
-  const deletePlan = useCallback(
-    (id: string) => dispatch({ type: "DELETE_PLAN", payload: { id } }),
-    [],
-  );
+  const deletePlan = useCallback((id: string) => {
+    dispatch({ type: "DELETE_PLAN", payload: { id } });
+    deletePlanRemote(id);
+  }, []);
 
   const addCheckEntry = useCallback(
     (entry: KiasCheckEntry) =>
@@ -217,11 +328,10 @@ export function useAppState() {
     [],
   );
 
-  const deleteCheckEntry = useCallback(
-    (weekOf: string) =>
-      dispatch({ type: "DELETE_CHECK_ENTRY", payload: { weekOf } }),
-    [],
-  );
+  const deleteCheckEntry = useCallback((weekOf: string) => {
+    dispatch({ type: "DELETE_CHECK_ENTRY", payload: { weekOf } });
+    deleteCheckEntryRemote(weekOf);
+  }, []);
 
   const addSavingsEntry = useCallback(
     (entry: SavingsEntry) =>
@@ -258,6 +368,30 @@ export function useAppState() {
     [],
   );
 
+  const renamePaycheckColumn = useCallback(
+    (key: string, label: string) =>
+      dispatch({ type: "RENAME_PAYCHECK_COLUMN", payload: { key, label } }),
+    [],
+  );
+
+  const addPaycheckColumn = useCallback(
+    (label: string) =>
+      dispatch({ type: "ADD_PAYCHECK_COLUMN", payload: { label } }),
+    [],
+  );
+
+  const deletePaycheckColumn = useCallback(
+    (key: string) =>
+      dispatch({ type: "DELETE_PAYCHECK_COLUMN", payload: { key } }),
+    [],
+  );
+
+  const markNotificationsSeen = useCallback(
+    (ids: string[]) =>
+      dispatch({ type: "MARK_NOTIFICATIONS_SEEN", payload: { ids } }),
+    [],
+  );
+
   return {
     state,
     addBill,
@@ -274,5 +408,9 @@ export function useAppState() {
     setPaycheckViewScope,
     addSnapshot,
     rolloverBills,
+    renamePaycheckColumn,
+    addPaycheckColumn,
+    deletePaycheckColumn,
+    markNotificationsSeen,
   };
 }

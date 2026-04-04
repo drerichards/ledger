@@ -16,4 +16,7 @@ export {
   getMondaysInMonth,
   mondayOf,
   advanceMonth,
+  getFridaysInMonth,
+  getFridaysUpToMonth,
+  getMondaysUpToMonth,
 } from "./dates";

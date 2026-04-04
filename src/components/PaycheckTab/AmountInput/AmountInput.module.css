@@ -37,5 +37,53 @@
 }
 
 .zero {
-    color: var(--color-border);
+    color: var(--color-text-mid);
+}
+
+/* ── Ghost variant — accordion body editability convention ────────────────── */
+/*
+ * UX rule (ui-ux-pro-max, priority 2 — hover-vs-tap):
+ * Never rely on hover alone to signal interactability. Editable fields must
+ * show a visible affordance at rest so users never hunt for inputs.
+ *
+ * At rest : cream pill (bg + border) — immediately distinguishable from
+ *           read-only text on a white or striped row background.
+ * On hover: border darkens to navy — reinforces "interactive".
+ * Editing : white bg + navy border — active input state.
+ *
+ * Read-only fields (Affirm, Savings) never get this class.
+ */
+
+.ghostDisplay {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-navy);
+    background: var(--color-cream);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    cursor: text;
+    min-width: 88px;
+    transition: border-color 0.12s;
+}
+
+.ghostDisplay:hover {
+    border-color: var(--color-navy);
+}
+
+.ghostInput {
+    display: inline-block;
+    min-width: 88px;
+    padding: 3px 8px;
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    text-align: right;
+    border: 1px solid var(--color-navy);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    outline: none;
+    color: var(--color-navy);
 }

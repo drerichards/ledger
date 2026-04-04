@@ -1,0 +1,13 @@
+.fallback {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-rust);
+    font-family: var(--font-body);
+}
+
+.message {
+    margin-top: var(--space-2);
+    font-size: var(--text-mini);
+    color: var(--color-text-mid);
+    font-family: var(--font-mono);
+}

@@ -32,7 +32,7 @@
 .value {
     display: block;
     font-family: var(--font-mono);
-    font-size: 19px;
+    font-size: var(--text-lg);
     font-weight: 700;
 }
 
@@ -64,5 +64,5 @@
 }
 
 .subRow .value {
-    font-size: 15px;
+    font-size: var(--text-base);
 }

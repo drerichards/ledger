@@ -5,6 +5,8 @@ import type { InstallmentPlan } from "@/types";
 import { toCents, fmtMoney } from "@/lib/money";
 import { monthsBetween, currentMonth } from "@/lib/dates";
 import { generateId } from "@/lib/id";
+import { Modal } from "@/components/ui/Modal";
+import { FormField } from "@/components/ui/FormField";
 import styles from "./AffirmForm.module.css";
 
 type Props = {
@@ -28,9 +30,7 @@ const DEFAULT_FORM: FormState = {
 
 export function AffirmForm({ onSave, onClose }: Props) {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormState, string>>
-  >({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -67,78 +67,71 @@ export function AffirmForm({ onSave, onClose }: Props) {
   };
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Add Installment Plan</h3>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ×
+    <Modal
+      title="Add Installment Plan"
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className={styles.btnGhost} onClick={onClose}>
+            Cancel
           </button>
-        </div>
+          <button type="button" className={styles.btnPrimary} onClick={handleSave}>
+            Save Plan
+          </button>
+        </>
+      }
+    >
+      <FormField id="affirm-label" label="Plan Label" error={errors.label}>
+        <input
+          id="affirm-label"
+          className={styles.input}
+          value={form.label}
+          onChange={(e) => set("label", e.target.value)}
+          placeholder="e.g. Affirm – Living Room TV"
+        />
+      </FormField>
 
-        <div className={styles.modalBody}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="affirm-label">Plan Label</label>
-            <input
-              id="affirm-label"
-              className={styles.input}
-              value={form.label}
-              onChange={(e) => set("label", e.target.value)}
-              placeholder="e.g. Affirm – Living Room TV"
-            />
-            {errors.label && <span className={styles.error}>{errors.label}</span>}
-          </div>
+      <FormField id="affirm-amount" label="Monthly Payment ($)" error={errors.amountStr}>
+        <input
+          id="affirm-amount"
+          className={styles.input}
+          value={form.amountStr}
+          onChange={(e) => set("amountStr", e.target.value)}
+          placeholder="0.00"
+        />
+      </FormField>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="affirm-amount">Monthly Payment ($)</label>
-            <input
-              id="affirm-amount"
-              className={styles.input}
-              value={form.amountStr}
-              onChange={(e) => set("amountStr", e.target.value)}
-              placeholder="0.00"
-            />
-            {errors.amountStr && <span className={styles.error}>{errors.amountStr}</span>}
-          </div>
-
-          <div className={styles.row2}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="affirm-start">Start Month</label>
-              <input
-                id="affirm-start"
-                className={styles.input}
-                type="month"
-                value={form.start}
-                onChange={(e) => set("start", e.target.value)}
-              />
-              {errors.start && <span className={styles.error}>{errors.start}</span>}
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="affirm-end">Final Payment Month</label>
-              <input
-                id="affirm-end"
-                className={styles.input}
-                type="month"
-                value={form.end}
-                onChange={(e) => set("end", e.target.value)}
-              />
-              {errors.end && <span className={styles.error}>{errors.end}</span>}
-            </div>
-          </div>
-
-          {previewMonths !== null && previewTotal !== null && (
-            <div className={styles.preview}>
-              <span>{previewMonths} month{previewMonths !== 1 ? "s" : ""}</span>
-              <span>Total owed: <strong>{fmtMoney(previewTotal)}</strong></span>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.modalFooter}>
-          <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
-          <button className={styles.btnPrimary} onClick={handleSave}>Save Plan</button>
-        </div>
+      <div className={styles.row2}>
+        <FormField id="affirm-start" label="Start Month" error={errors.start}>
+          <input
+            id="affirm-start"
+            className={styles.input}
+            type="month"
+            value={form.start}
+            onChange={(e) => set("start", e.target.value)}
+          />
+        </FormField>
+        <FormField id="affirm-end" label="Final Payment Month" error={errors.end}>
+          <input
+            id="affirm-end"
+            className={styles.input}
+            type="month"
+            value={form.end}
+            onChange={(e) => set("end", e.target.value)}
+          />
+        </FormField>
       </div>
-    </div>
+
+      {previewMonths !== null && previewTotal !== null && (
+        <div className={styles.preview}>
+          <span>
+            {previewMonths} month{previewMonths !== 1 ? "s" : ""}
+          </span>
+          <span>
+            Total owed: <strong>{fmtMoney(previewTotal)}</strong>
+          </span>
+        </div>
+      )}
+    </Modal>
   );
 }

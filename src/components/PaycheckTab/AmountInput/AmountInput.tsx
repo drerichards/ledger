@@ -8,13 +8,25 @@ type Props = {
   value: number;
   onChange: (raw: string) => void;
   highlight?: boolean;
+  /**
+   * "default" — bordered input used in table cells (existing behaviour).
+   * "ghost"   — borderless at rest, bottom border on hover, cream bg on focus.
+   *             Used in the accordion body to signal editability without
+   *             looking like a form field when idle.
+   */
+  variant?: "default" | "ghost";
 };
 
 /**
  * Click-to-edit monetary cell. Shows formatted value at rest,
  * switches to a raw text input on focus, commits on blur.
  */
-export function AmountInput({ value, onChange, highlight = false }: Props) {
+export function AmountInput({
+  value,
+  onChange,
+  highlight = false,
+  variant = "default",
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState("");
 
@@ -28,10 +40,17 @@ export function AmountInput({ value, onChange, highlight = false }: Props) {
     onChange(raw);
   };
 
+  const isGhost = variant === "ghost";
+
   if (editing) {
     return (
       <input
-        className={`${styles.input} ${highlight ? styles.inputHighlight : ""}`}
+        className={[
+          isGhost ? styles.ghostInput : styles.input,
+          highlight ? styles.inputHighlight : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         value={raw}
         onChange={(e) => setRaw(e.target.value)}
         onBlur={handleBlur}
@@ -43,7 +62,13 @@ export function AmountInput({ value, onChange, highlight = false }: Props) {
 
   return (
     <span
-      className={`${styles.display} ${highlight ? styles.displayHighlight : ""} ${styles.mono}`}
+      className={[
+        isGhost ? styles.ghostDisplay : styles.display,
+        highlight ? styles.displayHighlight : "",
+        styles.mono,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onClick={handleFocus}
       role="button"
       tabIndex={0}

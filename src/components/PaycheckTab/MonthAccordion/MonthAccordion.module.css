@@ -1,0 +1,165 @@
+/* ── Month block ──────────────────────────────────────────────────────────── */
+
+.monthBlock {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-white);
+}
+
+/* ── Month header — dark bar, click to collapse ───────────────────────────── */
+
+.monthHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    background: var(--color-navy);
+    cursor: pointer;
+    user-select: none;
+    gap: var(--space-4);
+    transition: background 0.1s;
+}
+
+.monthHeader:hover {
+    background: color-mix(in srgb, var(--color-navy) 88%, black);
+}
+
+.monthHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.chevron {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    width: 12px;
+    flex-shrink: 0;
+}
+
+.monthLabel {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-white);
+    letter-spacing: 0.01em;
+}
+
+.weekCount {
+    font-size: var(--text-xs);
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+}
+
+/* ── Month header right: running totals ───────────────────────────────────── */
+
+.monthHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.monthStat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.monthStatLabel {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+}
+
+.monthStatValue {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-white);
+}
+
+.monthStatSep {
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.muted {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.positive {
+    color: color-mix(in srgb, var(--color-olive) 75%, white);
+}
+
+.negative {
+    color: color-mix(in srgb, var(--color-rust) 70%, white);
+}
+
+/* ── Week rows container ──────────────────────────────────────────────────── */
+
+.weeks {
+    /* No padding — WeekAccordion handles its own spacing */
+}
+
+/* ── Month totals footer ──────────────────────────────────────────────────── */
+
+.monthTotals {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 16px;
+    background: var(--color-navy-tint, color-mix(in srgb, var(--color-navy) 8%, transparent));
+    border-top: 2px solid var(--color-border);
+    gap: var(--space-4);
+}
+
+.monthTotalsLabel {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    color: var(--color-navy);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.monthTotalsRight {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.monthTotalsStat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.monthTotalsStatLabel {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+}
+
+.monthTotalsStatValue {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-navy);
+}
+
+.monthTotalsStatSep {
+    width: 1px;
+    height: 12px;
+    background: var(--color-border);
+    flex-shrink: 0;
+}
+
+.mono {
+    font-family: var(--font-mono);
+}

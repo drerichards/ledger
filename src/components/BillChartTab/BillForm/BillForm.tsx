@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import type {
-  Bill,
-  BillCategory,
-  BillEntry,
-  BillGroup,
-  PaymentMethod,
-} from "@/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Bill } from "@/types";
 import { toCents } from "@/lib/money";
 import { currentMonth } from "@/lib/dates";
 import { generateId } from "@/lib/id";
+import { billSchema, type BillFormValues } from "@/lib/schemas/bill.schema";
+import { Modal } from "@/components/ui/Modal";
+import { FormField } from "@/components/ui/FormField";
 import styles from "./BillForm.module.css";
 
 type Props = {
@@ -19,31 +17,9 @@ type Props = {
   onClose: () => void;
 };
 
-type FormState = {
-  name: string;
-  amountStr: string;
-  due: string;
-  method: PaymentMethod;
-  group: BillGroup;
-  entry: BillEntry;
-  category: BillCategory;
-  flagged: boolean;
-  notes: string;
-};
+const FORM_ID = "bill-form";
 
-const DEFAULT_FORM: FormState = {
-  name: "",
-  amountStr: "",
-  due: "",
-  method: "autopay",
-  group: "kias_pay",
-  entry: "recurring",
-  category: "Other",
-  flagged: false,
-  notes: "",
-};
-
-function billToForm(bill: Bill): FormState {
+function billToDefaultValues(bill: Bill): BillFormValues {
   return {
     name: bill.name,
     amountStr: (bill.cents / 100).toFixed(2),
@@ -57,45 +33,42 @@ function billToForm(bill: Bill): FormState {
   };
 }
 
+const DEFAULT_VALUES: BillFormValues = {
+  name: "",
+  amountStr: "",
+  due: "",
+  method: "autopay",
+  group: "kias_pay",
+  entry: "recurring",
+  category: "Other",
+  flagged: false,
+  notes: "",
+};
+
 export function BillForm({ initial, onSave, onClose }: Props) {
-  const [form, setForm] = useState<FormState>(
-    initial ? billToForm(initial) : DEFAULT_FORM,
-  );
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormState, string>>
-  >({});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<BillFormValues>({
+    resolver: zodResolver(billSchema),
+    defaultValues: initial ? billToDefaultValues(initial) : DEFAULT_VALUES,
+  });
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
-
-  const validate = (): boolean => {
-    const next: typeof errors = {};
-    if (!form.name.trim()) next.name = "Name is required";
-    if (!form.amountStr.trim()) next.amountStr = "Amount is required";
-    if (!form.due.trim()) next.due = "Due date is required";
-    const dueNum = parseInt(form.due, 10);
-    if (isNaN(dueNum) || dueNum < 1 || dueNum > 31)
-      next.due = "Enter a day (1–31)";
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validate()) return;
-
+  const onSubmit = (values: BillFormValues) => {
     const bill: Bill = {
       id: initial?.id ?? generateId(),
       month: initial?.month ?? currentMonth(),
-      name: form.name.trim(),
-      cents: toCents(form.amountStr),
-      due: parseInt(form.due, 10),
+      name: values.name.trim(),
+      cents: toCents(values.amountStr),
+      due: parseInt(values.due, 10),
       paid: initial?.paid ?? false,
-      method: form.method,
-      group: form.group,
-      entry: form.entry,
-      category: form.category,
-      flagged: form.flagged,
-      notes: form.notes.trim(),
+      method: values.method,
+      group: values.group,
+      entry: values.entry,
+      category: values.category,
+      flagged: values.flagged,
+      notes: values.notes.trim(),
       amountHistory: initial?.amountHistory ?? [],
     };
 
@@ -103,104 +76,81 @@ export function BillForm({ initial, onSave, onClose }: Props) {
   };
 
   return (
-    <div className={styles.backdrop} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={styles.modal}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>
-            {initial ? "Edit Bill" : "Add Bill"}
-          </h3>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-            ×
+    <Modal
+      title={initial ? "Edit Bill" : "Add Bill"}
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className={styles.btnGhost} onClick={onClose}>
+            Cancel
           </button>
-        </div>
-
-        <div className={styles.modalBody}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="bill-name">Payee Name</label>
+          {/*
+           * form attribute associates this button with the <form id={FORM_ID}> below
+           * without requiring DOM nesting inside the form element.
+           */}
+          <button type="submit" form={FORM_ID} className={styles.btnPrimary}>
+            {initial ? "Save Changes" : "Add Bill"}
+          </button>
+        </>
+      }
+    >
+      <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
+        <div className={styles.fields}>
+          <FormField id="bill-name" label="Payee Name" error={errors.name?.message}>
             <input
               id="bill-name"
               className={styles.input}
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
               placeholder="e.g. T-Mobile"
+              {...register("name")}
             />
-            {errors.name && <span className={styles.error}>{errors.name}</span>}
-          </div>
+          </FormField>
 
           <div className={styles.row2}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="bill-amount">Amount ($)</label>
+            <FormField id="bill-amount" label="Amount ($)" error={errors.amountStr?.message}>
               <input
                 id="bill-amount"
                 className={styles.input}
-                value={form.amountStr}
-                onChange={(e) => set("amountStr", e.target.value)}
                 placeholder="0.00"
+                {...register("amountStr")}
               />
-              {errors.amountStr && <span className={styles.error}>{errors.amountStr}</span>}
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="bill-due">Due Day (1–31)</label>
+            </FormField>
+            <FormField id="bill-due" label="Due Day (1–31)" error={errors.due?.message}>
               <input
                 id="bill-due"
                 className={styles.input}
-                value={form.due}
-                onChange={(e) => set("due", e.target.value)}
                 placeholder="e.g. 15"
                 maxLength={2}
+                {...register("due")}
               />
-              {errors.due && <span className={styles.error}>{errors.due}</span>}
-            </div>
+            </FormField>
           </div>
 
           <div className={styles.row2}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="bill-method">Payment Method</label>
-              <select
-                id="bill-method"
-                className={styles.select}
-                value={form.method}
-                onChange={(e) => set("method", e.target.value as PaymentMethod)}
-              >
+            <FormField id="bill-method" label="Payment Method">
+              <select id="bill-method" className={styles.select} {...register("method")}>
                 <option value="autopay">Autopay</option>
                 <option value="transfer">Transfer</option>
               </select>
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="bill-group">Paid From</label>
-              <select
-                id="bill-group"
-                className={styles.select}
-                value={form.group}
-                onChange={(e) => set("group", e.target.value as BillGroup)}
-              >
+            </FormField>
+            <FormField id="bill-group" label="Paid From">
+              <select id="bill-group" className={styles.select} {...register("group")}>
                 <option value="kias_pay">Kia&apos;s Pay</option>
                 <option value="other_income">Other Income</option>
               </select>
-            </div>
+            </FormField>
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="bill-entry">Entry Type</label>
-            <select
-              id="bill-entry"
-              className={styles.select}
-              value={form.entry}
-              onChange={(e) => set("entry", e.target.value as BillEntry)}
-            >
-              <option value="recurring">Recurring — carries forward automatically</option>
+          <FormField id="bill-entry" label="Entry Type">
+            <select id="bill-entry" className={styles.select} {...register("entry")}>
+              <option value="recurring">
+                Recurring — carries forward automatically
+              </option>
               <option value="manual">Manual — re-enter each month</option>
             </select>
-          </div>
+          </FormField>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="bill-category">Category</label>
-            <select
-              id="bill-category"
-              className={styles.select}
-              value={form.category}
-              onChange={(e) => set("category", e.target.value as BillCategory)}
-            >
+          <FormField id="bill-category" label="Category">
+            <select id="bill-category" className={styles.select} {...register("category")}>
               <option value="Credit Cards">Credit Cards</option>
               <option value="Insurance">Insurance</option>
               <option value="Subscriptions">Subscriptions</option>
@@ -211,37 +161,24 @@ export function BillForm({ initial, onSave, onClose }: Props) {
               <option value="Savings">Savings</option>
               <option value="Other">Other</option>
             </select>
-          </div>
+          </FormField>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="bill-notes">Notes</label>
+          <FormField id="bill-notes" label="Notes">
             <textarea
               id="bill-notes"
               className={styles.textarea}
-              value={form.notes}
-              onChange={(e) => set("notes", e.target.value)}
               placeholder="Optional — e.g. Keep at 32.00"
               rows={2}
+              {...register("notes")}
             />
-          </div>
+          </FormField>
 
           <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={form.flagged}
-              onChange={(e) => set("flagged", e.target.checked)}
-            />
+            <input type="checkbox" {...register("flagged")} />
             Flag this bill (marks it red — needs attention)
           </label>
         </div>
-
-        <div className={styles.modalFooter}>
-          <button className={styles.btnGhost} onClick={onClose}>Cancel</button>
-          <button className={styles.btnPrimary} onClick={handleSave}>
-            {initial ? "Save Changes" : "Add Bill"}
-          </button>
-        </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

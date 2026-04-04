@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.swc/
 /out/
 
 # production
@@ -43,4 +44,11 @@ next-env.d.ts
 # Project docs — local only
 AGENTS.md
 CLAUDE.md
+LEDGER.md
+
+# SWC cache
+.swc/
+
+# Claude Skills
+.claude-skills/
 PROJECTION_SPEC.md
