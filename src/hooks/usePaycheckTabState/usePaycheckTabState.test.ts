@@ -44,7 +44,7 @@ function makeCheckEntry(overrides: Partial<KiasCheckEntry> = {}): KiasCheckEntry
 }
 
 function makeSavingsEntry(overrides: Partial<SavingsEntry> = {}): SavingsEntry {
-  return { weekOf: "2026-04-06", amount: 5000, ...overrides };
+  return { id: "s1", date: "2026-04-06", amount: 5000, ...overrides };
 }
 
 // ─── getVisibleMonths (pure function) ─────────────────────────────────────────
@@ -58,27 +58,30 @@ describe("getVisibleMonths", () => {
     expect(getVisibleMonths("2026-04", "monthly")).toEqual(["2026-04"]);
   });
 
-  it("returns 3 consecutive months for 'quarterly' scope", () => {
+  it("returns calendar quarter for 'quarterly' scope (Q2)", () => {
     const result = getVisibleMonths("2026-04", "quarterly");
     expect(result).toEqual(["2026-04", "2026-05", "2026-06"]);
   });
 
-  it("quarterly wraps correctly across year boundary", () => {
+  it("returns calendar quarter for 'quarterly' scope (Q4)", () => {
+    // November is in Q4, so should return Oct-Nov-Dec
     const result = getVisibleMonths("2026-11", "quarterly");
-    expect(result).toEqual(["2026-11", "2026-12", "2027-01"]);
+    expect(result).toEqual(["2026-10", "2026-11", "2026-12"]);
   });
 
-  it("returns 12 consecutive months for 'yearly' scope", () => {
+  it("returns full calendar year for 'yearly' scope", () => {
     const result = getVisibleMonths("2026-01", "yearly");
     expect(result).toHaveLength(12);
     expect(result[0]).toBe("2026-01");
     expect(result[11]).toBe("2026-12");
   });
 
-  it("yearly wraps correctly across year boundary", () => {
+  it("returns same calendar year regardless of input month", () => {
+    // June 2026 should still return Jan-Dec 2026
     const result = getVisibleMonths("2026-06", "yearly");
     expect(result).toHaveLength(12);
-    expect(result[7]).toBe("2027-01"); // 2026-06 + 7 months = 2027-01
+    expect(result[0]).toBe("2026-01");
+    expect(result[11]).toBe("2026-12");
   });
 });
 

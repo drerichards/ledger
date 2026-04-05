@@ -36,8 +36,11 @@ type Action =
   | { type: "ADD_PLAN"; payload: InstallmentPlan }
   | { type: "DELETE_PLAN"; payload: { id: string } }
   | { type: "ADD_CHECK_ENTRY"; payload: KiasCheckEntry }
+  | { type: "UPDATE_CHECK_ENTRY"; payload: KiasCheckEntry }
   | { type: "DELETE_CHECK_ENTRY"; payload: { weekOf: string } }
   | { type: "ADD_SAVINGS_ENTRY"; payload: SavingsEntry }
+  | { type: "UPDATE_SAVINGS_ENTRY"; payload: SavingsEntry }
+  | { type: "DELETE_SAVINGS_ENTRY"; payload: { id: string } }
   | { type: "UPSERT_INCOME"; payload: MonthlyIncome }
   | { type: "UPSERT_PAYCHECK_WEEK"; payload: PaycheckWeek }
   | { type: "SET_PAYCHECK_VIEW_SCOPE"; payload: PaycheckViewScope }
@@ -45,8 +48,10 @@ type Action =
   | { type: "ROLLOVER_BILLS"; payload: { fromMonth: string; toMonth: string } }
   | { type: "RENAME_PAYCHECK_COLUMN"; payload: { key: string; label: string } }
   | { type: "ADD_PAYCHECK_COLUMN"; payload: { label: string } }
-  | { type: "DELETE_PAYCHECK_COLUMN"; payload: { key: string } }
-  | { type: "MARK_NOTIFICATIONS_SEEN"; payload: { ids: string[] } };
+  | { type: "HIDE_PAYCHECK_COLUMN"; payload: { key: string } }
+  | { type: "RESTORE_PAYCHECK_COLUMN"; payload: { key: string } }
+  | { type: "MARK_NOTIFICATIONS_SEEN"; payload: { ids: string[] } }
+  | { type: "ACK_CHECK_EDIT_WARNING" };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
@@ -110,19 +115,43 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
 
+    case "UPDATE_CHECK_ENTRY": {
+      const updated = action.payload;
+      return {
+        ...state,
+        checkLog: state.checkLog.map((e) =>
+          e.weekOf === updated.weekOf ? updated : e
+        ),
+      };
+    }
+
     case "DELETE_CHECK_ENTRY": {
       const monday = mondayOf(action.payload.weekOf);
       return {
         ...state,
         checkLog: state.checkLog.filter((e) => mondayOf(e.weekOf) !== monday),
         savingsLog: state.savingsLog.filter(
-          (e) => mondayOf(e.weekOf) !== monday,
+          (e) => mondayOf(e.date ?? e.weekOf ?? "") !== monday,
         ),
       };
     }
 
     case "ADD_SAVINGS_ENTRY":
       return { ...state, savingsLog: [...state.savingsLog, action.payload] };
+
+    case "UPDATE_SAVINGS_ENTRY":
+      return {
+        ...state,
+        savingsLog: state.savingsLog.map((e) =>
+          e.id === action.payload.id ? action.payload : e
+        ),
+      };
+
+    case "DELETE_SAVINGS_ENTRY":
+      return {
+        ...state,
+        savingsLog: state.savingsLog.filter((e) => e.id !== action.payload.id),
+      };
 
     case "UPSERT_INCOME": {
       const inc = action.payload;
@@ -200,20 +229,26 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
 
-    case "DELETE_PAYCHECK_COLUMN": {
+    case "HIDE_PAYCHECK_COLUMN": {
       const { key } = action.payload;
       const cols = state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS;
-      // Guard: never delete a fixed column
-      if (cols.find((c) => c.key === key)?.fixed) return state;
       return {
         ...state,
-        paycheckColumns: cols.filter((c) => c.key !== key),
-        // Zero out the deleted column's data across all weeks
-        paycheck: state.paycheck.map((w) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { [key]: _removed, ...rest } = w.extra ?? {};
-          return { ...w, extra: rest };
-        }),
+        paycheckColumns: cols.map((c) =>
+          c.key === key ? { ...c, hidden: true } : c,
+        ),
+        // Data is preserved — column just won't render
+      };
+    }
+
+    case "RESTORE_PAYCHECK_COLUMN": {
+      const { key } = action.payload;
+      const cols = state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS;
+      return {
+        ...state,
+        paycheckColumns: cols.map((c) =>
+          c.key === key ? { ...c, hidden: false } : c,
+        ),
       };
     }
 
@@ -222,6 +257,9 @@ function reducer(state: AppState, action: Action): AppState {
       action.payload.ids.forEach((id) => existing.add(id));
       return { ...state, seenNotificationIds: Array.from(existing) };
     }
+
+    case "ACK_CHECK_EDIT_WARNING":
+      return { ...state, checkEditWarningAcked: true };
 
     default:
       return state;
@@ -328,6 +366,12 @@ export function useAppState() {
     [],
   );
 
+  const updateCheckEntry = useCallback(
+    (entry: KiasCheckEntry) =>
+      dispatch({ type: "UPDATE_CHECK_ENTRY", payload: entry }),
+    [],
+  );
+
   const deleteCheckEntry = useCallback((weekOf: string) => {
     dispatch({ type: "DELETE_CHECK_ENTRY", payload: { weekOf } });
     deleteCheckEntryRemote(weekOf);
@@ -336,6 +380,18 @@ export function useAppState() {
   const addSavingsEntry = useCallback(
     (entry: SavingsEntry) =>
       dispatch({ type: "ADD_SAVINGS_ENTRY", payload: entry }),
+    [],
+  );
+
+  const updateSavingsEntry = useCallback(
+    (entry: SavingsEntry) =>
+      dispatch({ type: "UPDATE_SAVINGS_ENTRY", payload: entry }),
+    [],
+  );
+
+  const deleteSavingsEntry = useCallback(
+    (id: string) =>
+      dispatch({ type: "DELETE_SAVINGS_ENTRY", payload: { id } }),
     [],
   );
 
@@ -380,15 +436,26 @@ export function useAppState() {
     [],
   );
 
-  const deletePaycheckColumn = useCallback(
+  const hidePaycheckColumn = useCallback(
     (key: string) =>
-      dispatch({ type: "DELETE_PAYCHECK_COLUMN", payload: { key } }),
+      dispatch({ type: "HIDE_PAYCHECK_COLUMN", payload: { key } }),
+    [],
+  );
+
+  const restorePaycheckColumn = useCallback(
+    (key: string) =>
+      dispatch({ type: "RESTORE_PAYCHECK_COLUMN", payload: { key } }),
     [],
   );
 
   const markNotificationsSeen = useCallback(
     (ids: string[]) =>
       dispatch({ type: "MARK_NOTIFICATIONS_SEEN", payload: { ids } }),
+    [],
+  );
+
+  const ackCheckEditWarning = useCallback(
+    () => dispatch({ type: "ACK_CHECK_EDIT_WARNING" }),
     [],
   );
 
@@ -403,6 +470,8 @@ export function useAppState() {
     addCheckEntry,
     deleteCheckEntry,
     addSavingsEntry,
+    updateSavingsEntry,
+    deleteSavingsEntry,
     upsertIncome,
     upsertPaycheckWeek,
     setPaycheckViewScope,
@@ -410,7 +479,10 @@ export function useAppState() {
     rolloverBills,
     renamePaycheckColumn,
     addPaycheckColumn,
-    deletePaycheckColumn,
+    hidePaycheckColumn,
+    restorePaycheckColumn,
     markNotificationsSeen,
+    updateCheckEntry,
+    ackCheckEditWarning,
   };
 }

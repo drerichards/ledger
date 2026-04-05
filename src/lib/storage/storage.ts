@@ -17,6 +17,7 @@ export const INITIAL_STATE: AppState = {
   paycheckViewScope: "monthly",
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
+  checkEditWarningAcked: false,
 };
 
 /**
@@ -46,7 +47,12 @@ export function loadState(): AppState {
         });
         return [...byWeek.values()];
       })(),
-      savingsLog: parsed.savingsLog ?? [],
+      // Migration: stamp id + date on old SavingsEntry records (weekOf-only shape)
+      savingsLog: (parsed.savingsLog ?? []).map((e) =>
+        e.id
+          ? e
+          : { ...e, id: `${e.weekOf ?? "unknown"}-${e.amount}`, date: e.weekOf ?? "" },
+      ),
       snapshots: parsed.snapshots ?? [],
       // If stored state has no plans, backfill from seed
       plans: (parsed.plans ?? []).length > 0 ? parsed.plans : SEED_STATE.plans,
@@ -58,6 +64,7 @@ export function loadState(): AppState {
       // Fall back to defaults if columns not yet persisted (first time after upgrade)
       paycheckColumns: parsed.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS,
       seenNotificationIds: parsed.seenNotificationIds ?? [],
+      checkEditWarningAcked: parsed.checkEditWarningAcked ?? false,
     };
   } catch {
     return SEED_STATE;

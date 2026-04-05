@@ -32,5 +32,5 @@
   cursor: pointer;
   background: transparent;
   color: var(--color-rust);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
 }

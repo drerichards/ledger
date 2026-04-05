@@ -22,6 +22,8 @@ export type PaycheckColumn = {
   label: string;
   /** true = backed by a typed PaycheckWeek field; cannot be deleted, only renamed. */
   fixed: boolean;
+  /** true = column is hidden from view but data is preserved. Can be restored. */
+  hidden?: boolean;
 };
 
 // ─── Core Entities ────────────────────────────────────────────────────────────
@@ -104,16 +106,29 @@ export type MonthSnapshot = {
 
 // ─── Kia's Check Log ─────────────────────────────────────────────────────────
 
+/** One historical edit in a check entry's audit trail. */
+export type CheckEditHistoryEntry = {
+  editedAt: string; // ISO datetime string
+  oldAmount: number; // cents — the value before this edit
+  newAmount: number; // cents — the value after this edit
+  reason?: string; // optional: why the edit was made
+};
+
 /** One entry in Kia's weekly pay history. Powers the baseline projection. */
 export type KiasCheckEntry = {
   weekOf: string; // YYYY-MM-DD
   amount: number; // cents
+  /** Audit trail for historical edits. Only populated for weeks that were edited after the month closed. */
+  editHistory?: CheckEditHistoryEntry[];
 };
 
-/** One week's intentional savings deposit. Powers the savings balance tracker. */
+/** One intentional savings deposit. Powers the savings balance tracker. */
 export type SavingsEntry = {
-  weekOf: string; // YYYY-MM-DD
+  id: string; // unique identifier for edit/delete
+  date: string; // YYYY-MM-DD — the deposit date (user-selectable)
   amount: number; // cents
+  /** @deprecated Use `date` instead. Kept for migration compatibility. */
+  weekOf?: string;
 };
 
 // ─── Notifications ────────────────────────────────────────────────────────────
@@ -153,4 +168,9 @@ export type AppState = {
    * Notifications themselves are derived — only seen state is persisted.
    */
   seenNotificationIds: string[];
+  /**
+   * True if user has acknowledged the warning about editing historical check entries.
+   * When true, the modal still appears but without the warning text.
+   */
+  checkEditWarningAcked: boolean;
 };

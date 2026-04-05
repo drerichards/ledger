@@ -1,4 +1,4 @@
-export { BillChart } from "./BillChart";
+export { AccountsTab } from "./AccountsTab";
 export { BillGroup } from "./BillGroup";
 export { BillRow } from "./BillRow";
 export { BillForm } from "./BillForm";

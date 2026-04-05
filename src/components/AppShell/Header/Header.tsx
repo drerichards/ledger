@@ -36,7 +36,7 @@ export function Header({
       </div>
 
       <div className={styles.actions}>
-        {userName && <span className={styles.userName}>{userName}</span>}
+        {userName && <span className={styles.userName}>Hi, {userName}</span>}
         <NotificationBell
           notifications={notifications}
           seenIds={seenNotificationIds}

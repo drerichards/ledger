@@ -26,7 +26,7 @@
   border-radius: var(--radius-sm);
   background: var(--color-white);
   color: var(--color-text);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
 }
 
 .textarea {
@@ -51,7 +51,7 @@
   cursor: pointer;
   background: var(--color-rust);
   color: var(--color-white);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
 }
 
 .btnGhost {
@@ -63,5 +63,5 @@
   cursor: pointer;
   background: transparent;
   color: var(--color-navy);
-  font-family: var(--font-primary);
+  font-family: var(--font-body);
 }

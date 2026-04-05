@@ -6,8 +6,6 @@ import type {
   PaycheckWeek,
   SavingsEntry,
 } from "@/types";
-import { calcCheckBaseline } from "@/lib/projection";
-import { CheckLog } from "./CheckLog";
 import { SavingsTracker } from "./SavingsTracker";
 import { SavingsProjection } from "./SavingsProjection";
 import styles from "./SavingsTab.module.css";
@@ -16,11 +14,12 @@ type Props = {
   plans: InstallmentPlan[];
   checking: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
-  checkLog: KiasCheckEntry[];
   paycheck: PaycheckWeek[];
-  onAddCheckEntry: (entry: KiasCheckEntry) => void;
-  onDeleteCheckEntry: (weekOf: string) => void;
   onAddSavings: (entry: SavingsEntry) => void;
+  onUpdateSavings: (entry: SavingsEntry) => void;
+  onDeleteSavings: (id: string) => void;
+  /** Navigate to Paycheck tab */
+  onGoToPaycheck?: () => void;
 };
 
 export function SavingsTab({
@@ -28,30 +27,40 @@ export function SavingsTab({
   checking,
   savingsLog,
   paycheck,
-  onAddCheckEntry,
-  onDeleteCheckEntry,
   onAddSavings,
+  onUpdateSavings,
+  onDeleteSavings,
+  onGoToPaycheck,
 }: Props) {
-  const baseline = calcCheckBaseline(checking);
-
   return (
     <div className={styles.container}>
       <div>
         <h2 className={styles.heading}>Savings &amp; Projections</h2>
         <p className={styles.subheading}>
-          Check Kia&apos;s checks, log savings moves, and see your 12-month
-          outlook.
+          Log savings moves and see your 12-month outlook.
+          {onGoToPaycheck && (
+            <>
+              {" "}Paycheck data is in the{" "}
+              <button
+                type="button"
+                className={styles.tabLink}
+                onClick={onGoToPaycheck}
+              >
+                Paycheck tab
+              </button>
+              .
+            </>
+          )}
         </p>
       </div>
 
       <div className={styles.panels}>
-        <CheckLog
-          log={checking}
-          baseline={baseline}
-          onAdd={onAddCheckEntry}
-          onDelete={onDeleteCheckEntry}
+        <SavingsTracker
+          log={savingsLog}
+          onAdd={onAddSavings}
+          onUpdate={onUpdateSavings}
+          onDelete={onDeleteSavings}
         />
-        <SavingsTracker log={savingsLog} onAdd={onAddSavings} />
       </div>
 
       <SavingsProjection

@@ -17,6 +17,7 @@
   font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-navy);
+  text-align: right;
 }
 
 .rust {
@@ -25,4 +26,13 @@
 
 .olive {
   color: var(--color-olive);
+}
+
+/* Compact variant for tight spaces like paycheck log sidebar */
+.compact .label {
+  font-size: 9px;
+}
+
+.compact .value {
+  font-size: var(--text-xs);
 }

@@ -1,81 +1,5 @@
 @import '../styles/tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    /* shadcn/ui design tokens mapped to updated Ledger color palette */
-
-    /* Navy (#274058) → Primary */
-    --primary: 207 42% 25%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Pale Olive (#898B5E) → Secondary (positive/success) */
-    --secondary: 61 20% 46%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Rust (#C4522A) → Destructive (warnings/urgent) */
-    --destructive: 15 64% 47%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Gold (#FDB833) → Accent (celebrations) */
-    --accent: 42 98% 60%;
-    --accent-foreground: 0 0% 10%;
-
-    /* Neutral colors - using muted gold and soft tones */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-
-    --muted: 45 29% 86%;
-    --muted-foreground: 0 0% 40%;
-
-    --border: 45 20% 85%;
-    --input: 45 20% 85%;
-    --ring: 207 42% 25%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    /* Dark mode - Deep Navy background with brighter accents */
-    --primary: 207 52% 45%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 61 30% 56%;
-    --secondary-foreground: 0 0% 10%;
-
-    --destructive: 15 74% 57%;
-    --destructive-foreground: 0 0% 100%;
-
-    --accent: 42 98% 70%;
-    --accent-foreground: 0 0% 10%;
-
-    --background: 207 60% 16%;
-    --foreground: 0 0% 98%;
-
-    --card: 207 55% 18%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 207 55% 18%;
-    --popover-foreground: 0 0% 98%;
-
-    --muted: 60 10% 30%;
-    --muted-foreground: 0 0% 70%;
-
-    --border: 207 30% 25%;
-    --input: 207 30% 25%;
-    --ring: 207 52% 45%;
-  }
-}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 
@@ -98,7 +22,7 @@ button:active:not(:disabled) {
 
 [class*="btnGhost"]:hover,
 [class*="editBtn"]:hover {
-    background: var(--color-navy-alpha-6);
+    background: var(--color-cream);
 }
 
 [class*="btnDanger"]:hover {
@@ -112,7 +36,7 @@ button:active:not(:disabled) {
 
 [class*="scopeBtn"]:not([class*="scopeBtnActive"]):hover,
 [class*="scenarioBtn"]:not([class*="scenarioBtnActive"]):hover {
-    background: var(--color-navy-alpha-6);
+    background: var(--color-cream);
     color: var(--color-navy);
 }
 
@@ -134,10 +58,10 @@ html {
 }
 
 body {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-base);
     color: var(--color-text);
-    background: linear-gradient(150deg, var(--color-navy-tint) 0%, #dde3ea 35%, #e8ecf0 70%, #eef0f3 100%);
+    background-color: var(--color-cream);
     min-height: 100vh;
 }
 
@@ -146,7 +70,7 @@ body {
 h1,
 h2,
 h3 {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-weight: 700;
     color: var(--color-navy);
 }
@@ -156,7 +80,7 @@ h3 {
 input,
 select,
 textarea {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-base);
     color: var(--color-text);
 }

@@ -71,6 +71,15 @@
   padding: var(--space-6) var(--space-8);
 }
 
+/* Tab panel visibility — CSS toggle keeps all tabs mounted, only active one visible */
+.tabPanel {
+  display: none;
+}
+
+.tabPanelActive {
+  display: block;
+}
+
 @media print {
   .printPageBreak {
     page-break-after: always;

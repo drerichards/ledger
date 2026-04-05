@@ -109,7 +109,7 @@
     cursor: pointer;
     background: var(--color-white);
     color: var(--color-navy);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }
 
 .btnDanger {
@@ -123,5 +123,5 @@
     cursor: pointer;
     background: transparent;
     color: var(--color-rust);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }

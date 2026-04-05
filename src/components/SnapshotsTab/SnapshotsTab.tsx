@@ -3,25 +3,25 @@
 import type { MonthSnapshot } from "@/types";
 import { fmtMoney } from "@/lib/money";
 import { fmtMonthFull } from "@/lib/dates";
-import styles from "./HistoryTab.module.css";
+import styles from "./SnapshotsTab.module.css";
 
 type Props = {
   snapshots: MonthSnapshot[];
 };
 
-export function HistoryTab({ snapshots }: Props) {
+export function SnapshotsTab({ snapshots }: Props) {
   const sorted = [...snapshots].sort((a, b) => b.month.localeCompare(a.month));
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.heading}>History</h2>
-        <p className={styles.subheading}>Monthly summaries saved from the Bill Chart.</p>
+        <h2 className={styles.heading}>Snapshots</h2>
+        <p className={styles.subheading}>Monthly summaries saved from the Accounts tab.</p>
       </div>
 
       {sorted.length === 0 ? (
         <p className={styles.empty}>
-          No monthly summaries yet. Use &apos;Save Month Summary&apos; in the Bill Chart after closing out a month.
+          No monthly summaries yet. Use &apos;Month Summary&apos; in the Accounts tab after closing out a month.
         </p>
       ) : (
         <div className={styles.tableWrapper}>

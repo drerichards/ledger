@@ -111,15 +111,15 @@
     cursor: pointer;
     background: var(--color-white);
     color: var(--color-navy);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }
 
 .navBtn:hover {
-    background: var(--color-navy-alpha-6);
+    background: var(--color-cream);
 }
 
 .monthLabel {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-md);
     color: var(--color-navy);
     font-weight: 600;
@@ -152,7 +152,7 @@
 }
 
 .heading {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-lg);
     color: var(--color-navy);
 }
@@ -396,7 +396,7 @@
     cursor: pointer;
     background: var(--color-rust);
     color: var(--color-white);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }
 
 .btnGhost {
@@ -410,7 +410,7 @@
     cursor: pointer;
     background: var(--color-white);
     color: var(--color-navy);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }
 
 .btnDanger {
@@ -424,5 +424,5 @@
     cursor: pointer;
     background: transparent;
     color: var(--color-rust);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
 }

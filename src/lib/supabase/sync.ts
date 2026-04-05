@@ -169,7 +169,7 @@ const checkEntryToRow = (e: KiasCheckEntry, userId: string): CheckLogRow => ({
 
 const savingsEntryToRow = (e: SavingsEntry, userId: string): SavingsLogRow => ({
   user_id: userId,
-  week_of: e.weekOf,
+  week_of: e.date ?? e.weekOf ?? "",
   amount: e.amount,
 });
 
@@ -235,7 +235,8 @@ const rowToCheckEntry = (r: CheckLogRow): KiasCheckEntry => ({
 });
 
 const rowToSavingsEntry = (r: SavingsLogRow): SavingsEntry => ({
-  weekOf: r.week_of,
+  id: `${r.week_of}-${r.amount}`, // Generate ID from row data for backwards compat
+  date: r.week_of,
   amount: r.amount,
 });
 
@@ -280,8 +281,11 @@ export async function loadFromSupabase(): Promise<AppState | null> {
       paycheckViewScope: "monthly",
       paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
       seenNotificationIds: [],
+      checkEditWarningAcked: false,
     };
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] loadFromSupabase failed:", err);
     return null;
   }
 }
@@ -338,8 +342,10 @@ export async function syncStateToSupabase(state: AppState): Promise<void> {
             .upsert(state.savingsLog.map((e) => savingsEntryToRow(e, uid)))
         : Promise.resolve(),
     ]);
-  } catch {
+  } catch (err) {
     // Fail silently — localStorage remains source of truth during the session
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] syncStateToSupabase failed:", err);
   }
 }
 
@@ -358,8 +364,9 @@ export async function deleteBillRemote(id: string): Promise<void> {
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
-  } catch {
-    // Silent fail
+  } catch (err) {
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] remote delete failed:", err);
   }
 }
 
@@ -378,8 +385,9 @@ export async function deletePlanRemote(id: string): Promise<void> {
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
-  } catch {
-    // Silent fail
+  } catch (err) {
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] remote delete failed:", err);
   }
 }
 
@@ -403,7 +411,8 @@ export async function deleteCheckEntryRemote(weekOf: string): Promise<void> {
       .delete()
       .eq("week_of", weekOf)
       .eq("user_id", user.id);
-  } catch {
-    // Silent fail
+  } catch (err) {
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] remote delete failed:", err);
   }
 }

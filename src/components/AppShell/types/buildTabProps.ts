@@ -23,12 +23,17 @@ type AppActions = {
   deletePlan: (id: string) => void;
   upsertPaycheckWeek: (week: PaycheckWeek) => void;
   addCheckEntry: (entry: KiasCheckEntry) => void;
+  updateCheckEntry: (entry: KiasCheckEntry) => void;
   deleteCheckEntry: (weekOf: string) => void;
+  ackCheckEditWarning: () => void;
   setPaycheckViewScope: (scope: PaycheckViewScope) => void;
   addSavingsEntry: (entry: SavingsEntry) => void;
+  updateSavingsEntry: (entry: SavingsEntry) => void;
+  deleteSavingsEntry: (id: string) => void;
   renamePaycheckColumn: (key: string, label: string) => void;
   addPaycheckColumn: (label: string) => void;
-  deletePaycheckColumn: (key: string) => void;
+  hidePaycheckColumn: (key: string) => void;
+  restorePaycheckColumn: (key: string) => void;
   markNotificationsSeen: (ids: string[]) => void;
 };
 
@@ -43,6 +48,7 @@ type AppState = {
   paycheckColumns: PaycheckColumn[];
   snapshots: MonthSnapshot[];
   seenNotificationIds: string[];
+  checkEditWarningAcked: boolean;
 };
 
 type TabPropsDeps = {
@@ -52,7 +58,7 @@ type TabPropsDeps = {
   onViewMonthChange: (month: string) => void;
 };
 
-export const buildBillChartProps = ({
+export const buildAccountsTabProps = ({
   state,
   actions,
   viewMonth,
@@ -80,29 +86,42 @@ export const buildAffirmTabProps = ({ state, actions }: TabPropsDeps) => ({
   onDelete: actions.deletePlan,
 });
 
-export const buildPaycheckTabProps = ({ state, actions }: TabPropsDeps) => ({
+export const buildPaycheckTabProps = (
+  { state, actions }: TabPropsDeps,
+  onGoToAffirm?: () => void,
+  onGoToSavings?: () => void
+) => ({
   paycheck: state.paycheck,
   checkLog: state.checkLog,
   savingsLog: state.savingsLog,
   plans: state.plans,
   columns: state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS,
   viewScope: state.paycheckViewScope,
+  checkEditWarningAcked: state.checkEditWarningAcked,
   onUpsertWeek: actions.upsertPaycheckWeek,
   onAddCheckEntry: actions.addCheckEntry,
+  onUpdateCheckEntry: actions.updateCheckEntry,
   onDeleteCheckEntry: actions.deleteCheckEntry,
   onSetViewScope: actions.setPaycheckViewScope,
   onRenameColumn: actions.renamePaycheckColumn,
   onAddColumn: actions.addPaycheckColumn,
-  onDeleteColumn: actions.deletePaycheckColumn,
+  onHideColumn: actions.hidePaycheckColumn,
+  onRestoreColumn: actions.restorePaycheckColumn,
+  onAckCheckEditWarning: actions.ackCheckEditWarning,
+  onGoToAffirm,
+  onGoToSavings,
 });
 
-export const buildSavingsTabProps = ({ state, actions }: TabPropsDeps) => ({
+export const buildSavingsTabProps = (
+  { state, actions }: TabPropsDeps,
+  onGoToPaycheck?: () => void
+) => ({
   plans: state.plans,
   checking: state.checkLog,
   savingsLog: state.savingsLog,
-  checkLog: state.checkLog,
   paycheck: state.paycheck,
-  onAddCheckEntry: actions.addCheckEntry,
-  onDeleteCheckEntry: actions.deleteCheckEntry,
   onAddSavings: actions.addSavingsEntry,
+  onUpdateSavings: actions.updateSavingsEntry,
+  onDeleteSavings: actions.deleteSavingsEntry,
+  onGoToPaycheck,
 });

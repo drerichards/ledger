@@ -41,6 +41,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Disable Turbopack RocksDB persistent cache to prevent SST write-lock
+    // conflicts on restart. The dev-mode distDir (.next/dev) is pre-seeded
+    // by the `predev` npm script so manifests can still be written.
+    turbopackFileSystemCacheForDev: false,
+  },
   async headers() {
     return [
       {

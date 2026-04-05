@@ -19,7 +19,7 @@ import { BillGroup } from "./BillGroup";
 import { BillForm } from "./BillForm";
 import { IncomePanel } from "./IncomePanel";
 import { MonthSnapshot as MonthSnapshotPanel } from "./MonthSnapshot";
-import styles from "./BillChart.module.css";
+import styles from "./AccountsTab.module.css";
 
 type SortKey = "due" | "name" | "cents" | "method" | "category";
 type SortDir = "asc" | "desc";
@@ -41,7 +41,7 @@ type Props = {
   onRollover: (fromMonth: string, toMonth: string) => void;
 };
 
-export function BillChart({
+export function AccountsTab({
   bills,
   income,
   savingsLog,

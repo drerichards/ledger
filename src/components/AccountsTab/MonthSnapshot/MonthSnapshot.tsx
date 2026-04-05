@@ -49,7 +49,9 @@ export function MonthSnapshot({
     : 0;
   const shortfall = calcShortfall(totalBilled, totalIncome);
   const savingsMoved = sumCents(
-    savingsLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
+    savingsLog
+      .filter((e) => (e.date ?? e.weekOf ?? "").startsWith(month))
+      .map((e) => e.amount),
   );
   const kiasPayActual = sumCents(
     checkLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),

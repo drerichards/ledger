@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node -e \"const fs=require('fs'),path=require('path'); const dirs=['.next/dev/server','.next/dev/server/app','.next/dev/server/pages','.next/dev/static/development']; dirs.forEach(d=>fs.mkdirSync(d,{recursive:true})); const mf='.next/dev/server/middleware-manifest.json'; if(!fs.existsSync(mf)) fs.writeFileSync(mf,JSON.stringify({version:2,middleware:{},sortedMiddleware:[],functions:{}}));\"",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

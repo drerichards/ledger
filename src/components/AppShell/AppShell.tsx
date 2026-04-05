@@ -2,62 +2,49 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { advanceMonth, currentMonth, fmtMonthFull } from "@/lib/dates";
+import { currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
 import { useAffirmNotifications } from "@/hooks/useAffirmNotifications";
 import { createClient } from "@/lib/supabase/client";
 import { withErrorBoundary } from "@/components/ui/withErrorBoundary/withErrorBoundary";
 import { Header } from "@/components/AppShell/Header/Header";
 import {
-  buildBillChartProps,
+  buildAccountsTabProps,
   buildAffirmTabProps,
   buildPaycheckTabProps,
   buildSavingsTabProps,
 } from "@/components/AppShell/types";
-import { BillChart } from "@/components/BillChartTab/BillChart";
-import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
+import { AccountsTab } from "@/components/AccountsTab";
 import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
+import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
 import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
-import { HistoryTab } from "@/components/HistoryTab/HistoryTab";
-import { ActivityTab } from "@/components/ActivityTab/ActivityTab";
+import { SnapshotsTab } from "@/components/SnapshotsTab";
+import { ActivityTab } from "@/components/ActivityTab";
 import styles from "./AppShell.module.css";
 
-type Tab = "bills" | "paycheck" | "affirm" | "savings" | "history" | "activity";
+type Tab = "accounts" | "paycheck" | "affirm" | "savings" | "snapshots" | "activity";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "bills",    label: "Accounts"  },
-  { id: "paycheck", label: "Paycheck"  },
-  { id: "affirm",   label: "Affirm"    },
-  { id: "savings",  label: "Savings"   },
-  { id: "history",  label: "Snapshots" },
-  { id: "activity", label: "Activity"  },
+  { id: "accounts", label: "Accounts" },
+  { id: "paycheck", label: "Paycheck" },
+  { id: "affirm", label: "Affirm" },
+  { id: "savings", label: "Savings" },
+  { id: "snapshots", label: "Snapshots" },
+  { id: "activity", label: "Activity" },
 ];
 
 // Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
-const SafeBillChart = withErrorBoundary(BillChart, "BillChart");
-const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
+const SafeAccountsTab = withErrorBoundary(AccountsTab, "AccountsTab");
 const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
+const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
 const SafeSavingsTab = withErrorBoundary(SavingsTab, "SavingsTab");
+const SafeSnapshotsTab = withErrorBoundary(SnapshotsTab, "SnapshotsTab");
 const SafeActivityTab = withErrorBoundary(ActivityTab, "ActivityTab");
-const SafeHistoryTab = withErrorBoundary(HistoryTab, "HistoryTab");
 
 export function AppShell() {
-  // Always start with "bills" so server and client render identically (no hydration mismatch).
-  // After hydration, read the URL and jump to the correct tab.
-  const [activeTab, setActiveTab] = useState<Tab>("bills");
-
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get(
-      "tab",
-    ) as Tab | null;
-    if (t && TABS.some((tab) => tab.id === t)) {
-      setActiveTab(t);
-    }
-  }, []);
+  const [activeTab, setActiveTab] = useState<Tab>("accounts");
   const [printAll, setPrintAll] = useState(false);
-  const [viewMonth, setViewMonth] = useState(() =>
-    advanceMonth(currentMonth(), 1),
-  );
+  const [viewMonth, setViewMonth] = useState(() => currentMonth());
   const [userName, setUserName] = useState<string | null>(null);
   const appState = useAppState();
   const router = useRouter();
@@ -78,13 +65,6 @@ export function AppShell() {
       }
     });
   }, []);
-
-  const handleTabChange = (tab: Tab) => {
-    setActiveTab(tab);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", tab);
-    window.history.replaceState(null, "", url.toString());
-  };
 
   const handlePrintTab = () => window.print();
 
@@ -121,10 +101,14 @@ export function AppShell() {
     onViewMonthChange: setViewMonth,
   };
 
-  const billChartProps = buildBillChartProps(deps);
-  const paycheckTabProps = buildPaycheckTabProps(deps);
+  const accountsTabProps = buildAccountsTabProps(deps);
   const affirmTabProps = buildAffirmTabProps(deps);
-  const savingsTabProps = buildSavingsTabProps(deps);
+  const paycheckTabProps = buildPaycheckTabProps(
+    deps,
+    () => setActiveTab("affirm"),
+    () => setActiveTab("savings")
+  );
+  const savingsTabProps = buildSavingsTabProps(deps, () => setActiveTab("paycheck"));
 
   return (
     <div className={styles.shell}>
@@ -134,7 +118,7 @@ export function AppShell() {
           notifications={notifications}
           seenNotificationIds={s.seenNotificationIds ?? []}
           onMarkNotificationsSeen={actions.markNotificationsSeen}
-          onNavigateToAffirm={() => handleTabChange("affirm")}
+          onNavigateToAffirm={() => setActiveTab("affirm")}
           onViewAllNotifications={() => router.push("/notifications")}
           onPrintTab={handlePrintTab}
           onPrintAll={handlePrintAll}
@@ -145,15 +129,15 @@ export function AppShell() {
             <button
               key={tab.id}
               className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-              onClick={() => handleTabChange(tab.id)}
+              onClick={() => setActiveTab(tab.id)}
               aria-selected={activeTab === tab.id}
               role="tab"
             >
               {tab.label}
             </button>
           ))}
-          <time className={styles.viewMonth} dateTime={viewMonth}>
-            {fmtMonthFull(viewMonth)}
+          <time className={styles.viewMonth} dateTime={currentMonth()}>
+            {fmtMonthFull(currentMonth())}
           </time>
         </nav>
       </div>
@@ -161,7 +145,7 @@ export function AppShell() {
       <main className={styles.content}>
         {printAll ? (
           <>
-            <SafeBillChart {...billChartProps} />
+            <SafeAccountsTab {...accountsTabProps} />
             <div className={styles.printPageBreak} />
             <SafePaycheckTab {...paycheckTabProps} />
             <div className={styles.printPageBreak} />
@@ -169,22 +153,29 @@ export function AppShell() {
             <div className={styles.printPageBreak} />
             <SafeSavingsTab {...savingsTabProps} />
             <div className={styles.printPageBreak} />
-            <SafeActivityTab bills={s.bills} />
-            <div className={styles.printPageBreak} />
-            <SafeHistoryTab snapshots={s.snapshots} />
+            <SafeSnapshotsTab snapshots={s.snapshots} />
+            {/* TODO: Add Activity tab content to print */}
           </>
         ) : (
           <>
-            {activeTab === "bills" && <SafeBillChart {...billChartProps} />}
-            {activeTab === "paycheck" && (
+            <div className={`${styles.tabPanel} ${activeTab === "accounts" ? styles.tabPanelActive : ""}`}>
+              <SafeAccountsTab {...accountsTabProps} />
+            </div>
+            <div className={`${styles.tabPanel} ${activeTab === "paycheck" ? styles.tabPanelActive : ""}`}>
               <SafePaycheckTab {...paycheckTabProps} />
-            )}
-            {activeTab === "affirm" && <SafeAffirmTab {...affirmTabProps} />}
-            {activeTab === "savings" && <SafeSavingsTab {...savingsTabProps} />}
-            {activeTab === "activity" && <SafeActivityTab bills={s.bills} />}
-            {activeTab === "history" && (
-              <SafeHistoryTab snapshots={s.snapshots} />
-            )}
+            </div>
+            <div className={`${styles.tabPanel} ${activeTab === "affirm" ? styles.tabPanelActive : ""}`}>
+              <SafeAffirmTab {...affirmTabProps} />
+            </div>
+            <div className={`${styles.tabPanel} ${activeTab === "savings" ? styles.tabPanelActive : ""}`}>
+              <SafeSavingsTab {...savingsTabProps} />
+            </div>
+            <div className={`${styles.tabPanel} ${activeTab === "snapshots" ? styles.tabPanelActive : ""}`}>
+              <SafeSnapshotsTab snapshots={s.snapshots} />
+            </div>
+            <div className={`${styles.tabPanel} ${activeTab === "activity" ? styles.tabPanelActive : ""}`}>
+              <SafeActivityTab />
+            </div>
           </>
         )}
       </main>

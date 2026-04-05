@@ -7,7 +7,7 @@ import type {
   SavingsEntry,
 } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
-import { getMondaysInMonth, advanceMonth, mondayOf } from "@/lib/dates";
+import { getMondaysInMonth, mondayOf } from "@/lib/dates";
 
 /**
  * Derives per-month computed values for the Paycheck tab.
@@ -42,9 +42,13 @@ export function usePaycheckTabState(
 
       const savingsByWeek = new Map<string, number>();
       savingsLog
-        .filter((e) => e.weekOf.startsWith(month))
+        .filter((e) => {
+          const dateStr = e.date ?? e.weekOf ?? "";
+          return dateStr.startsWith(month);
+        })
         .forEach((e) => {
-          const monday = mondayOf(e.weekOf);
+          const dateStr = e.date ?? e.weekOf ?? "";
+          const monday = mondayOf(dateStr);
           savingsByWeek.set(monday, (savingsByWeek.get(monday) ?? 0) + e.amount);
         });
 
@@ -64,18 +68,37 @@ export function usePaycheckTabState(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Returns the months to display for a given scope.
+ * - weekly/monthly: just the given month
+ * - quarterly: calendar quarter (Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec)
+ * - yearly: full calendar year (Jan-Dec)
+ */
 export function getVisibleMonths(
   from: string,
   scope: PaycheckViewScope,
 ): string[] {
+  const year = from.slice(0, 4);
+  const month = parseInt(from.slice(5, 7), 10); // 1-12
+
   switch (scope) {
     case "weekly":
     case "monthly":
       return [from];
-    case "quarterly":
-      return [from, advanceMonth(from, 1), advanceMonth(from, 2)];
+    case "quarterly": {
+      // Q1: 1-3, Q2: 4-6, Q3: 7-9, Q4: 10-12
+      const quarterStart = Math.floor((month - 1) / 3) * 3 + 1;
+      return [
+        `${year}-${String(quarterStart).padStart(2, "0")}`,
+        `${year}-${String(quarterStart + 1).padStart(2, "0")}`,
+        `${year}-${String(quarterStart + 2).padStart(2, "0")}`,
+      ];
+    }
     case "yearly":
-      return Array.from({ length: 12 }, (_, i) => advanceMonth(from, i));
+      return Array.from(
+        { length: 12 },
+        (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`,
+      );
   }
 }
 

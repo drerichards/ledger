@@ -10,7 +10,7 @@
 }
 
 .panelTitle {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-md);
     font-weight: 700;
     color: var(--color-navy);
@@ -23,41 +23,193 @@
     color: var(--color-olive);
 }
 
+/* ── Add form ─────────────────────────────────────────────────────────────── */
+
+.addForm {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
 .addRow {
     display: flex;
     gap: var(--space-2);
 }
 
-.panelInput {
-    flex: 1;
-    padding: 6px 10px;
-    font-size: var(--text-base);
+.dateInput {
+    width: 140px;
+    padding: 6px 8px;
+    font-size: var(--text-sm);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     background: var(--color-white);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     color: var(--color-text);
 }
 
-.logList {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    max-height: 220px;
-    overflow-y: auto;
+.amountInput {
+    flex: 1;
+    min-width: 80px;
+    padding: 6px 10px;
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    color: var(--color-text);
+    text-align: right;
 }
-
-/* .logRow / .logDate / .savingsEntry → ui/LogRow (variant="savings") */
 
 .btnOlive {
     padding: 6px 14px;
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     font-weight: 600;
     border-radius: var(--radius-sm);
     border: none;
     cursor: pointer;
     background: var(--color-olive);
     color: var(--color-white);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     white-space: nowrap;
+}
+
+/* ── Entry list ───────────────────────────────────────────────────────────── */
+
+.logList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.logRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.1s;
+}
+
+.logRow:hover {
+    background: var(--color-surface);
+}
+
+.logRow:hover .logActions {
+    opacity: 1;
+}
+
+.logDate {
+    font-size: var(--text-xs);
+    color: var(--color-text-mid);
+    min-width: 50px;
+}
+
+.logAmount {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-olive);
+    flex: 1;
+}
+
+.logActions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+.btnIcon {
+    padding: 2px 6px;
+    font-size: var(--text-sm);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    color: var(--color-text-mid);
+    transition: color 0.1s, border-color 0.1s;
+}
+
+.btnIcon:hover {
+    color: var(--color-navy);
+    border-color: var(--color-navy);
+}
+
+.btnIconDanger {
+    padding: 2px 6px;
+    font-size: var(--text-sm);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    color: var(--color-text-mid);
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
+}
+
+.btnIconDanger:hover {
+    color: var(--color-rust);
+    border-color: var(--color-rust);
+    background: color-mix(in srgb, var(--color-rust) 10%, transparent);
+}
+
+/* ── Editing row ──────────────────────────────────────────────────────────── */
+
+.logRowEditing {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 4px 8px;
+    background: var(--color-cream);
+    border-radius: var(--radius-sm);
+}
+
+.editDateInput {
+    width: 120px;
+    padding: 4px 6px;
+    font-size: var(--text-xs);
+    border: 1px solid var(--color-navy);
+    border-radius: var(--radius-xs);
+    background: var(--color-white);
+    font-family: var(--font-body);
+}
+
+.editAmountInput {
+    flex: 1;
+    min-width: 60px;
+    padding: 4px 6px;
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    border: 1px solid var(--color-navy);
+    border-radius: var(--radius-xs);
+    background: var(--color-white);
+    text-align: right;
+}
+
+.btnSmall {
+    padding: 4px 8px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: var(--color-olive);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+}
+
+.btnSmallGhost {
+    padding: 4px 8px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: transparent;
+    color: var(--color-text-mid);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+}
+
+.btnSmallGhost:hover {
+    color: var(--color-navy);
+    border-color: var(--color-navy);
 }

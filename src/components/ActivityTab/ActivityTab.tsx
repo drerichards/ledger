@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppState } from "@/hooks/useAppState";
 import type { Bill } from "@/types";
 import { fmtMoney } from "@/lib/money";
 import styles from "./ActivityTab.module.css";
@@ -10,10 +11,6 @@ type AmountChangeEvent = {
   billName: string;
   from: number;      // cents — what it was before
   to: number;        // cents — what it changed to
-};
-
-type Props = {
-  bills: Bill[];
 };
 
 /**
@@ -57,8 +54,9 @@ function fmtDate(iso: string): string {
   return `${months[parseInt(month, 10) - 1]} ${parseInt(day, 10)}, ${year}`;
 }
 
-export function ActivityTab({ bills }: Props) {
-  const log = buildActivityLog(bills);
+export function ActivityTab() {
+  const { state } = useAppState();
+  const log = buildActivityLog(state.bills);
 
   return (
     <div className={styles.container}>

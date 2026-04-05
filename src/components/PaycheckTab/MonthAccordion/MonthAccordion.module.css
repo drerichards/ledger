@@ -100,9 +100,20 @@
     color: color-mix(in srgb, var(--color-rust) 70%, white);
 }
 
-/* ── Week rows container ──────────────────────────────────────────────────── */
+/* ── Week rows container — animated collapse ─────────────────────────────── */
+
+.weeksWrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.weeksCollapsed {
+    grid-template-rows: 0fr;
+}
 
 .weeks {
+    overflow: hidden;
     /* No padding — WeekAccordion handles its own spacing */
 }
 

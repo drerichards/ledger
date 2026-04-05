@@ -9,7 +9,7 @@
 }
 
 .panelTitle {
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-size: var(--text-md);
     font-weight: 700;
     color: var(--color-navy);
@@ -47,7 +47,7 @@
     background: var(--color-white);
     color: var(--color-text-mid);
     cursor: pointer;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     transition: all 0.12s;
 }
 

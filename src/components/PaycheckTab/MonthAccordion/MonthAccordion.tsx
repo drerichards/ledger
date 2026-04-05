@@ -1,7 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import type { KiasCheckEntry, PaycheckColumn, PaycheckWeek } from "@/types";
+import React from "react";
+import type {
+  KiasCheckEntry,
+  PaycheckColumn,
+  PaycheckViewScope,
+  PaycheckWeek,
+} from "@/types";
 import { fmtMoney, sumCents } from "@/lib/money";
 import { fmtMonthFull, getMondaysInMonth, mondayOf } from "@/lib/dates";
 import { getWeekColumnValue } from "@/lib/paycheck";
@@ -17,15 +22,30 @@ type Props = {
   savingsByWeek: Map<string, number>;
   affirmPerWeek: number;
   affirmMonthTotal: number;
-  /** The Monday of the current real-world week — auto-expanded on mount. */
-  currentWeekOf: string;
+  /** Which weeks are currently expanded — controlled by PaycheckTab. */
+  expandedWeeks: Set<string>;
+  /** Toggle a week's expanded state — controlled by PaycheckTab. */
+  onToggleWeek: (monday: string) => void;
+  /** Current view scope — weekly view shows only the selected week. */
+  viewScope: PaycheckViewScope;
+  /** The Monday of the selected week (for weekly view filtering). */
+  selectedWeekOf: string;
   /** Controlled by PaycheckTab — collapses the entire month block. */
   isCollapsed: boolean;
   onToggle: () => void;
   onUpsertWeek: (week: PaycheckWeek) => void;
   onAddCheckEntry: (entry: KiasCheckEntry) => void;
+  onUpdateCheckEntry: (entry: KiasCheckEntry) => void;
   onDeleteCheckEntry: (weekOf: string) => void;
+  checkEditWarningAcked: boolean;
+  onAckCheckEditWarning: () => void;
   template: PaycheckWeek | undefined;
+  /** If true, disables editing (for future months). */
+  readOnly?: boolean;
+  /** Navigate to Affirm tab */
+  onGoToAffirm?: () => void;
+  /** Navigate to Savings tab */
+  onGoToSavings?: () => void;
 };
 
 /**
@@ -34,8 +54,7 @@ type Props = {
  * Collapsed: navy header bar showing month + running totals.
  * Expanded: all week rows as WeekAccordion items.
  *
- * Week expand/collapse state is managed internally.
- * Month collapse state is controlled by the parent (PaycheckTab).
+ * Both week and month collapse state is controlled by the parent (PaycheckTab).
  */
 export const MonthAccordion = React.memo(function MonthAccordion({
   month,
@@ -45,39 +64,27 @@ export const MonthAccordion = React.memo(function MonthAccordion({
   savingsByWeek,
   affirmPerWeek,
   affirmMonthTotal,
-  currentWeekOf,
+  expandedWeeks,
+  onToggleWeek,
+  viewScope,
+  selectedWeekOf,
   isCollapsed,
   onToggle,
   onUpsertWeek,
   onAddCheckEntry,
+  onUpdateCheckEntry,
   onDeleteCheckEntry,
+  checkEditWarningAcked,
+  onAckCheckEditWarning,
   template,
+  readOnly = false,
+  onGoToAffirm,
+  onGoToSavings,
 }: Props) {
   const mondays = getMondaysInMonth(month);
 
-  // Auto-expand the current week if it lives in this month
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    if (mondays.includes(currentWeekOf)) {
-      initial.add(currentWeekOf);
-    }
-    return initial;
-  });
-
-  const toggleWeek = (monday: string) => {
-    setExpandedWeeks((prev) => {
-      const next = new Set(prev);
-      if (next.has(monday)) {
-        next.delete(monday);
-      } else {
-        next.add(monday);
-      }
-      return next;
-    });
-  };
-
   // Build week rows from mondays — always Monday-based regardless of check log
-  const rows = mondays.map((monday) => {
+  const allRows = mondays.map((monday) => {
     // Pull Kia's pay from check log (supports both Friday- and Monday-keyed entries)
     const logAmount =
       checkLog.find((e) => mondayOf(e.weekOf) === monday)?.amount ?? 0;
@@ -86,6 +93,12 @@ export const MonthAccordion = React.memo(function MonthAccordion({
       emptyWeek(monday, template, logAmount);
     return { week, monday };
   });
+
+  // In weekly view, show only the selected week
+  const rows =
+    viewScope === "weekly"
+      ? allRows.filter((r) => r.monday === selectedWeekOf)
+      : allRows;
 
   // Monthly totals
   const monthKiaTotal = sumCents(rows.map((r) => r.week.kiasPay));
@@ -150,25 +163,37 @@ export const MonthAccordion = React.memo(function MonthAccordion({
       </div>
 
       {/* ── Week rows ──────────────────────────────────────────────── */}
-      {!isCollapsed && (
+      <div className={`${styles.weeksWrapper} ${isCollapsed ? styles.weeksCollapsed : ""}`}>
         <div className={styles.weeks}>
-          {rows.map(({ week, monday }) => (
-            <WeekAccordion
-              key={monday}
-              week={week}
-              columns={columns}
-              displayDate={monday}
-              affirmPerWeek={affirmPerWeek}
-              savingsForWeek={savingsByWeek.get(monday) ?? 0}
-              isExpanded={expandedWeeks.has(monday)}
-              onToggle={() => toggleWeek(monday)}
-              onUpsertWeek={onUpsertWeek}
-              onAddCheckEntry={onAddCheckEntry}
-              onDeleteCheckEntry={onDeleteCheckEntry}
-            />
-          ))}
+          {rows.map(({ week, monday }) => {
+            const checkEntry = checkLog.find((e) => mondayOf(e.weekOf) === monday);
+            return (
+              <WeekAccordion
+                key={monday}
+                week={week}
+                columns={columns}
+                displayDate={monday}
+                affirmPerWeek={affirmPerWeek}
+                savingsForWeek={savingsByWeek.get(monday) ?? 0}
+                isExpanded={expandedWeeks.has(monday)}
+                onToggle={() => onToggleWeek(monday)}
+                onUpsertWeek={onUpsertWeek}
+                onAddCheckEntry={onAddCheckEntry}
+                onUpdateCheckEntry={onUpdateCheckEntry}
+                onDeleteCheckEntry={onDeleteCheckEntry}
+                checkEntry={checkEntry}
+                checkLog={checkLog}
+                checkEditWarningAcked={checkEditWarningAcked}
+                onAckCheckEditWarning={onAckCheckEditWarning}
+                readOnly={readOnly}
+                onGoToAffirm={onGoToAffirm}
+                onGoToSavings={onGoToSavings}
+              />
+            );
+          })}
 
-          {/* Month totals footer */}
+          {/* Month totals footer — hidden in weekly view */}
+          {viewScope !== "weekly" && (
           <div className={styles.monthTotals}>
             <span className={styles.monthTotalsLabel}>
               {fmtMonthFull(month)} total
@@ -204,8 +229,9 @@ export const MonthAccordion = React.memo(function MonthAccordion({
               </span>
             </div>
           </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 });

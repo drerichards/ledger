@@ -296,7 +296,7 @@ describe("useAppState — ADD_CHECK_ENTRY / DELETE_CHECK_ENTRY", () => {
     const { result } = setup();
     act(() => {
       result.current.addCheckEntry({ weekOf: "2026-04-06", amount: 76423 });
-      result.current.addSavingsEntry({ weekOf: "2026-04-06", amount: 5000 });
+      result.current.addSavingsEntry({ id: "s1", date: "2026-04-06", amount: 5000 });
     });
 
     act(() => { result.current.deleteCheckEntry("2026-04-06"); });

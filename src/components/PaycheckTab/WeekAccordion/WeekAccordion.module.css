@@ -99,11 +99,22 @@
     text-align: right;
 }
 
-/* ── Body — visible when expanded ────────────────────────────────────────── */
+/* ── Body — animated collapse ────────────────────────────────────────────── */
+
+.bodyWrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bodyCollapsed {
+    grid-template-rows: 0fr;
+}
 
 .body {
     padding: 0;
     background: var(--color-white);
+    overflow: hidden;
 }
 
 /* ── Field row ────────────────────────────────────────────────────────────── */
@@ -129,14 +140,30 @@
     background: var(--color-white);
 }
 
-/* Derived rows (Affirm, Savings) — always recede visually */
-.fieldDerived {
-    /* background stripe still applies via nth-child */
+/* ── Derived group: Affirm + Savings grouped together ───────────────────────── */
+/*
+ * Visual distinction from editable columns:
+ * - Top border separates from editable fields above
+ * - Subtle tinted background shows they belong together
+ * - Both rows share the same receded styling
+ */
+
+.derivedGroup {
+    border-top: 2px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-cream) 50%, var(--color-white) 50%);
 }
 
-/* Divider before Savings */
-.fieldDivider {
-    border-top: 2px solid var(--color-border);
+.derivedGroup .field {
+    background: transparent;
+}
+
+.derivedGroup .field:last-child {
+    border-bottom: none;
+}
+
+/* Derived rows (Affirm, Savings) — always recede visually */
+.fieldDerived {
+    /* inherits from derivedGroup */
 }
 
 /* ── Field label ──────────────────────────────────────────────────────────── */
@@ -153,6 +180,27 @@
     color: var(--color-text-mid);
     font-style: italic;
     font-weight: 400;
+}
+
+/* Clickable label that navigates to source tab */
+.fieldLabelLink {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--color-text-mid);
+    font-style: italic;
+    font-weight: 400;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+    transition: color 0.1s;
+}
+
+.fieldLabelLink:hover {
+    color: var(--color-navy);
 }
 
 /* ── Field right side ─────────────────────────────────────────────────────── */
@@ -189,4 +237,145 @@
 
 .zero {
     color: var(--color-text-mid);
+}
+
+/* ── Modal content styles ─────────────────────────────────────────────────── */
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.warning {
+    padding: var(--space-4);
+    background: color-mix(in srgb, var(--color-rust) 10%, var(--color-white));
+    border: 1px solid var(--color-rust);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.warning p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.auditList {
+    margin: var(--space-2) 0 var(--space-2) var(--space-4);
+    padding-left: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+.auditList li {
+    margin-bottom: var(--space-1);
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-mid);
+    cursor: pointer;
+}
+
+.changeDetails {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.changeDetails p {
+    margin: 0;
+    font-size: var(--text-base);
+}
+
+/* ── Impact section ───────────────────────────────────────────────────────── */
+
+.impactSection {
+    padding: var(--space-4);
+    background: color-mix(in srgb, var(--color-olive) 8%, var(--color-white));
+    border: 1px solid color-mix(in srgb, var(--color-olive) 25%, var(--color-white));
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.impactHeader {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.impactGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.impactItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: var(--text-sm);
+}
+
+.impactLabel {
+    color: var(--color-text-mid);
+}
+
+.impactValue {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.impactNew {
+    font-weight: 600;
+    color: var(--color-navy);
+}
+
+.impactExplainer {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-mid);
+    line-height: 1.5;
+    padding-top: var(--space-2);
+    border-top: 1px solid color-mix(in srgb, var(--color-olive) 15%, var(--color-white));
+}
+
+.btnGhost,
+.btnPrimary {
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btnGhost {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.btnGhost:hover {
+    background: var(--color-cream);
+}
+
+.btnPrimary {
+    background: var(--color-navy);
+    border: 1px solid var(--color-navy);
+    color: var(--color-white);
+}
+
+.btnPrimary:hover {
+    background: color-mix(in srgb, var(--color-navy) 90%, var(--color-black));
 }

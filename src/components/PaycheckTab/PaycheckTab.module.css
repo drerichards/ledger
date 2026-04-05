@@ -19,7 +19,7 @@
 .heading {
     font-size: var(--text-lg);
     color: var(--color-navy);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-weight: 700;
 }
 
@@ -55,13 +55,18 @@
     background: var(--color-white);
     color: var(--color-navy);
     cursor: pointer;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     transition: background 0.1s, border-color 0.1s;
 }
 
-.navBtn:hover {
-    background: var(--color-navy-alpha-6);
+.navBtn:hover:not(:disabled) {
+    background: var(--color-cream);
     border-color: var(--color-navy);
+}
+
+.navBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 /* ── Scope toggle ─────────────────────────────────────────────────────────── */
@@ -82,7 +87,7 @@
     background: var(--color-white);
     color: var(--color-text-mid);
     cursor: pointer;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     transition: background 0.1s, color 0.1s;
 }
 
@@ -109,7 +114,7 @@
     background: var(--color-white);
     color: var(--color-text-mid);
     cursor: pointer;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     transition: all 0.1s;
     white-space: nowrap;
 }
@@ -125,7 +130,333 @@
     color: var(--color-navy);
 }
 
-/* ── Column manager panel ─────────────────────────────────────────────────── */
+/* ── Menu dropdown ──────────────────────────────────────────────────────────── */
+
+.menuWrapper {
+    position: relative;
+}
+
+.menuDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 180px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    font-family: var(--font-body);
+    color: var(--color-navy);
+    background: var(--color-white);
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+}
+
+.menuItem:hover {
+    background: var(--color-cream);
+}
+
+.menuItem:not(:last-child) {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.menuItemActive {
+    background: var(--color-navy-tint);
+}
+
+/* ── Column manager modal ───────────────────────────────────────────────────── */
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-cream);
+}
+
+.modalTitle {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--color-navy);
+    margin: 0;
+}
+
+.modalClose {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--color-text-mid);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.1s;
+}
+
+.modalClose:hover {
+    color: var(--color-navy);
+}
+
+.modalBody {
+    flex: 1;
+    min-height: 0;
+    padding: 16px 20px;
+    overflow-y: auto;
+}
+
+.modalFooter {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-cream);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.btnPrimary {
+    padding: 7px 14px;
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    background: var(--color-rust);
+    color: var(--color-white);
+    font-family: var(--font-body);
+}
+
+.btnGhost {
+    padding: 7px 14px;
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-navy);
+    font-family: var(--font-body);
+}
+
+.columnList {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.columnRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    background: var(--color-white);
+}
+
+.columnRow:first-child {
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.columnRow:last-child {
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.columnRow:only-child {
+    border-radius: var(--radius-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.columnLabel {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-navy);
+}
+
+.columnInput {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: var(--font-body);
+    border: 1px solid var(--color-navy);
+    border-radius: var(--radius-sm);
+    background: var(--color-white);
+    color: var(--color-navy);
+    outline: none;
+}
+
+.columnActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.columnEditBtn,
+.columnHideBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-mid);
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.columnEditBtn:hover {
+    background: var(--color-cream);
+    border-color: var(--color-border);
+    color: var(--color-navy);
+}
+
+.columnHideBtn:hover {
+    background: color-mix(in srgb, var(--color-rust) 10%, transparent);
+    border-color: var(--color-rust);
+    color: var(--color-rust);
+}
+
+/* ── Hidden columns section ────────────────────────────────────────────────── */
+
+.hiddenSection {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+.hiddenToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: var(--font-body);
+    color: var(--color-text-mid);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.1s;
+}
+
+.hiddenToggle:hover {
+    color: var(--color-navy);
+}
+
+.chevronCollapsed {
+    transition: transform 0.2s;
+}
+
+.chevronExpanded {
+    transform: rotate(90deg);
+    transition: transform 0.2s;
+}
+
+.hiddenSection .columnList {
+    margin-top: 8px;
+}
+
+.columnLabelHidden {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-mid);
+}
+
+.columnRestoreBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    font-family: var(--font-body);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-mid);
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.columnRestoreBtn:hover {
+    background: color-mix(in srgb, var(--color-olive) 10%, transparent);
+    border-color: var(--color-olive);
+    color: var(--color-olive);
+}
+
+.addColumnSection {
+    margin-top: 16px;
+}
+
+.addColumnRow {
+    display: flex;
+    gap: 8px;
+}
+
+.addColumnBtn {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: var(--font-body);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-mid);
+    cursor: pointer;
+    transition: all 0.1s;
+}
+
+.addColumnBtn:hover {
+    border-color: var(--color-olive);
+    color: var(--color-olive);
+    background: color-mix(in srgb, var(--color-olive) 5%, transparent);
+}
+
+/* ── Column manager panel (deprecated, kept for reference) ─────────────────── */
 
 .colMgrPanel {
     display: flex;
@@ -181,7 +512,7 @@
     padding: 1px 4px;
     font-size: var(--text-xs);
     font-weight: 600;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     border: 1px solid var(--color-navy);
     border-radius: var(--radius-xs);
     background: var(--color-white);
@@ -209,7 +540,7 @@
     background: transparent;
     color: var(--color-text-mid);
     cursor: pointer;
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     transition: border-color 0.1s, color 0.1s;
 }
 
@@ -246,15 +577,15 @@
     flex-shrink: 0;
     width: 0;
     overflow: hidden;
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .slidePanelOpen {
-    width: 352px; /* 320px card + 32px gutter (padding-left in inner) */
+    width: 392px; /* 360px card + 32px gutter (padding-left in inner) */
 }
 
 .slidePanelInner {
-    width: 320px;
+    width: 360px;
     padding-left: 32px; /* gutter between accordion and panel */
     box-sizing: content-box;
 }

@@ -219,22 +219,22 @@ const plan = (
 });
 
 const PLANS: InstallmentPlan[] = [
-  plan("Due 4th", 32.27, "2026-04", "2026-08"),
-  plan("Due 6th", 25.96, "2026-04", "2026-07"),
-  plan("Due 6th", 36.98, "2026-04", "2026-04"), // single month
-  plan("Due 9th", 21.08, "2026-04", "2027-01"),
-  plan("Due 9th", 15.48, "2026-04", "2027-01"),
-  plan("Due 11th", 76.0, "2026-04", "2026-07"),
-  plan("Due 14th", 15.35, "2026-04", "2026-06"),
-  plan("Due 15th", 9.7, "2026-04", "2026-09"),
-  plan("Due 17th", 11.21, "2026-04", "2026-08"),
-  plan("Due 20th", 28.96, "2026-04", "2027-01"),
-  plan("Due 21st", 10.7, "2026-04", "2026-06"),
-  plan("Due 24th", 15.52, "2026-04", "2026-07"),
-  plan("Due 25th", 13.08, "2026-04", "2026-07"),
-  plan("Due 26th", 13.96, "2026-04", "2026-07"),
-  plan("Due 27th", 15.81, "2026-04", "2026-08"),
-  plan("Due 28th", 34.46, "2026-04", "2026-06"),
+  plan("Affirm — Due 4th", 32.27, "2026-04", "2026-08"),
+  plan("Affirm — Due 6th", 25.96, "2026-04", "2026-07"),
+  plan("Affirm — Due 6th", 36.98, "2026-04", "2026-04"), // single month
+  plan("Affirm — Due 9th", 21.08, "2026-04", "2027-01"),
+  plan("Affirm — Due 9th", 15.48, "2026-04", "2027-01"),
+  plan("Affirm — Due 11th", 76.0, "2026-04", "2026-07"),
+  plan("Affirm — Due 14th", 15.35, "2026-04", "2026-06"),
+  plan("Affirm — Due 15th", 9.7, "2026-04", "2026-09"),
+  plan("Affirm — Due 17th", 11.21, "2026-04", "2026-08"),
+  plan("Affirm — Due 20th", 28.96, "2026-04", "2027-01"),
+  plan("Affirm — Due 21st", 10.7, "2026-04", "2026-06"),
+  plan("Affirm — Due 24th", 15.52, "2026-04", "2026-07"),
+  plan("Affirm — Due 25th", 13.08, "2026-04", "2026-07"),
+  plan("Affirm — Due 26th", 13.96, "2026-04", "2026-07"),
+  plan("Affirm — Due 27th", 15.81, "2026-04", "2026-08"),
+  plan("Affirm — Due 28th", 34.46, "2026-04", "2026-06"),
 ];
 
 // ─── Monthly Income — April 2026 ─────────────────────────────────────────────
@@ -325,4 +325,5 @@ export const SEED_STATE: AppState = {
   paycheckViewScope: "monthly",
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
+  checkEditWarningAcked: false,
 };
