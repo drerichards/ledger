@@ -15,31 +15,45 @@ import {
   buildSavingsTabProps,
 } from "@/components/AppShell/types";
 import { BillChart } from "@/components/BillChartTab/BillChart";
-import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
+import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
 import { HistoryTab } from "@/components/HistoryTab/HistoryTab";
+import { ActivityTab } from "@/components/ActivityTab/ActivityTab";
 import styles from "./AppShell.module.css";
 
-type Tab = "bills" | "affirm" | "paycheck" | "savings" | "history";
+type Tab = "bills" | "paycheck" | "affirm" | "savings" | "history" | "activity";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "bills", label: "Bill Chart" },
-  { id: "affirm", label: "Affirm Plans" },
-  { id: "paycheck", label: "Paycheck" },
-  { id: "savings", label: "Savings" },
-  { id: "history", label: "History" },
+  { id: "bills",    label: "Accounts"  },
+  { id: "paycheck", label: "Paycheck"  },
+  { id: "affirm",   label: "Affirm"    },
+  { id: "savings",  label: "Savings"   },
+  { id: "history",  label: "Snapshots" },
+  { id: "activity", label: "Activity"  },
 ];
 
 // Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
 const SafeBillChart = withErrorBoundary(BillChart, "BillChart");
-const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
 const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
+const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
 const SafeSavingsTab = withErrorBoundary(SavingsTab, "SavingsTab");
+const SafeActivityTab = withErrorBoundary(ActivityTab, "ActivityTab");
 const SafeHistoryTab = withErrorBoundary(HistoryTab, "HistoryTab");
 
 export function AppShell() {
+  // Always start with "bills" so server and client render identically (no hydration mismatch).
+  // After hydration, read the URL and jump to the correct tab.
   const [activeTab, setActiveTab] = useState<Tab>("bills");
+
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get(
+      "tab",
+    ) as Tab | null;
+    if (t && TABS.some((tab) => tab.id === t)) {
+      setActiveTab(t);
+    }
+  }, []);
   const [printAll, setPrintAll] = useState(false);
   const [viewMonth, setViewMonth] = useState(() =>
     advanceMonth(currentMonth(), 1),
@@ -64,6 +78,13 @@ export function AppShell() {
       }
     });
   }, []);
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url.toString());
+  };
 
   const handlePrintTab = () => window.print();
 
@@ -101,8 +122,8 @@ export function AppShell() {
   };
 
   const billChartProps = buildBillChartProps(deps);
-  const affirmTabProps = buildAffirmTabProps(deps);
   const paycheckTabProps = buildPaycheckTabProps(deps);
+  const affirmTabProps = buildAffirmTabProps(deps);
   const savingsTabProps = buildSavingsTabProps(deps);
 
   return (
@@ -113,7 +134,7 @@ export function AppShell() {
           notifications={notifications}
           seenNotificationIds={s.seenNotificationIds ?? []}
           onMarkNotificationsSeen={actions.markNotificationsSeen}
-          onNavigateToAffirm={() => setActiveTab("affirm")}
+          onNavigateToAffirm={() => handleTabChange("affirm")}
           onViewAllNotifications={() => router.push("/notifications")}
           onPrintTab={handlePrintTab}
           onPrintAll={handlePrintAll}
@@ -124,7 +145,7 @@ export function AppShell() {
             <button
               key={tab.id}
               className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               aria-selected={activeTab === tab.id}
               role="tab"
             >
@@ -142,22 +163,25 @@ export function AppShell() {
           <>
             <SafeBillChart {...billChartProps} />
             <div className={styles.printPageBreak} />
-            <SafeAffirmTab {...affirmTabProps} />
-            <div className={styles.printPageBreak} />
             <SafePaycheckTab {...paycheckTabProps} />
             <div className={styles.printPageBreak} />
+            <SafeAffirmTab {...affirmTabProps} />
+            <div className={styles.printPageBreak} />
             <SafeSavingsTab {...savingsTabProps} />
+            <div className={styles.printPageBreak} />
+            <SafeActivityTab bills={s.bills} />
             <div className={styles.printPageBreak} />
             <SafeHistoryTab snapshots={s.snapshots} />
           </>
         ) : (
           <>
             {activeTab === "bills" && <SafeBillChart {...billChartProps} />}
-            {activeTab === "affirm" && <SafeAffirmTab {...affirmTabProps} />}
             {activeTab === "paycheck" && (
               <SafePaycheckTab {...paycheckTabProps} />
             )}
+            {activeTab === "affirm" && <SafeAffirmTab {...affirmTabProps} />}
             {activeTab === "savings" && <SafeSavingsTab {...savingsTabProps} />}
+            {activeTab === "activity" && <SafeActivityTab bills={s.bills} />}
             {activeTab === "history" && (
               <SafeHistoryTab snapshots={s.snapshots} />
             )}

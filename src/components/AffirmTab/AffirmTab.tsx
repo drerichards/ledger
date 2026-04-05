@@ -5,6 +5,7 @@ import type { InstallmentPlan } from "@/types";
 import { fmtMoney } from "@/lib/money";
 import { fmtMonthLabel } from "@/lib/dates";
 import { useAffirmTabState } from "@/hooks/useAffirmTabState";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AffirmForm } from "./AffirmForm";
 import { PlanRow } from "./PlanRow/PlanRow";
 import styles from "./AffirmTab.module.css";
@@ -25,7 +26,10 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className={styles.toolbar}>
         <h2 className={styles.heading}>Affirm Plans</h2>
-        <button className={styles.btnPrimary} onClick={() => setShowForm(true)}>
+        <button
+          className={styles.btnPrimary}
+          onClick={() => setShowForm(true)}
+        >
           + Add Plan
         </button>
       </div>
@@ -36,78 +40,88 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
           No installment plans yet.
           <br />
           <span className={styles.emptySubtext}>
-            Add an Affirm or layaway plan to track monthly payments and see when
-            they end.
+            Add an Affirm or layaway plan to track monthly payments and see
+            when they end.
           </span>
         </div>
       )}
 
       {/* ── Grid ──────────────────────────────────────────────────── */}
       {plans.length > 0 && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col" className={`${styles.th} ${styles.thPlan}`}>
-                  Plan
-                </th>
-                {months.map((m) => (
+        <div className={styles.cardWrapper}>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr className={styles.headerRow}>
                   <th
-                    key={m}
+                    className={`${styles.th} ${styles.thPlan}`}
                     scope="col"
-                    className={`${styles.th} ${m === now ? styles.thCurrent : ""}`}
+                    style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
                   >
-                    {fmtMonthLabel(m)}
+                    Plan
                   </th>
+                  {months.map((m) => (
+                    <th
+                      key={m}
+                      scope="col"
+                      className={`${styles.th} ${m === now ? styles.thCurrent : ""}`}
+                      style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+                    >
+                      {fmtMonthLabel(m)}
+                    </th>
+                  ))}
+                  <th
+                    className={`${styles.th} ${styles.thTotal}`}
+                    scope="col"
+                    style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+                  >
+                    Total Owed
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {plans.map((plan) => (
+                  <PlanRow
+                    key={plan.id}
+                    plan={plan}
+                    months={months}
+                    totalOwed={totalOwedByPlan.get(plan.id) ?? 0}
+                    onDelete={onDelete}
+                  />
                 ))}
-                <th scope="col" className={`${styles.th} ${styles.thTotal}`}>
-                  Total Owed
-                </th>
-                <th scope="col" className={`${styles.th} ${styles.thDelete}`} />
-              </tr>
-            </thead>
+              </tbody>
 
-            <tbody>
-              {plans.map((plan) => (
-                <PlanRow
-                  key={plan.id}
-                  plan={plan}
-                  months={months}
-                  totalOwed={totalOwedByPlan.get(plan.id) ?? 0}
-                  onDelete={onDelete}
-                />
-              ))}
-            </tbody>
-
-            {/* ── Monthly burden totals row ────────────────────────── */}
-            <tfoot>
-              <tr className={styles.totalRow}>
-                <td className={styles.totalLabel}>Monthly Total</td>
-                {months.map((m) => (
-                  <td key={m} className={styles.totalCell}>
-                    {fmtMoney(monthlyTotals.get(m) ?? 0)}
+              <tfoot>
+                <tr className={styles.totalRow}>
+                  <td className={styles.totalLabel}>Monthly Total</td>
+                  {months.map((m) => (
+                    <td key={m} className={styles.totalCell}>
+                      {fmtMoney(monthlyTotals.get(m) ?? 0)}
+                    </td>
+                  ))}
+                  <td className={`${styles.totalCell} ${styles.totalCellRight}`}>
+                    {fmtMoney(grandTotalOwed)}
                   </td>
-                ))}
-                <td className={`${styles.totalCell} ${styles.totalCellRight}`}>
-                  {fmtMoney(grandTotalOwed)}
-                </td>
-                <td className={styles.totalCellEnd} />
-              </tr>
-            </tfoot>
-          </table>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
       )}
 
       {/* ── Add Plan Modal ────────────────────────────────────────── */}
-      {showForm && (
-        <AffirmForm
-          onSave={(plan) => {
-            onAdd(plan);
-            setShowForm(false);
-          }}
-          onClose={() => setShowForm(false)}
-        />
-      )}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent>
+          <AffirmForm
+            onSave={(plan) => {
+              onAdd(plan);
+              setShowForm(false);
+            }}
+            onClose={() => setShowForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

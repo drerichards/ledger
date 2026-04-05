@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test:*)",
+      "Bash(pnpm tsc:*)",
+      "mcp__memory__create_entities",
+      "mcp__context7__resolve-library-uri",
+      "mcp__context7__search-library-docs",
+      "Bash(pnpm jest:*)",
+      "mcp__filesystem__read_text_file",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm test:*)",
+      "mcp__memory__search_nodes",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(npx jest --bail --ci)",
+      "Bash(find:*)",
+      "Bash(npx shadcn@latest add badge dialog select separator)",
+      "mcp__memory__add_observations",
+      "Bash(test -f:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm eslint:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx shadcn@latest add alert-dialog:*)",
+      "mcp__memory__create_relations",
+      "mcp__memory__read_graph"
+    ]
+  }
+}

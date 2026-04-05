@@ -1,6 +1,12 @@
 .shell {
   min-height: 100vh;
-  background: var(--color-cream);
+  background:
+    linear-gradient(180deg,
+      #b8c8d8 0%,
+      #c8d5e2 18%,
+      #d4dfe9 45%,
+      #dde6ef 100%
+    );
   display: flex;
   flex-direction: column;
 }
@@ -12,14 +18,15 @@
 }
 
 .tabBar {
-  background: var(--color-navy-dark);
+  background: linear-gradient(180deg, var(--color-navy-dark) 0%, #172533 100%);
   display: flex;
   padding: 0 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tabButton {
   padding: 9px 20px;
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -45,7 +52,7 @@
 
 .viewMonth {
   margin-left: auto;
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   font-size: var(--text-sm);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
@@ -58,10 +65,10 @@
 
 .content {
   flex: 1;
-  max-width: 1100px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--space-6) 28px;
+  padding: var(--space-6) var(--space-8);
 }
 
 @media print {

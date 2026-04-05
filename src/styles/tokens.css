@@ -1,45 +1,71 @@
 :root {
     /* ── Brand Colors ────────────────────────────────────────────── */
-    --color-navy: #1E3A5F;
-    --color-navy-dark: #18304F;
-    --color-navy-tint: #E8EDF5;       /* light navy wash — table current-col, row hover */
-    --color-olive: #5C6B2E;
-    --color-olive-light: #EEF1E3;
-    --color-olive-border: #C8D8A8;    /* olive-tinted border — active plan cells */
-    --color-rust: #C4522A;
-    --color-rust-light: #FAE9E2;
-    --color-rust-border: #A8431D;     /* darker rust border — final payment column */
-    --color-rust-tint: #F5EDE8;       /* warm rust wash — rent-week rows */
-    --color-cream: #F5F0E8;
-    --color-cream-mid: #F0EDE8;       /* slightly deeper cream — inactive grid cells */
-    --color-surface: #FAFAF8;         /* near-white surface — alternating table rows */
-    --color-border: #E0D9CE;
-    --color-text: #1A1A1A;
-    --color-text-mid: #666666;
-    --color-white: #FFFFFF;
+    --color-navy: #274058;           /* Yale Blue — authority, primary actions */
+    --color-navy-dark: #1C2F40;      /* darker navy for active states */
+    --color-navy-tint: #E9EDF1;      /* light yale blue wash — derived from #274058 */
+
+    --color-olive: #898B5E;          /* Pale Olive — positive progress, savings */
+    --color-olive-dark: #41521F;     /* Olive Leaf — deep olive for emphasis */
+    --color-olive-darker: #63652C;   /* Darker Olive — strong emphasis */
+    --color-olive-light: #F4F4ED;    /* light olive tint — derived from #898B5E */
+    --color-olive-border: #B4B591;   /* mid olive border — derived from #898B5E */
+
+    --color-rust: #C4522A;           /* Red Ochre — urgent, warnings, final payments */
+    --color-rust-light: #F9EDE6;     /* light red ochre wash — derived from #C4522A */
+    --color-rust-border: #A84422;    /* darker rust border — derived from #C4522A */
+    --color-rust-tint: #FDF6F3;      /* very light rust tint — derived from #C4522A */
+
+    --color-gold: #FDB833;           /* Sunflower Gold — celebrations, achievements */
+    --color-gold-muted: #CAA632;     /* Soft Fawn — muted gold accent */
+    --color-gold-light: #FFF5E0;     /* soft gold wash */
+    --color-gold-border: #F5A623;    /* darker gold border */
+
+    --color-brown: #835225;          /* Saddle Brown — earthy accent */
+    --color-brown-light: #A67B4A;    /* lighter brown for gradients */
+    --color-brown-wash: #7A96B4;     /* repointed — cool blue-grey neutral */
+
+    --color-fawn: #7A96B4;           /* repointed — cool blue-grey neutral */
+    --color-fawn-light: #EDF1F7;     /* repointed — cool blue-grey wash */
+    --color-fawn-border: #CDD4DF;    /* repointed — cool neutral border */
+
+    --color-cream: #EDF1F7;          /* cool blue-grey — replaces all warm cream usage */
+    --color-cream-mid: #E6EBF3;      /* slightly deeper cool blue-grey */
+    --color-surface: #F5F7FB;        /* cool surface — near-white with blue tint */
+    --color-border: #D8DEE8;         /* cool neutral border */
+    --color-text: #1A1A1A;           /* primary text */
+    --color-text-mid: #666666;       /* secondary text */
+    --color-white: #FFFFFF;          /* primary canvas */
 
     /* ── Alpha surfaces (color-mix keeps derivation tied to brand tokens) ── */
     --color-navy-alpha-6: color-mix(in srgb, var(--color-navy) 6%, transparent);
+    --color-olive-alpha-10: color-mix(in srgb, var(--color-olive) 10%, transparent);
+    --color-olive-alpha-15: color-mix(in srgb, var(--color-olive) 15%, transparent);
     --color-rust-alpha-7: color-mix(in srgb, var(--color-rust) 7%, transparent);
     --color-rust-alpha-8: color-mix(in srgb, var(--color-rust) 8%, transparent);
     --color-rust-alpha-25: color-mix(in srgb, var(--color-rust) 25%, transparent);
+    --color-gold-alpha-10: color-mix(in srgb, var(--color-gold) 10%, transparent);
+    --color-gold-alpha-20: color-mix(in srgb, var(--color-gold) 20%, transparent);
 
     /* ── Typography ──────────────────────────────────────────────── */
-    --font-display: 'Playfair Display', serif;
-    --font-heading: 'Playfair Display', serif; /* alias — same font, clearer intent */
-    --font-body: 'DM Sans', sans-serif;
+    --font-primary: 'Poppins', sans-serif;
+    /* headings, body, UI */
     --font-mono: 'DM Mono', monospace;
+    /* currency, numbers in tables */
 
-    --text-2xs: 8px;     /* tiny badge text */
-    --text-xxs: 9px;     /* dense table column labels */
-    --text-mini: 10px;   /* small badges, flags */
+    --text-2xs: 8px;
+    /* tiny badge text */
+    --text-xxs: 9px;
+    /* dense table column labels */
+    --text-mini: 10px;
+    /* small badges, flags */
     --text-xs: 13px;
     --text-sm: 14px;
     --text-base: 15px;
     --text-md: 16px;
     --text-lg: 20px;
     --text-xl: 24px;
-    --text-2xl: 28px;    /* large stat values */
+    --text-2xl: 28px;
+    /* large stat values */
     --text-3xl: 32px;
 
     /* ── Spacing ─────────────────────────────────────────────────── */
@@ -58,18 +84,31 @@
     --radius-lg: 6px;
     --radius-xl: 8px;
     --radius-2xl: 12px;
-    --radius-3xl: 14px;  /* login logo mark */
+    --radius-3xl: 14px;
+    /* login logo mark */
 
     /* ── Shadows ─────────────────────────────────────────────────── */
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
     --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.12);
     --shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.15);
     --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.25);
     --shadow-overlay: 0 8px 32px rgba(0, 0, 0, 0.30);
+    --shadow-frosted: 0 4px 30px rgba(0, 0, 0, 0.06);
+
+    /* ── Glass/Frosted effects ──────────────────────────────────── */
+    --glass-blur: blur(12px);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-strong: rgba(255, 255, 255, 0.92);
+    --glass-border: rgba(255, 255, 255, 0.5);
 
     /* ── Z-index ─────────────────────────────────────────────────── */
     --z-modal: 1000;
 
     /* ── Touch targets ───────────────────────────────────────────── */
     --min-touch: 44px;
+
+    /* ── Animation ──────────────────────────────────────────────────── */
+    --anim-speed: 0.15s;
 }

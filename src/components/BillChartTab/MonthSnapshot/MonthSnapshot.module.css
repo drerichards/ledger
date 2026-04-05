@@ -39,7 +39,7 @@
     cursor: pointer;
     background: var(--color-rust);
     color: var(--color-white);
-    font-family: var(--font-body);
+    font-family: var(--font-primary);
 }
 
 .btnGhost {
@@ -51,5 +51,5 @@
     cursor: pointer;
     background: transparent;
     color: var(--color-navy);
-    font-family: var(--font-body);
+    font-family: var(--font-primary);
 }

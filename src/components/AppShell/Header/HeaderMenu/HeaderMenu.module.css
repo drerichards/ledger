@@ -34,7 +34,7 @@
   top: calc(100% + 6px);
   right: 0;
   min-width: 168px;
-  background: var(--color-cream);
+  background: var(--color-white);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-dropdown);
@@ -47,7 +47,7 @@
   width: 100%;
   padding: 9px 14px;
   text-align: left;
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-navy);
