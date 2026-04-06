@@ -1,10 +1,14 @@
 #!/usr/bin/env sh
+set -e
 
-# 1. ESLint on staged files (fast — only what changed)
-pnpm lint-staged
+echo "→ eslint (staged files)"
+STAGED=$(git diff --cached --name-only --diff-filter=d -- '*.ts' '*.tsx')
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs ./node_modules/.bin/eslint --max-warnings=0
+fi
 
-# 2. TypeScript — whole project (can't scope to staged files)
-pnpm type-check
+echo "→ type-check"
+./node_modules/.bin/tsc --noEmit
 
-# 3. Unit tests (fast with --bail so first failure stops the run)
-pnpm test --bail --ci
+echo "→ tests"
+./node_modules/.bin/jest --passWithNoTests --bail --ci

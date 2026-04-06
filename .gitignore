@@ -49,6 +49,7 @@ LEDGER.md
 # SWC cache
 .swc/
 
-# Claude Skills
-.claude-skills/
+# Claude
+.claude/
+.wolf/
 ctx/
