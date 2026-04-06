@@ -152,6 +152,41 @@ describe("loadState", () => {
     const state = loadState();
     expect(state.checkEditWarningAcked).toBe(false);
   });
+
+  // ── CheckLog merge ────────────────────────────────────────────────────────────
+
+  it("returns stored checkLog as-is when it already has 12+ entries (line 43 branch)", () => {
+    const checkLog = Array.from({ length: 12 }, (_, i) => ({
+      weekOf: `2026-04-${String(i + 1).padStart(2, "0")}`,
+      amount: 50000,
+    }));
+    setRaw({ ...INITIAL_STATE, checkLog });
+    const state = loadState();
+    expect(state.checkLog).toHaveLength(12);
+    // Verify the seed merge did NOT add extra entries
+    expect(state.checkLog[0].weekOf).toBe("2026-04-01");
+  });
+
+  it("merges seed entries into stored checkLog when stored has fewer than 12 entries (Map callback coverage)", () => {
+    // A single entry with a weekOf that won't collide with seed data forces the
+    // stored.map((e) => [e.weekOf, e]) callback to actually execute with an item
+    const storedEntry = { weekOf: "2099-01-01", amount: 99999 };
+    setRaw({ ...INITIAL_STATE, checkLog: [storedEntry] });
+    const state = loadState();
+    // Stored entry is preserved
+    expect(state.checkLog.some((e) => e.weekOf === "2099-01-01")).toBe(true);
+    // Seed entries are merged in (total > 1)
+    expect(state.checkLog.length).toBeGreaterThan(1);
+  });
+
+  // ── Plan migration ────────────────────────────────────────────────────────────
+
+  it("uses parsed plans when stored state has non-empty plans (line 58 true branch)", () => {
+    const plans = [{ id: "custom-plan", label: "Test Plan", mc: 5000, start: "2026-01", end: "2026-06" }];
+    setRaw({ ...INITIAL_STATE, plans });
+    const state = loadState();
+    expect(state.plans[0].id).toBe("custom-plan");
+  });
 });
 
 // ── saveState / clearState ────────────────────────────────────────────────────

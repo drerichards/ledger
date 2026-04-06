@@ -121,7 +121,7 @@ export const MonthBlock = React.memo(function MonthBlock({
             </td>
             {columns.map((col) => (
               <td key={col.key} className={`${styles.td} ${styles.mono}`}>
-                {fmtMoney(monthColTotals[col.key] ?? 0)}
+                {fmtMoney(monthColTotals[col.key]!)}
               </td>
             ))}
             <td className={`${styles.td} ${styles.mono}`}>

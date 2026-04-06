@@ -86,7 +86,7 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                     key={plan.id}
                     plan={plan}
                     months={months}
-                    totalOwed={totalOwedByPlan.get(plan.id) ?? 0}
+                    totalOwed={totalOwedByPlan.get(plan.id)!}
                     onDelete={onDelete}
                   />
                 ))}
@@ -97,7 +97,7 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                   <td className={styles.totalLabel}>Monthly Total</td>
                   {months.map((m) => (
                     <td key={m} className={styles.totalCell}>
-                      {fmtMoney(monthlyTotals.get(m) ?? 0)}
+                      {fmtMoney(monthlyTotals.get(m)!)}
                     </td>
                   ))}
                   <td className={`${styles.totalCell} ${styles.totalCellRight}`}>

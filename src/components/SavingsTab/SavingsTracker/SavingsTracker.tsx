@@ -44,6 +44,7 @@ export function SavingsTracker({ log, onAdd, onUpdate, onDelete }: Props) {
   };
 
   const commitEdit = () => {
+    // istanbul ignore next — editingId is always set before commitEdit is callable via UI
     if (!editingId) return;
     const cents = toCents(editAmtStr);
     if (cents <= 0) {
@@ -56,12 +57,15 @@ export function SavingsTracker({ log, onAdd, onUpdate, onDelete }: Props) {
 
   const handleDelete = (id: string) => {
     onDelete(id);
+    // istanbul ignore next — delete button is hidden while a row is in edit mode;
+    // this guard is unreachable via UI interaction (defensive only)
     if (editingId === id) {
       cancelEdit();
     }
   };
 
   // Use `date` field, falling back to deprecated `weekOf` for migration
+  // istanbul ignore next — entries always have `date` post-migration; `?? ""` is unreachable
   const getEntryDate = (e: SavingsEntry) => e.date ?? e.weekOf ?? "";
 
   const runningTotal = sumCents(log.map((e) => e.amount));

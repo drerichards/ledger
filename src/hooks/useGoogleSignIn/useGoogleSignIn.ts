@@ -16,6 +16,7 @@ type UseGoogleSignIn = {
 export function useGoogleSignIn(): UseGoogleSignIn {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    // istanbul ignore next — JSDOM always has window; SSR guard is not testable in jest
     if (typeof window === "undefined") return null;
     return new URLSearchParams(window.location.search).get("error")
       ? "Sign-in failed. Please try again."

@@ -98,6 +98,7 @@ export function AccountsTab({
   };
 
   const confirmRollover = () => {
+    // istanbul ignore next — confirmRollover only callable when rolloverPrompt is set; guard is unreachable via UI
     if (!rolloverPrompt) return;
     onRollover(rolloverPrompt.from, rolloverPrompt.to);
     setViewMonth(rolloverPrompt.to);
@@ -105,6 +106,7 @@ export function AccountsTab({
   };
 
   const dismissRollover = () => {
+    // istanbul ignore next — dismissRollover only callable when rolloverPrompt is set; guard is unreachable via UI
     if (!rolloverPrompt) return;
     setViewMonth(rolloverPrompt.to);
     setRolloverPrompt(null);

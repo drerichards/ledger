@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party skill bundles — not project source
+    ".claude-skills/**",
+    // Generated coverage output
+    "coverage/**",
+    // Config files that legitimately use require()
+    "jest.config.js",
+    "tailwind.config.ts",
   ]),
   {
     rules: {

@@ -116,6 +116,7 @@ export function AppShell() {
         <Header
           userName={userName}
           notifications={notifications}
+          // istanbul ignore next — INITIAL_STATE always initializes seenNotificationIds
           seenNotificationIds={s.seenNotificationIds ?? []}
           onMarkNotificationsSeen={actions.markNotificationsSeen}
           onNavigateToAffirm={() => setActiveTab("affirm")}

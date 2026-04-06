@@ -4,12 +4,21 @@ import {
   getVisibleMonths,
   emptyWeek,
 } from "./usePaycheckTabState";
+import { getMondaysInMonth } from "@/lib/dates";
 import type {
   InstallmentPlan,
   KiasCheckEntry,
   PaycheckWeek,
   SavingsEntry,
 } from "@/types";
+
+jest.mock("@/lib/dates", () => ({
+  ...jest.requireActual("@/lib/dates"),
+  // Wrap as jest.fn so individual tests can use mockReturnValueOnce
+  getMondaysInMonth: jest.fn((...args: Parameters<typeof import("@/lib/dates").getMondaysInMonth>) =>
+    jest.requireActual("@/lib/dates").getMondaysInMonth(...args),
+  ),
+}));
 
 // ─── Factories ────────────────────────────────────────────────────────────────
 
@@ -124,6 +133,21 @@ describe("emptyWeek", () => {
   it("sets weekOf to the provided date string", () => {
     const week = emptyWeek("2026-05-04");
     expect(week.weekOf).toBe("2026-05-04");
+  });
+
+  it("copies template.extra when present (extra truthy branch)", () => {
+    const template = makeWeek({ extra: { custom_123: 5000 } });
+    const week = emptyWeek("2026-05-04", template);
+    expect(week.extra).toEqual({ custom_123: 5000 });
+    // Must be a copy, not the same reference
+    expect(week.extra).not.toBe(template.extra);
+  });
+
+  it("uses empty object for extra when template has no extra (extra falsy branch)", () => {
+    const template = makeWeek();
+    // template.extra is undefined or {} — both falsy-ish; ensure we get {}
+    const week = emptyWeek("2026-05-04", template);
+    expect(week.extra).toEqual({});
   });
 });
 
@@ -242,4 +266,40 @@ describe("usePaycheckTabState — monthData", () => {
     expect(affirmTotal).toBe(8000);
     expect(affirmPerWeek).toBe(Math.round(8000 / mondays.length));
   });
+
+  it("affirmPerWeek defaults to 0 when getMondaysInMonth returns empty array (line 37 falsy branch)", () => {
+    (getMondaysInMonth as jest.Mock).mockReturnValueOnce([]);
+    const plans = [makePlan({ mc: 8000, start: "2026-04", end: "2026-04" })];
+    const { result } = renderHook(() =>
+      usePaycheckTabState([], [], [], plans, ["2026-04"]),
+    );
+    expect(result.current.monthData[0].affirmPerWeek).toBe(0);
+  });
+
+  it("groups savings entries using weekOf when date field is absent (lines 46/50 weekOf branch)", () => {
+    // Entry has no date — should fall through to weekOf
+    const savingsLog: SavingsEntry[] = [
+      { id: "s1", weekOf: "2026-04-06", amount: 3000 } as SavingsEntry,
+    ];
+    const { result } = renderHook(() =>
+      usePaycheckTabState([], [], savingsLog, [], ["2026-04"]),
+    );
+    expect(result.current.monthData[0].savingsByWeek.get("2026-04-06")).toBe(3000);
+  });
+
+  it("ignores savings entry with neither date nor weekOf — falls back to empty string (lines 46/50 empty branch)", () => {
+    // Entry has neither date nor weekOf → dateStr = "" → doesn't match month prefix
+    const savingsLog: SavingsEntry[] = [
+      { id: "s1", amount: 3000 } as SavingsEntry,
+    ];
+    const { result } = renderHook(() =>
+      usePaycheckTabState([], [], savingsLog, [], ["2026-04"]),
+    );
+    expect(result.current.monthData[0].savingsByWeek.size).toBe(0);
+  });
+
+  // NOTE: line 50 `?? ""` inside the forEach is logically unreachable —
+  // the filter at line 46 already ensures only entries whose dateStr starts
+  // with the month prefix enter the forEach. An empty string ("") can never
+  // pass .startsWith("2026-04"), so the ?? "" fallback in forEach never fires.
 });

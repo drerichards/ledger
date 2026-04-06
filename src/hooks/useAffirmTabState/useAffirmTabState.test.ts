@@ -90,6 +90,44 @@ describe("useAffirmTabState — milestonePlans", () => {
   });
 });
 
+describe("useAffirmTabState — grandTotalOwed + monthlyTotals", () => {
+  it("computes grandTotalOwed as sum of mc × active months per plan", () => {
+    // Plan active Jan–Mar (3 months) with mc=5000 → 15000
+    const plans = [makePlan({ id: "p1", mc: 5000, start: "2026-01", end: "2026-03" })];
+    const { result } = renderHook(() => useAffirmTabState(plans));
+    expect(result.current.grandTotalOwed).toBe(15000);
+  });
+
+  it("grandTotalOwed is 0 for an empty plans array", () => {
+    const { result } = renderHook(() => useAffirmTabState([]));
+    expect(result.current.grandTotalOwed).toBe(0);
+  });
+
+  it("monthlyTotals has an entry for each column month", () => {
+    const plans = [makePlan({ start: "2026-04", end: "2026-06" })];
+    const { result } = renderHook(() => useAffirmTabState(plans));
+    const { months, monthlyTotals } = result.current;
+    expect(monthlyTotals.size).toBe(months.length);
+  });
+
+  it("monthlyTotals sums mc across plans active in a given month", () => {
+    const plans = [
+      makePlan({ id: "p1", mc: 3000, start: "2026-04", end: "2026-04" }),
+      makePlan({ id: "p2", mc: 2000, start: "2026-04", end: "2026-05" }),
+    ];
+    const { result } = renderHook(() => useAffirmTabState(plans));
+    expect(result.current.monthlyTotals.get("2026-04")).toBe(5000);
+  });
+
+  it("totalOwedByPlan maps plan id to mc × active months count", () => {
+    // Plan active Apr–May (2 months) with mc=4000 → 8000
+    const plans = [makePlan({ id: "p1", mc: 4000, start: "2026-04", end: "2026-05" })];
+    const { result } = renderHook(() => useAffirmTabState(plans));
+    expect(result.current.totalOwedByPlan.get("p1")).toBe(8000);
+  });
+
+});
+
 describe("useAffirmTabState — memoization", () => {
   it("returns same reference when plans array is stable", () => {
     const plans = [makePlan()];

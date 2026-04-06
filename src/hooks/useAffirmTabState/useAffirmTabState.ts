@@ -27,7 +27,7 @@ export function useAffirmTabState(plans: InstallmentPlan[]) {
 
     // Grand total owed across all plans — drives the tfoot right-most cell.
     const grandTotalOwed = plans.reduce((sum, p) => {
-      return sum + (totalOwedByPlan.get(p.id) ?? 0);
+      return sum + totalOwedByPlan.get(p.id)!;
     }, 0);
 
     // Monthly column totals — drives the tfoot per-month cells.

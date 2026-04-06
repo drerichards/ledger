@@ -135,6 +135,11 @@ describe("exportBillsCSV", () => {
       expect(capturedCSV).toContain("Other Income");
     });
 
+    it("formats manual entry as 'Manual' (line 29 falsy branch)", () => {
+      exportBillsCSV([makeBill({ entry: "manual" })]);
+      expect(capturedCSV).toContain("Manual");
+    });
+
     it("formats amount as a dollar string", () => {
       exportBillsCSV([makeBill({ cents: 108400 })]);
       expect(capturedCSV).toContain("$1,084.00");

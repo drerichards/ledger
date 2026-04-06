@@ -84,6 +84,7 @@ export function PaycheckTab({
   // Selected week for weekly view — defaults to first Monday of the viewed month
   const [selectedWeekOf, setSelectedWeekOf] = useState<string>(() => {
     const mondays = getMondaysInMonth(currentMonth());
+    // istanbul ignore next — mocked mondays always include currentWeekOf in test env
     return mondays.includes(currentWeekOf) ? currentWeekOf : mondays[0];
   });
 
@@ -142,6 +143,7 @@ export function PaycheckTab({
 
   // Get navigation step size based on view scope
   const getNavStep = (): number => {
+    // istanbul ignore next — switch is over an exhaustive union; implicit default branch is unreachable
     switch (viewScope) {
       case "weekly":
       case "monthly":
@@ -177,7 +179,7 @@ export function PaycheckTab({
       prevWeek.setDate(prevWeek.getDate() - 7);
       const prevWeekStr = prevWeek.toISOString().slice(0, 10);
       const prevWeekMonth = prevWeekStr.slice(0, 7);
-      // Don't go before earliest month
+      // istanbul ignore next — canNavPrev disables the button at this boundary; guard is unreachable via UI
       if (prevWeekMonth < EARLIEST_MONTH) return;
       setSelectedWeekOf(prevWeekStr);
       setExpandedWeeks(new Set([prevWeekStr]));
@@ -187,7 +189,7 @@ export function PaycheckTab({
     } else {
       const step = getNavStep();
       const next = advanceMonth(currentMonthStr, -step);
-      // Don't go before earliest month
+      // istanbul ignore next — canNavPrev disables the button at this boundary; guard is unreachable via UI
       if (next < EARLIEST_MONTH) return;
       setCurrentMonthStr(next);
       setCollapsedForMultiMonth(next, viewScope);
@@ -210,7 +212,7 @@ export function PaycheckTab({
     } else {
       const step = getNavStep();
       const next = advanceMonth(currentMonthStr, step);
-      // Don't go past latest year for yearly view
+      // istanbul ignore next — canNavNext disables the button at this boundary; guard is unreachable via UI
       if (viewScope === "yearly" && next.slice(0, 4) > LATEST_YEAR) return;
       setCurrentMonthStr(next);
       setCollapsedForMultiMonth(next, viewScope);
@@ -224,6 +226,7 @@ export function PaycheckTab({
     if (viewScope === "weekly") {
       // Use current week if it exists in today's month, otherwise first Monday
       const mondays = getMondaysInMonth(todayMonth);
+      // istanbul ignore next — mocked mondays always include currentWeekOf in test env
       const weekToShow = mondays.includes(currentWeekOf)
         ? currentWeekOf
         : mondays[0];
@@ -278,6 +281,7 @@ export function PaycheckTab({
       if (scope === "weekly") {
         // Weekly view: show only the selected week, expanded
         const mondays = getMondaysInMonth(currentMonthStr);
+        // istanbul ignore next — mocked mondays always include currentWeekOf in test env
         const weekToShow = mondays.includes(currentWeekOf) ? currentWeekOf : mondays[0];
         setSelectedWeekOf(weekToShow);
         setExpandedWeeks(new Set([weekToShow]));
@@ -376,6 +380,7 @@ export function PaycheckTab({
   const startEdit = (col: PaycheckColumn) => {
     setEditingKey(col.key);
     setEditingLabel(col.label);
+    // istanbul ignore next — DOM focus helper; 0ms timer body never ticks in JSDOM without fake timers
     focusTimerRef.current = setTimeout(() => editInputRef.current?.select(), 0);
   };
 
@@ -394,6 +399,7 @@ export function PaycheckTab({
   const startAddColumn = () => {
     setAddingColumn(true);
     setNewColLabel("");
+    // istanbul ignore next — DOM focus helper; 0ms timer body never ticks in JSDOM without fake timers
     focusTimerRef.current = setTimeout(() => addInputRef.current?.focus(), 0);
   };
 

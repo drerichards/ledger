@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { useAppState } from "@/hooks/useAppState";
+import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 import type {
   Bill,
   InstallmentPlan,
@@ -23,27 +24,23 @@ jest.mock("@/lib/supabase/sync", () => ({
   deleteCheckEntryRemote: jest.fn(() => Promise.resolve()),
 }));
 
+const mockInitialState = {
+  bills: [],
+  plans: [],
+  checkLog: [],
+  savingsLog: [],
+  income: [],
+  paycheck: [],
+  snapshots: [],
+  paycheckViewScope: "monthly" as const,
+  paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
+  seenNotificationIds: [],
+  checkEditWarningAcked: false,
+};
+
 jest.mock("@/lib/storage", () => ({
-  INITIAL_STATE: {
-    bills: [],
-    plans: [],
-    checkLog: [],
-    savingsLog: [],
-    income: [],
-    paycheck: [],
-    snapshots: [],
-    paycheckViewScope: "monthly",
-  },
-  loadState: jest.fn(() => ({
-    bills: [],
-    plans: [],
-    checkLog: [],
-    savingsLog: [],
-    income: [],
-    paycheck: [],
-    snapshots: [],
-    paycheckViewScope: "monthly",
-  })),
+  get INITIAL_STATE() { return mockInitialState; },
+  loadState: jest.fn(() => ({ ...mockInitialState })),
   saveState: jest.fn(),
   clearState: jest.fn(),
 }));
@@ -331,6 +328,19 @@ describe("useAppState — UPSERT_INCOME", () => {
     });
     expect(result.current.state.income).toHaveLength(2);
   });
+
+  it("preserves non-matching income records when upserting (line 162 inner ternary false branch)", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.upsertIncome(makeIncome({ month: "2026-04", military_pay: 100000 }));
+      result.current.upsertIncome(makeIncome({ month: "2026-05", military_pay: 110000 }));
+    });
+    // Update only April — May must stay unchanged
+    act(() => { result.current.upsertIncome(makeIncome({ month: "2026-04", military_pay: 200000 })); });
+    expect(result.current.state.income).toHaveLength(2);
+    const may = result.current.state.income.find((i) => i.month === "2026-05");
+    expect(may?.military_pay).toBe(110000); // unchanged — hits the `i` else branch
+  });
 });
 
 describe("useAppState — UPSERT_PAYCHECK_WEEK", () => {
@@ -348,6 +358,19 @@ describe("useAppState — UPSERT_PAYCHECK_WEEK", () => {
     expect(result.current.state.paycheck).toHaveLength(1);
     expect(result.current.state.paycheck[0].kiasPay).toBe(90000);
   });
+
+  it("preserves non-matching weeks when upserting (line 173 inner ternary false branch)", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.upsertPaycheckWeek(makeWeek({ weekOf: "2026-04-06", kiasPay: 76423 }));
+      result.current.upsertPaycheckWeek(makeWeek({ weekOf: "2026-04-13", kiasPay: 80000 }));
+    });
+    // Update only Apr 6 — Apr 13 must stay unchanged (hits the `w` else branch)
+    act(() => { result.current.upsertPaycheckWeek(makeWeek({ weekOf: "2026-04-06", kiasPay: 99000 })); });
+    expect(result.current.state.paycheck).toHaveLength(2);
+    const apr13 = result.current.state.paycheck.find((w) => w.weekOf === "2026-04-13");
+    expect(apr13?.kiasPay).toBe(80000);
+  });
 });
 
 describe("useAppState — ADD_SNAPSHOT", () => {
@@ -364,6 +387,19 @@ describe("useAppState — ADD_SNAPSHOT", () => {
 
     expect(result.current.state.snapshots).toHaveLength(1);
     expect(result.current.state.snapshots[0].totalBilled).toBe(200000);
+  });
+
+  it("preserves non-matching snapshots when upserting (line 187 inner ternary false branch)", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBilled: 100000 }));
+      result.current.addSnapshot(makeSnapshot({ month: "2026-05", totalBilled: 120000 }));
+    });
+    // Replace Apr — May must remain unchanged (hits the `s` else branch)
+    act(() => { result.current.addSnapshot(makeSnapshot({ month: "2026-04", totalBilled: 200000 })); });
+    expect(result.current.state.snapshots).toHaveLength(2);
+    const may = result.current.state.snapshots.find((s) => s.month === "2026-05");
+    expect(may?.totalBilled).toBe(120000);
   });
 });
 
@@ -417,5 +453,281 @@ describe("useAppState — ROLLOVER_BILLS", () => {
 
     const mayBill = result.current.state.bills.find((b) => b.month === "2026-05");
     expect(mayBill?.id).not.toBe("original-id"); // must be a fresh id
+  });
+});
+
+// ─── Additional action coverage ───────────────────────────────────────────────
+
+describe("useAppState — ADD_SAVINGS_ENTRY", () => {
+  it("appends a savings entry", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addSavingsEntry({ id: "s1", date: "2026-04-06", amount: 5000 });
+    });
+    expect(result.current.state.savingsLog).toHaveLength(1);
+    expect(result.current.state.savingsLog[0].amount).toBe(5000);
+  });
+});
+
+describe("useAppState — UPDATE_SAVINGS_ENTRY", () => {
+  it("updates a savings entry by id", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addSavingsEntry({ id: "s1", date: "2026-04-06", amount: 5000 });
+    });
+    act(() => {
+      result.current.updateSavingsEntry({ id: "s1", date: "2026-04-06", amount: 9000 });
+    });
+    expect(result.current.state.savingsLog[0].amount).toBe(9000);
+  });
+
+  it("does not affect other entries", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addSavingsEntry({ id: "s1", date: "2026-04-06", amount: 5000 });
+      result.current.addSavingsEntry({ id: "s2", date: "2026-04-13", amount: 3000 });
+    });
+    act(() => {
+      result.current.updateSavingsEntry({ id: "s1", date: "2026-04-06", amount: 9000 });
+    });
+    expect(result.current.state.savingsLog[1].amount).toBe(3000);
+  });
+});
+
+describe("useAppState — DELETE_SAVINGS_ENTRY", () => {
+  it("removes a savings entry by id", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addSavingsEntry({ id: "s1", date: "2026-04-06", amount: 5000 });
+      result.current.addSavingsEntry({ id: "s2", date: "2026-04-13", amount: 3000 });
+    });
+    act(() => { result.current.deleteSavingsEntry("s1"); });
+    expect(result.current.state.savingsLog).toHaveLength(1);
+    expect(result.current.state.savingsLog[0].id).toBe("s2");
+  });
+});
+
+describe("useAppState — SET_PAYCHECK_VIEW_SCOPE", () => {
+  it("updates the paycheck view scope", () => {
+    const { result } = setup();
+    act(() => { result.current.setPaycheckViewScope("quarterly"); });
+    expect(result.current.state.paycheckViewScope).toBe("quarterly");
+  });
+
+  it("can cycle through all scope values", () => {
+    const { result } = setup();
+    for (const scope of ["weekly", "monthly", "quarterly", "yearly"] as const) {
+      act(() => { result.current.setPaycheckViewScope(scope); });
+      expect(result.current.state.paycheckViewScope).toBe(scope);
+    }
+  });
+});
+
+describe("useAppState — RENAME_PAYCHECK_COLUMN", () => {
+  it("renames a column by key", () => {
+    const { result } = setup();
+    act(() => { result.current.renamePaycheckColumn("storage", "Unit Storage"); });
+    const col = result.current.state.paycheckColumns?.find((c) => c.key === "storage");
+    expect(col?.label).toBe("Unit Storage");
+  });
+
+  it("does not affect other columns", () => {
+    const { result } = setup();
+    act(() => { result.current.renamePaycheckColumn("storage", "Unit Storage"); });
+    const rent = result.current.state.paycheckColumns?.find((c) => c.key === "rent");
+    expect(rent?.label).toBe("Rent");
+  });
+});
+
+describe("useAppState — ADD_PAYCHECK_COLUMN", () => {
+  it("appends a new custom column", () => {
+    const { result } = setup();
+    const before = result.current.state.paycheckColumns.length;
+    act(() => { result.current.addPaycheckColumn("Gym"); });
+    expect(result.current.state.paycheckColumns.length).toBe(before + 1);
+  });
+
+  it("new column has fixed: false", () => {
+    const { result } = setup();
+    act(() => { result.current.addPaycheckColumn("Gym"); });
+    const cols = result.current.state.paycheckColumns ?? [];
+    const custom = cols[cols.length - 1];
+    expect(custom.fixed).toBe(false);
+    expect(custom.label).toBe("Gym");
+  });
+
+  it("new column key starts with 'col_'", () => {
+    const { result } = setup();
+    act(() => { result.current.addPaycheckColumn("Gym"); });
+    const cols = result.current.state.paycheckColumns ?? [];
+    expect(cols[cols.length - 1].key).toMatch(/^col_/);
+  });
+});
+
+describe("useAppState — HIDE_PAYCHECK_COLUMN", () => {
+  it("marks a column as hidden", () => {
+    const { result } = setup();
+    act(() => { result.current.hidePaycheckColumn("storage"); });
+    const col = result.current.state.paycheckColumns?.find((c) => c.key === "storage");
+    expect(col?.hidden).toBe(true);
+  });
+
+  it("preserves other columns", () => {
+    const { result } = setup();
+    act(() => { result.current.hidePaycheckColumn("storage"); });
+    const rent = result.current.state.paycheckColumns?.find((c) => c.key === "rent");
+    expect(rent?.hidden).toBeFalsy();
+  });
+});
+
+describe("useAppState — RESTORE_PAYCHECK_COLUMN", () => {
+  it("clears hidden flag on a previously hidden column", () => {
+    const { result } = setup();
+    act(() => { result.current.hidePaycheckColumn("storage"); });
+    act(() => { result.current.restorePaycheckColumn("storage"); });
+    const col = result.current.state.paycheckColumns?.find((c) => c.key === "storage");
+    expect(col?.hidden).toBe(false);
+  });
+});
+
+describe("useAppState — MARK_NOTIFICATIONS_SEEN", () => {
+  it("adds ids to seenNotificationIds", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.markNotificationsSeen(["notif-1", "notif-2"]);
+    });
+    expect(result.current.state.seenNotificationIds).toContain("notif-1");
+    expect(result.current.state.seenNotificationIds).toContain("notif-2");
+  });
+
+  it("does not duplicate ids already seen", () => {
+    const { result } = setup();
+    act(() => { result.current.markNotificationsSeen(["notif-1"]); });
+    act(() => { result.current.markNotificationsSeen(["notif-1", "notif-2"]); });
+    const seen = result.current.state.seenNotificationIds ?? [];
+    const count = seen.filter((id) => id === "notif-1").length;
+    expect(count).toBe(1);
+  });
+});
+
+describe("useAppState — ACK_CHECK_EDIT_WARNING", () => {
+  it("sets checkEditWarningAcked to true", () => {
+    const { result } = setup();
+    act(() => { result.current.ackCheckEditWarning(); });
+    expect(result.current.state.checkEditWarningAcked).toBe(true);
+  });
+});
+
+describe("useAppState — ADD_CHECK_ENTRY (update branch)", () => {
+  it("updates in-place when an entry for the same weekOf already exists", () => {
+    const { result } = setup();
+    // First add creates the entry
+    act(() => { result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 50000 })); });
+    // Second add with same weekOf should update, not append
+    act(() => { result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 80000 })); });
+    expect(result.current.state.checkLog).toHaveLength(1);
+    expect(result.current.state.checkLog[0].amount).toBe(80000);
+  });
+
+  it("preserves non-matching entries when upserting (line 113 inner ternary false branch)", () => {
+    const { result } = setup();
+    // Add two entries for different weeks
+    act(() => {
+      result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 50000 }));
+      result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-13", amount: 60000 }));
+    });
+    // Update only the first entry — the second must remain unchanged (hits the `e` else branch)
+    act(() => { result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 99000 })); });
+    expect(result.current.state.checkLog).toHaveLength(2);
+    expect(result.current.state.checkLog[1].amount).toBe(60000); // Apr 13 unchanged
+  });
+});
+
+describe("useAppState — Supabase hydration", () => {
+  it("hydrates from remote when loadFromSupabase returns data", async () => {
+    const { loadFromSupabase } = jest.requireMock("@/lib/supabase/sync");
+    const remoteState = {
+      ...mockInitialState,
+      bills: [makeBill({ id: "remote-bill" })],
+    };
+    (loadFromSupabase as jest.Mock).mockResolvedValueOnce(remoteState);
+
+    const { result } = setup();
+    // Wait for the async Supabase effect to resolve
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.state.bills.some((b) => b.id === "remote-bill")).toBe(true);
+  });
+
+  it("syncs to Supabase on state change after debounce timer fires", () => {
+    jest.useFakeTimers();
+    const { syncStateToSupabase } = jest.requireMock("@/lib/supabase/sync");
+    const syncSpy = syncStateToSupabase as jest.Mock;
+    syncSpy.mockClear();
+
+    const { result } = setup();
+    act(() => { result.current.addBill(makeBill()); });
+    // Timer not fired yet — debounced at 1.5s
+    jest.advanceTimersByTime(1600);
+    expect(syncSpy).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+
+  it("clears pending debounce timer when a second state change fires before 1.5s elapses (line clearTimeout branch)", () => {
+    jest.useFakeTimers();
+    const { syncStateToSupabase } = jest.requireMock("@/lib/supabase/sync");
+    const syncSpy = syncStateToSupabase as jest.Mock;
+    syncSpy.mockClear();
+
+    const { result } = setup();
+    // First change — starts timer
+    act(() => { result.current.addBill(makeBill({ id: "b1" })); });
+    // Second change before 1.5s — should clear the first timer and set a new one
+    act(() => { result.current.addBill(makeBill({ id: "b2" })); });
+    // Timer hasn't fired yet
+    expect(syncSpy).not.toHaveBeenCalled();
+    // Let the debounce fire
+    jest.advanceTimersByTime(1600);
+    expect(syncSpy).toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+
+  it("cancels the pending debounce timer on unmount (cleanup branch)", () => {
+    jest.useFakeTimers();
+    const { syncStateToSupabase } = jest.requireMock("@/lib/supabase/sync");
+    const syncSpy = syncStateToSupabase as jest.Mock;
+    syncSpy.mockClear();
+
+    const { result, unmount } = setup();
+    act(() => { result.current.addBill(makeBill()); });
+    // Unmount before debounce fires — cleanup should clear the timer
+    unmount();
+    jest.advanceTimersByTime(1600);
+    // The debounce sync should NOT have fired after unmount
+    expect(syncSpy).not.toHaveBeenCalled();
+
+    jest.useRealTimers();
+  });
+});
+
+describe("useAppState — UPDATE_CHECK_ENTRY", () => {
+  it("updates an existing check entry by weekOf", () => {
+    const { result } = setup();
+    act(() => { result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 76423 })); });
+    act(() => { result.current.updateCheckEntry({ weekOf: "2026-04-06", amount: 90000 }); });
+    expect(result.current.state.checkLog[0].amount).toBe(90000);
+  });
+
+  it("does not affect other entries", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-06", amount: 76423 }));
+      result.current.addCheckEntry(makeCheckEntry({ weekOf: "2026-04-13", amount: 80000 }));
+    });
+    act(() => { result.current.updateCheckEntry({ weekOf: "2026-04-06", amount: 90000 }); });
+    expect(result.current.state.checkLog[1].amount).toBe(80000);
   });
 });

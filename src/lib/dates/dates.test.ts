@@ -15,6 +15,9 @@ import {
   advanceMonth,
   getMonthRange,
   getMondaysInMonth,
+  getFridaysInMonth,
+  getFridaysUpToMonth,
+  getMondaysUpToMonth,
   monthsBetween,
   fmtMonthLabel,
   fmtMonthFull,
@@ -183,6 +186,102 @@ describe("date utils", () => {
 
     it("formats January correctly", () => {
       expect(fmtMonthFull("2026-01")).toBe("January 2026");
+    });
+  });
+
+  // ─── getFridaysInMonth ─────────────────────────────────────────────────────
+  describe("getFridaysInMonth", () => {
+    it("returns the correct Fridays for April 2026", () => {
+      // April 2026: 3rd, 10th, 17th, 24th
+      expect(getFridaysInMonth("2026-04")).toEqual([
+        "2026-04-03",
+        "2026-04-10",
+        "2026-04-17",
+        "2026-04-24",
+      ]);
+    });
+
+    it("all returned dates start with the correct year-month prefix", () => {
+      const fridays = getFridaysInMonth("2026-04");
+      expect(fridays.every((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+
+    it("returns 4 or 5 Fridays per month", () => {
+      const count = getFridaysInMonth("2026-04").length;
+      expect(count).toBeGreaterThanOrEqual(4);
+      expect(count).toBeLessThanOrEqual(5);
+    });
+
+    it("pads single-digit days with a leading zero", () => {
+      const fridays = getFridaysInMonth("2026-04");
+      // 2026-04-03 — day 3 must be zero-padded
+      expect(fridays[0]).toBe("2026-04-03");
+    });
+
+    it("handles a month where the 1st is a Friday", () => {
+      // January 2021: Jan 1 is a Friday
+      const fridays = getFridaysInMonth("2021-01");
+      expect(fridays[0]).toBe("2021-01-01");
+    });
+  });
+
+  // ─── getFridaysUpToMonth ───────────────────────────────────────────────────
+  describe("getFridaysUpToMonth", () => {
+    it("returns newest-first ordering", () => {
+      const fridays = getFridaysUpToMonth("2026-04", "2026-03");
+      // All April dates should come before March dates
+      const aprilDates = fridays.filter((d) => d.startsWith("2026-04"));
+      const marchDates = fridays.filter((d) => d.startsWith("2026-03"));
+      expect(fridays.indexOf(aprilDates[0])).toBeLessThan(
+        fridays.indexOf(marchDates[0]),
+      );
+    });
+
+    it("includes both start and end months when fromMonth is specified", () => {
+      const fridays = getFridaysUpToMonth("2026-04", "2026-03");
+      expect(fridays.some((d) => d.startsWith("2026-03"))).toBe(true);
+      expect(fridays.some((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+
+    it("defaults to a 6-month window when fromMonth is omitted", () => {
+      const fridays = getFridaysUpToMonth("2026-04");
+      // 6-month window: 2025-11 through 2026-04
+      expect(fridays.some((d) => d.startsWith("2025-11"))).toBe(true);
+      expect(fridays.some((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+
+    it("single-month range returns only fridays in that month", () => {
+      const fridays = getFridaysUpToMonth("2026-04", "2026-04");
+      expect(fridays.every((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+  });
+
+  // ─── getMondaysUpToMonth ───────────────────────────────────────────────────
+  describe("getMondaysUpToMonth", () => {
+    it("returns newest-first ordering", () => {
+      const mondays = getMondaysUpToMonth("2026-04", "2026-03");
+      const aprilDates = mondays.filter((d) => d.startsWith("2026-04"));
+      const marchDates = mondays.filter((d) => d.startsWith("2026-03"));
+      expect(mondays.indexOf(aprilDates[0])).toBeLessThan(
+        mondays.indexOf(marchDates[0]),
+      );
+    });
+
+    it("includes both start and end months when fromMonth is specified", () => {
+      const mondays = getMondaysUpToMonth("2026-04", "2026-03");
+      expect(mondays.some((d) => d.startsWith("2026-03"))).toBe(true);
+      expect(mondays.some((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+
+    it("defaults to a 6-month window when fromMonth is omitted", () => {
+      const mondays = getMondaysUpToMonth("2026-04");
+      expect(mondays.some((d) => d.startsWith("2025-11"))).toBe(true);
+      expect(mondays.some((d) => d.startsWith("2026-04"))).toBe(true);
+    });
+
+    it("single-month range returns only mondays in that month", () => {
+      const mondays = getMondaysUpToMonth("2026-04", "2026-04");
+      expect(mondays.every((d) => d.startsWith("2026-04"))).toBe(true);
     });
   });
 

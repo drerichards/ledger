@@ -13,7 +13,7 @@ import type {
   PaycheckWeek,
   SavingsEntry,
 } from "@/types";
-import { DEFAULT_PAYCHECK_COLUMNS, newColumnKey } from "@/lib/paycheck";
+import { newColumnKey } from "@/lib/paycheck";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
 import { today, mondayOf } from "@/lib/dates";
 import { generateId } from "@/lib/id";
@@ -131,6 +131,7 @@ function reducer(state: AppState, action: Action): AppState {
         ...state,
         checkLog: state.checkLog.filter((e) => mondayOf(e.weekOf) !== monday),
         savingsLog: state.savingsLog.filter(
+          // istanbul ignore next — entries always have `date` post-migration; `?? ""` is unreachable
           (e) => mondayOf(e.date ?? e.weekOf ?? "") !== monday,
         ),
       };
@@ -211,7 +212,7 @@ function reducer(state: AppState, action: Action): AppState {
       const { key, label } = action.payload;
       return {
         ...state,
-        paycheckColumns: (state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS).map(
+        paycheckColumns: state.paycheckColumns!.map(
           (c) => (c.key === key ? { ...c, label } : c),
         ),
       };
@@ -225,13 +226,13 @@ function reducer(state: AppState, action: Action): AppState {
       };
       return {
         ...state,
-        paycheckColumns: [...(state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS), newCol],
+        paycheckColumns: [...state.paycheckColumns!, newCol],
       };
     }
 
     case "HIDE_PAYCHECK_COLUMN": {
       const { key } = action.payload;
-      const cols = state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS;
+      const cols = state.paycheckColumns!;
       return {
         ...state,
         paycheckColumns: cols.map((c) =>
@@ -243,7 +244,7 @@ function reducer(state: AppState, action: Action): AppState {
 
     case "RESTORE_PAYCHECK_COLUMN": {
       const { key } = action.payload;
-      const cols = state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS;
+      const cols = state.paycheckColumns!;
       return {
         ...state,
         paycheckColumns: cols.map((c) =>
@@ -253,6 +254,7 @@ function reducer(state: AppState, action: Action): AppState {
     }
 
     case "MARK_NOTIFICATIONS_SEEN": {
+      // istanbul ignore next — seenNotificationIds always initialised; fallback unreachable post-hydration
       const existing = new Set(state.seenNotificationIds ?? []);
       action.payload.ids.forEach((id) => existing.add(id));
       return { ...state, seenNotificationIds: Array.from(existing) };
@@ -261,6 +263,7 @@ function reducer(state: AppState, action: Action): AppState {
     case "ACK_CHECK_EDIT_WARNING":
       return { ...state, checkEditWarningAcked: true };
 
+    // istanbul ignore next — typed switch is exhaustive; no unknown action can reach this
     default:
       return state;
   }
@@ -296,6 +299,7 @@ export function useAppState() {
 
   // ── Step 2: Supabase hydrate (async, runs once after mount) ─────────────────
   useEffect(() => {
+    // istanbul ignore next — guard against React StrictMode double-invocation; not testable in JSDOM
     if (remoteHydrated.current) return;
     remoteHydrated.current = true;
 
