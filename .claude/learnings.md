@@ -24,12 +24,14 @@ Last updated: 2026-04-05
 **The real problem**: Diane (mom) is living paycheck-to-paycheck. Her husband Kia has highly variable weekly income ($441-$1,421 swing). She's intelligent but drowning in survival mode, making it hard to see progress or plan ahead.
 
 **The real solution**: Educate her about financial literacy _through_ the interface. Show her:
+
 - How well she's actually doing (she doesn't know because she's always in survival mode)
 - Where her money goes (necessary vs discretionary bills)
 - Progress toward financial independence (debt countdown, savings growth)
 - That stability is possible (baseline income, projection scenarios)
 
 **Educational Principles**:
+
 1. Implicit empowerment, not explicit — Never say "breathing room" or preachy language
 2. Show, don't tell — Use data visualization, not lectures
 3. Connect the dots — Explain how check edits affect savings projections
@@ -44,6 +46,7 @@ Last updated: 2026-04-05
 ### Priority 1: Redo Audit Trail (53 tasks lost in git reset)
 
 **AppState & Reducer Changes:**
+
 - [ ] Add `checkEditWarningAcked: boolean` to AppState type
 - [ ] Add `UPDATE_CHECK_ENTRY` action to reducer
 - [ ] Add `ACK_CHECK_EDIT_WARNING` action to reducer
@@ -54,6 +57,7 @@ Last updated: 2026-04-05
 - [ ] Add migration fallback in storage.ts: `checkEditWarningAcked ?? false`
 
 **WeekAccordion Modal:**
+
 - [ ] Create confirmation modal for historical week edits
 - [ ] Add "Don't show again" checkbox linked to `checkEditWarningAcked`
 - [ ] Modal shows "Warning: You're changing a check amount from a past month"
@@ -72,6 +76,7 @@ Last updated: 2026-04-05
 - [ ] Use fallback `oldAmount` from `week.kiasPay` when no checkEntry exists
 
 **CheckLog Edit History:**
+
 - [ ] Add olive dot (•) indicator for entries with `editHistory.length > 0`
 - [ ] Make dot a clickable button with title="View edit history"
 - [ ] Add hover animation: scale(1.3) on hover, scale(1.1) on active
@@ -86,6 +91,7 @@ Last updated: 2026-04-05
 - [ ] Update `.historyPopover` to fixed center with transform translate(-50%, -50%)
 
 **CheckLog Row Highlighting:**
+
 - [ ] Add `selectedWeekOf?: string` prop to CheckLog
 - [ ] Pass `selectedWeekOf` from PaycheckTab to CheckLog
 - [ ] Value: `selectedWeekOf` in weekly view, `currentWeekOf` in other views
@@ -94,6 +100,7 @@ Last updated: 2026-04-05
 - [ ] Add hover state for selected row (20% olive mix)
 
 **AmountInput Edit Controls:**
+
 - [ ] Remove `onBlur` auto-submit behavior
 - [ ] Add checkmark (✓) confirm button (olive background)
 - [ ] Add cancel (✕) button (gray background)
@@ -128,6 +135,7 @@ Last updated: 2026-04-05
 **These changes exist in the working directory but have issues. User wants mockup approval before more design coding.**
 
 ### AffirmTab.tsx Changes
+
 - ✅ Migrated to shadcn/ui components: Button, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow, Dialog, DialogContent
 - ✅ Replaced native `<button>` with shadcn `<Button>` for "Add Plan"
 - ✅ Replaced native `<table>/<thead>/<tbody>/<tfoot>` with shadcn Table components
@@ -136,6 +144,7 @@ Last updated: 2026-04-05
 - ⚠️ Removed delete column from header (`.thDelete` hidden)
 
 ### PlanRow.tsx Changes
+
 - ✅ Migrated to shadcn: TableRow, TableCell, Button, Badge, AlertDialog
 - ✅ Added Trash2 icon from lucide-react
 - ✅ Delete button moved into Total Owed cell (inline with amount)
@@ -144,6 +153,7 @@ Last updated: 2026-04-05
 - ⚠️ Uses Tailwind classes like `flex items-center gap-4` — VIOLATES CSS Modules rule
 
 ### AffirmTab.module.css Changes
+
 - ✅ Container: added padding, min-height
 - ✅ Heading: Poppins font, text-xl, font-weight 700, navy
 - ✅ Milestone banner: gold background, navy text, colored shadow, rounded-lg
@@ -167,6 +177,7 @@ Last updated: 2026-04-05
 - ⚠️ Lots of `!important` overrides — indicates fighting with shadcn defaults
 
 ### tokens.css Changes
+
 - ✅ Navy updated to #274058 (Yale Blue)
 - ✅ Added --color-olive: #898B5E (Pale Olive)
 - ✅ Added --color-olive-dark: #41521F (Olive Leaf)
@@ -181,6 +192,7 @@ Last updated: 2026-04-05
 - ✅ Added glass effect tokens: --glass-blur, --glass-bg, --glass-bg-strong, --glass-border
 
 ### Known Issues with Current Affirm Work
+
 1. **Text collision in Plan column** — content bleeds through to month cells (UNFIXED)
 2. **Frosted glass not visible** — user said they see nothing
 3. **Colored shadows not visible** — user said they see nothing
@@ -193,6 +205,7 @@ Last updated: 2026-04-05
 ## COMPLETED WORK (Survived git reset)
 
 ### Tab Reorganization & Creation
+
 1. ✅ Created ActivityTab component
 2. ✅ Created SnapshotsTab component
 3. ✅ Updated tab order: Accounts, Affirm, Paycheck, Savings, Activity, Snapshots
@@ -200,6 +213,7 @@ Last updated: 2026-04-05
 5. ✅ Updated buildTabProps to include new tabs
 
 ### PaycheckTab Improvements
+
 6. ✅ Added column management modal (rename, hide, restore columns)
 7. ✅ Added sliding CheckLog panel in PaycheckTab
 8. ✅ Added "Paycheck Log" menu item
@@ -209,6 +223,7 @@ Last updated: 2026-04-05
 12. ✅ Fixed readOnly logic (only future months readOnly, not historical)
 
 ### Other
+
 - ✅ Seed data created in `src/lib/seed/seed.ts`
 - ✅ Duplicate key bug fixed (was caused by `new Date(string)` timezone drift)
 - ✅ Supabase auth + Postgres integrated
@@ -220,6 +235,7 @@ Last updated: 2026-04-05
 ## CRITICAL ERRORS MADE (DO NOT REPEAT)
 
 ### Error 1: Careless git reset
+
 - **What**: Ran `git reset --hard HEAD` without verifying commit history or what would be lost
 - **Impact**: Wiped entire audit trail implementation (modal, baseline impact, edit controls, checkmark/cancel buttons)
 - **Root cause**: User said "reset to last commit" referring to a commit message that didn't exist yet (work was uncommitted)
@@ -230,6 +246,7 @@ Last updated: 2026-04-05
   - ALWAYS find appropriate moments to encourage user to commit their work
 
 ### Error 2: Incomplete pre-commit validation
+
 - **What**: Told user code was "ready to commit" after only running `tsc` and `eslint`
 - **Impact**: Husky pre-commit hook failed when user tried to commit
 - **Prevention**:
@@ -238,6 +255,7 @@ Last updated: 2026-04-05
   - NEVER say "ready to commit" without running the full husky command sequence
 
 ### Error 3: Breaking Supabase auth with dummy credentials
+
 - **What**: Added dummy Supabase URL/key to `.env.local` instead of just disabling sync
 - **Impact**: Login failed, user couldn't test anything
 - **Prevention**:
@@ -246,6 +264,7 @@ Last updated: 2026-04-05
   - Comment out sync calls, leave auth intact
 
 ### Error 4: Wrong file references
+
 - **What**: Referenced deleted files instead of paths user provided
 - **Prevention**:
   - Check system reminders for current file locations
@@ -256,16 +275,19 @@ Last updated: 2026-04-05
 ## DESIGN SYSTEM — CRITICAL CONTEXT
 
 ### Current State
+
 - Affirm table is a mess with loud colors, text collision, user exhausted
 - User wants to use **Figma + v0.dev** to create mockups BEFORE coding
 - DO NOT code design without mockup approval
 
 ### Critical Unfixed Bugs
+
 - **Text collision in Plan column** — content bleeding through to month cells
 - No visible frosted glass effect
 - No colored shadows
 
 ### Color Rules (from hist.md + DESIGN.md)
+
 - **Navy** — headers/primary actions
 - **Olive** — positive/active states
 - **Rust** — FINAL badges, warnings
@@ -274,6 +296,7 @@ Last updated: 2026-04-05
 - **80%+ WHITE canvas** — ultra-minimalist like inspo3/4, subtle color accents
 
 ### User Preferences from Inspiration Images (hist.md)
+
 - **inspo1**: icon nav, 3-dot menus, last updated timestamps
 - **inspo2**: frosted edges, subtle color pop backgrounds, colored shadows, popovers, rounded corners, hierarchy via font weight
 - **inspo3**: font choice, ultra-minimalist charts, "love this whole vibe"
@@ -282,6 +305,7 @@ Last updated: 2026-04-05
 - **lightmode**: better use of white, complementary colors
 
 ### Color Palette (tokens.css)
+
 - #274058 (Yale Blue navy)
 - #7B886B (Dusty Olive)
 - #41521F (Olive Leaf dark)
@@ -337,20 +361,24 @@ If these don't match after any change, something broke.
 ## CRITICAL RULES — DO NOT VIOLATE
 
 ### State
+
 - ALL mutations through `useAppState.ts` dispatch — NEVER mutate state directly
 - NEVER `.push()` on state arrays
 - NEVER call `.map()` and discard the result
 
 ### Money
+
 - ALL amounts in **cents (integer)** — never floats
 - `toCents()` at input boundary
 - `fmtMoney()` at render boundary only
 
 ### Dates
+
 - **NEVER** use `new Date(string)` for month iteration — causes timezone bugs
 - ALL month math uses pure string/integer arithmetic in `src/lib/dates.ts`
 
 ### Components
+
 - Named function declarations for React components — never arrow functions
 - One component per file — always
 - CSS Modules only — no inline styles, no Tailwind classes in components
@@ -358,11 +386,13 @@ If these don't match after any change, something broke.
 - All hooks go in `src/hooks/` with co-located test files
 
 ### Pre-commit
+
 - Husky + lint-staged runs ESLint, tsc, and jest on every commit
 - Do NOT bypass with `--no-verify`
 - Before saying "ready to commit", run ALL: `pnpm type-check && pnpm lint-staged && pnpm test --bail --ci`
 
 ### Troubleshooting
+
 - Error "Cannot find module middleware-manifest.json" = corrupted .next directory
 - Check .next/dev/server/ — if showing 65535 entries, filesystem is corrupted
 - Solution: `rm -rf .next` then restart dev server
@@ -430,6 +460,7 @@ If these don't match after any change, something broke.
 - **Linting**: ESLint, Husky pre-commit hooks
 
 **State flow**:
+
 1. useAppState loads from localStorage (SEED_STATE if empty)
 2. Hydrates from Supabase (replaces local if remote exists)
 3. Every state change → localStorage sync (immediate)
