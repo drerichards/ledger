@@ -131,6 +131,43 @@ export type SavingsEntry = {
   weekOf?: string;
 };
 
+// ─── Savings Goals ────────────────────────────────────────────────────────────
+
+/**
+ * A named savings goal with a target amount and optional deadline.
+ * Monthly contribution needed and on-track status are derived at render time.
+ */
+export type SavingsGoal = {
+  id: string;
+  label: string;           // e.g. "Buy a car", "Save $1000 by August"
+  targetCents: number;     // integer cents
+  targetDate: string;      // YYYY-MM — the month by which goal should be met
+  createdAt: string;       // ISO datetime string
+  priority?: number;       // 1 = highest — optional ordering hint
+};
+
+// ─── Milestones ───────────────────────────────────────────────────────────────
+
+export type MilestoneType =
+  | "affirm_payoff"
+  | "savings_threshold"
+  | "goal_achieved"
+  | "first_surplus";
+
+/**
+ * A financial milestone derived from app state.
+ * Stored in AppState as a permanent feed entry.
+ * Also triggers an ephemeral toast when first achieved.
+ */
+export type Milestone = {
+  id: string;
+  type: MilestoneType;
+  /** Free-form payload describing what was achieved. Shape varies by type. */
+  payload: Record<string, unknown>;
+  achievedAt: string;      // ISO datetime string
+  seen: boolean;           // true once the user has seen the toast
+};
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 /**
@@ -173,4 +210,8 @@ export type AppState = {
    * When true, the modal still appears but without the warning text.
    */
   checkEditWarningAcked: boolean;
+  /** User-defined savings goals. Contribution math derived at render time. */
+  goals: SavingsGoal[];
+  /** Achieved milestones. Derived from state changes and persisted as a feed. */
+  milestones: Milestone[];
 };

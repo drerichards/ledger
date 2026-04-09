@@ -30,6 +30,7 @@ type MinimalState = {
   snapshots: MonthSnapshot[];
   seenNotificationIds: string[];
   checkEditWarningAcked: boolean;
+  goals: never[];
 };
 
 // ─── Minimal state & actions ──────────────────────────────────────────────────
@@ -46,6 +47,7 @@ const emptyState: MinimalState = {
   snapshots: [],
   seenNotificationIds: [],
   checkEditWarningAcked: false,
+  goals: [],
 };
 
 const noop = jest.fn();
@@ -59,6 +61,7 @@ const actions = {
   setPaycheckViewScope: noop, addSavingsEntry: noop, updateSavingsEntry: noop,
   deleteSavingsEntry: noop, renamePaycheckColumn: noop, addPaycheckColumn: noop,
   hidePaycheckColumn: noop, restorePaycheckColumn: noop, markNotificationsSeen: noop,
+  addGoal: noop, deleteGoal: noop,
 };
 
 const deps = {
@@ -170,5 +173,20 @@ describe("buildSavingsTabProps", () => {
     const goToPaycheck = jest.fn();
     const props = buildSavingsTabProps(deps, goToPaycheck);
     expect(props.onGoToPaycheck).toBe(goToPaycheck);
+  });
+
+  it("passes goals from state", () => {
+    const props = buildSavingsTabProps(deps);
+    expect(props.goals).toEqual([]);
+  });
+
+  it("wires onAddGoal to actions.addGoal", () => {
+    const props = buildSavingsTabProps(deps);
+    expect(props.onAddGoal).toBe(actions.addGoal);
+  });
+
+  it("wires onDeleteGoal to actions.deleteGoal", () => {
+    const props = buildSavingsTabProps(deps);
+    expect(props.onDeleteGoal).toBe(actions.deleteGoal);
   });
 });

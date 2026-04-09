@@ -8,6 +8,7 @@ import type {
   PaycheckViewScope,
   PaycheckWeek,
   SavingsEntry,
+  SavingsGoal,
 } from "@/types";
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 
@@ -35,6 +36,8 @@ type AppActions = {
   hidePaycheckColumn: (key: string) => void;
   restorePaycheckColumn: (key: string) => void;
   markNotificationsSeen: (ids: string[]) => void;
+  addGoal: (goal: SavingsGoal) => void;
+  deleteGoal: (id: string) => void;
 };
 
 type AppState = {
@@ -49,6 +52,7 @@ type AppState = {
   snapshots: MonthSnapshot[];
   seenNotificationIds: string[];
   checkEditWarningAcked: boolean;
+  goals: SavingsGoal[];
 };
 
 type TabPropsDeps = {
@@ -120,8 +124,11 @@ export const buildSavingsTabProps = (
   checking: state.checkLog,
   savingsLog: state.savingsLog,
   paycheck: state.paycheck,
+  goals: state.goals ?? [],
   onAddSavings: actions.addSavingsEntry,
   onUpdateSavings: actions.updateSavingsEntry,
   onDeleteSavings: actions.deleteSavingsEntry,
+  onAddGoal: actions.addGoal,
+  onDeleteGoal: actions.deleteGoal,
   onGoToPaycheck,
 });

@@ -713,7 +713,7 @@ export function PaycheckTab({
                 className={styles.btnGhost}
                 onClick={cancelColumnModal}
               >
-                Cancel
+                Back
               </button>
               <button
                 type="button"

@@ -6,12 +6,14 @@ import type {
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
+  Milestone,
   MonthlyIncome,
   MonthSnapshot,
   PaycheckColumn,
   PaycheckViewScope,
   PaycheckWeek,
   SavingsEntry,
+  SavingsGoal,
 } from "@/types";
 import { newColumnKey } from "@/lib/paycheck";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
@@ -51,7 +53,12 @@ type Action =
   | { type: "HIDE_PAYCHECK_COLUMN"; payload: { key: string } }
   | { type: "RESTORE_PAYCHECK_COLUMN"; payload: { key: string } }
   | { type: "MARK_NOTIFICATIONS_SEEN"; payload: { ids: string[] } }
-  | { type: "ACK_CHECK_EDIT_WARNING" };
+  | { type: "ACK_CHECK_EDIT_WARNING" }
+  | { type: "ADD_GOAL"; payload: SavingsGoal }
+  | { type: "UPDATE_GOAL"; payload: SavingsGoal }
+  | { type: "DELETE_GOAL"; payload: { id: string } }
+  | { type: "MARK_MILESTONE_SEEN"; payload: { id: string } }
+  | { type: "ADD_MILESTONE"; payload: Milestone };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
@@ -263,6 +270,39 @@ function reducer(state: AppState, action: Action): AppState {
     case "ACK_CHECK_EDIT_WARNING":
       return { ...state, checkEditWarningAcked: true };
 
+    case "ADD_GOAL":
+      return { ...state, goals: [...(state.goals ?? []), action.payload] };
+
+    case "UPDATE_GOAL":
+      return {
+        ...state,
+        goals: (state.goals ?? []).map((g) =>
+          g.id === action.payload.id ? action.payload : g,
+        ),
+      };
+
+    case "DELETE_GOAL":
+      return {
+        ...state,
+        goals: (state.goals ?? []).filter((g) => g.id !== action.payload.id),
+      };
+
+    case "MARK_MILESTONE_SEEN":
+      return {
+        ...state,
+        milestones: (state.milestones ?? []).map((m) =>
+          m.id === action.payload.id ? { ...m, seen: true } : m,
+        ),
+      };
+
+    case "ADD_MILESTONE": {
+      const existing = (state.milestones ?? []).some(
+        (m) => m.id === action.payload.id,
+      );
+      if (existing) return state;
+      return { ...state, milestones: [...(state.milestones ?? []), action.payload] };
+    }
+
     // istanbul ignore next — typed switch is exhaustive; no unknown action can reach this
     default:
       return state;
@@ -463,6 +503,31 @@ export function useAppState() {
     [],
   );
 
+  const addGoal = useCallback(
+    (goal: SavingsGoal) => dispatch({ type: "ADD_GOAL", payload: goal }),
+    [],
+  );
+
+  const updateGoal = useCallback(
+    (goal: SavingsGoal) => dispatch({ type: "UPDATE_GOAL", payload: goal }),
+    [],
+  );
+
+  const deleteGoal = useCallback(
+    (id: string) => dispatch({ type: "DELETE_GOAL", payload: { id } }),
+    [],
+  );
+
+  const markMilestoneSeen = useCallback(
+    (id: string) => dispatch({ type: "MARK_MILESTONE_SEEN", payload: { id } }),
+    [],
+  );
+
+  const addMilestone = useCallback(
+    (milestone: Milestone) => dispatch({ type: "ADD_MILESTONE", payload: milestone }),
+    [],
+  );
+
   return {
     state,
     addBill,
@@ -488,5 +553,10 @@ export function useAppState() {
     markNotificationsSeen,
     updateCheckEntry,
     ackCheckEditWarning,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    markMilestoneSeen,
+    addMilestone,
   };
 }

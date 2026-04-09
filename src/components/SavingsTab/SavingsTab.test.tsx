@@ -9,6 +9,10 @@ jest.mock("@/lib/dates", () => ({
   today: jest.fn(() => "2026-04-06"),
 }));
 
+jest.mock("@/lib/affirm", () => ({
+  getAffirmTotalForMonth: jest.fn(() => 0),
+}));
+
 describe("SavingsTab", () => {
   it("renders the Savings & Projections heading", () => {
     render(
@@ -17,9 +21,12 @@ describe("SavingsTab", () => {
         checking={[]}
         savingsLog={[]}
         paycheck={[]}
+        goals={[]}
         onAddSavings={() => {}}
         onUpdateSavings={() => {}}
         onDeleteSavings={() => {}}
+        onAddGoal={() => {}}
+        onDeleteGoal={() => {}}
       />,
     );
     expect(screen.getByText("Savings & Projections")).toBeInTheDocument();
@@ -32,9 +39,12 @@ describe("SavingsTab", () => {
         checking={[]}
         savingsLog={[]}
         paycheck={[]}
+        goals={[]}
         onAddSavings={() => {}}
         onUpdateSavings={() => {}}
         onDeleteSavings={() => {}}
+        onAddGoal={() => {}}
+        onDeleteGoal={() => {}}
       />,
     );
     expect(screen.getByText("Savings Balance")).toBeInTheDocument();
@@ -47,9 +57,12 @@ describe("SavingsTab", () => {
         checking={[]}
         savingsLog={[]}
         paycheck={[]}
+        goals={[]}
         onAddSavings={() => {}}
         onUpdateSavings={() => {}}
         onDeleteSavings={() => {}}
+        onAddGoal={() => {}}
+        onDeleteGoal={() => {}}
         onGoToPaycheck={() => {}}
       />,
     );
@@ -64,9 +77,12 @@ describe("SavingsTab", () => {
         checking={[]}
         savingsLog={[]}
         paycheck={[]}
+        goals={[]}
         onAddSavings={() => {}}
         onUpdateSavings={() => {}}
         onDeleteSavings={() => {}}
+        onAddGoal={() => {}}
+        onDeleteGoal={() => {}}
         onGoToPaycheck={onGoToPaycheck}
       />,
     );
@@ -81,9 +97,12 @@ describe("SavingsTab", () => {
         checking={[]}
         savingsLog={[]}
         paycheck={[]}
+        goals={[]}
         onAddSavings={() => {}}
         onUpdateSavings={() => {}}
         onDeleteSavings={() => {}}
+        onAddGoal={() => {}}
+        onDeleteGoal={() => {}}
       />,
     );
     expect(screen.queryByRole("button", { name: "Paycheck tab" })).not.toBeInTheDocument();

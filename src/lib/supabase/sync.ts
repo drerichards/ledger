@@ -282,6 +282,8 @@ export async function loadFromSupabase(): Promise<AppState | null> {
       paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
       seenNotificationIds: [],
       checkEditWarningAcked: false,
+      goals: [],
+      milestones: [],
     };
   } catch (err) {
     if (process.env.NODE_ENV === "development")

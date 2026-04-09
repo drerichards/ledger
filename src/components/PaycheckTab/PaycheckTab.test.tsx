@@ -313,10 +313,10 @@ describe("PaycheckTab — column modal", () => {
     expect(screen.queryByRole("heading", { name: "Manage Columns" })).not.toBeInTheDocument();
   });
 
-  it("closes modal via Cancel footer button (cancelColumnModal)", () => {
+  it("closes modal via Back footer button (cancelColumnModal)", () => {
     renderPaycheck();
     openModal();
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(screen.queryByRole("heading", { name: "Manage Columns" })).not.toBeInTheDocument();
   });
 

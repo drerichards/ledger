@@ -1,0 +1,51 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.svg {
+  display: block;
+}
+
+.track {
+  fill: none;
+  stroke: var(--color-cream, #f5f0e8);
+}
+
+.arc {
+  fill: none;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.arc_olive  { stroke: var(--color-olive, #5c6b2e); }
+.arc_rust   { stroke: var(--color-rust, #c4522a); }
+.arc_navy   { stroke: var(--color-navy, #1e3a5f); }
+.arc_gold   { stroke: var(--color-gold, #fdb833); }
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-navy, #1e3a5f);
+  line-height: 1;
+}
+
+.sublabel {
+  font-size: 0.6rem;
+  color: var(--color-text-muted, #6b7280);
+  margin-top: 2px;
+  line-height: 1;
+}

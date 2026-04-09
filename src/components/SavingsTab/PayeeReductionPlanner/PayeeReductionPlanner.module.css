@@ -1,0 +1,165 @@
+.container {
+  margin-top: var(--spacing-6, 1.5rem);
+}
+
+.title {
+  font-family: var(--font-primary, sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-navy, #1e3a5f);
+  margin: 0 0 var(--spacing-1, 0.25rem);
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #6b7280);
+  margin: 0 0 var(--spacing-4, 1rem);
+}
+
+.amount {
+  color: var(--color-rust, #c4522a);
+  font-family: var(--font-mono, monospace);
+}
+
+.empty {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #6b7280);
+  font-style: italic;
+}
+
+/* ── Plan Cards ─────────────────────────────────────────────── */
+
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 0.5rem);
+  margin-bottom: var(--spacing-5, 1.25rem);
+}
+
+.planCard {
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+  background: var(--color-surface, #ffffff);
+}
+
+.planCardFinal {
+  border-color: var(--color-rust, #c4522a);
+  background: color-mix(in srgb, var(--color-rust, #c4522a) 5%, white);
+}
+
+.planHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+  margin-bottom: var(--spacing-2, 0.5rem);
+}
+
+.planLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-navy, #1e3a5f);
+}
+
+.finalBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--color-rust, #c4522a);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.planMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metaLabel {
+  font-size: 0.65rem;
+  color: var(--color-text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metaValue {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-navy, #1e3a5f);
+  font-family: var(--font-mono, monospace);
+}
+
+.freed {
+  color: var(--color-olive, #5c6b2e);
+}
+
+.metaDivider {
+  width: 1px;
+  height: 2rem;
+  background: var(--color-border, #e5e7eb);
+  align-self: center;
+}
+
+/* ── Projection ─────────────────────────────────────────────── */
+
+.projection {
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  padding-top: var(--spacing-4, 1rem);
+}
+
+.projectionTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-navy, #1e3a5f);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--spacing-3, 0.75rem);
+}
+
+.milestoneList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+.milestone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.milestoneDate {
+  color: var(--color-text-muted, #6b7280);
+  min-width: 7rem;
+}
+
+.milestoneBurden {
+  font-family: var(--font-mono, monospace);
+}
+
+.fromBurden {
+  color: var(--color-rust, #c4522a);
+}
+
+.arrow {
+  color: var(--color-text-muted, #6b7280);
+}
+
+.toBurden {
+  color: var(--color-navy, #1e3a5f);
+}
+
+.toBurdenZero {
+  color: var(--color-olive, #5c6b2e);
+  font-weight: 700;
+}

@@ -326,4 +326,6 @@ export const SEED_STATE: AppState = {
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
   checkEditWarningAcked: false,
+  goals: [],
+  milestones: [],
 };

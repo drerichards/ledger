@@ -5,9 +5,12 @@ import type {
   KiasCheckEntry,
   PaycheckWeek,
   SavingsEntry,
+  SavingsGoal,
 } from "@/types";
 import { SavingsTracker } from "./SavingsTracker";
 import { SavingsProjection } from "./SavingsProjection";
+import { PayeeReductionPlanner } from "./PayeeReductionPlanner";
+import { GoalSetter } from "./GoalSetter";
 import styles from "./SavingsTab.module.css";
 
 type Props = {
@@ -15,9 +18,12 @@ type Props = {
   checking: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
   paycheck: PaycheckWeek[];
+  goals: SavingsGoal[];
   onAddSavings: (entry: SavingsEntry) => void;
   onUpdateSavings: (entry: SavingsEntry) => void;
   onDeleteSavings: (id: string) => void;
+  onAddGoal: (goal: SavingsGoal) => void;
+  onDeleteGoal: (id: string) => void;
   /** Navigate to Paycheck tab */
   onGoToPaycheck?: () => void;
 };
@@ -27,9 +33,12 @@ export function SavingsTab({
   checking,
   savingsLog,
   paycheck,
+  goals,
   onAddSavings,
   onUpdateSavings,
   onDeleteSavings,
+  onAddGoal,
+  onDeleteGoal,
   onGoToPaycheck,
 }: Props) {
   return (
@@ -62,6 +71,15 @@ export function SavingsTab({
           onDelete={onDeleteSavings}
         />
       </div>
+
+      <GoalSetter
+        goals={goals}
+        savingsLog={savingsLog}
+        onAdd={onAddGoal}
+        onDelete={onDeleteGoal}
+      />
+
+      <PayeeReductionPlanner plans={plans} />
 
       <SavingsProjection
         plans={plans}

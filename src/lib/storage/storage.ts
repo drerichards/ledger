@@ -18,6 +18,8 @@ export const INITIAL_STATE: AppState = {
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
   checkEditWarningAcked: false,
+  goals: [],
+  milestones: [],
 };
 
 /**
@@ -65,6 +67,8 @@ export function loadState(): AppState {
       paycheckColumns: parsed.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS,
       seenNotificationIds: parsed.seenNotificationIds ?? [],
       checkEditWarningAcked: parsed.checkEditWarningAcked ?? false,
+      goals: parsed.goals ?? [],
+      milestones: parsed.milestones ?? [],
     };
   } catch {
     return SEED_STATE;
