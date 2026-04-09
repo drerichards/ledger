@@ -1,39 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm test:*)",
-      "Bash(pnpm tsc:*)",
-      "mcp__memory__create_entities",
-      "mcp__context7__resolve-library-uri",
-      "mcp__context7__search-library-docs",
-      "Bash(pnpm jest:*)",
-      "mcp__filesystem__read_text_file",
-      "Bash(npx tsc:*)",
-      "Bash(npx eslint:*)",
-      "Bash(npm test:*)",
-      "mcp__memory__search_nodes",
-      "mcp__sequential-thinking__sequentialthinking",
-      "Bash(npx jest --bail --ci)",
-      "Bash(find:*)",
-      "Bash(npx shadcn@latest add badge dialog select separator)",
-      "mcp__memory__add_observations",
-      "Bash(test -f:*)",
-      "Bash(ls:*)",
-      "Bash(pnpm eslint:*)",
-      "Bash(pnpm add:*)",
-      "Bash(npx shadcn@latest add alert-dialog:*)",
-      "mcp__memory__create_relations",
-      "mcp__memory__read_graph",
-      "Bash(sed -i '' 's/ag_igris_architecture_son/cs1_byakuya_compliance/g' *.md)",
-      "Bash(sed -i '' 's/ag_beru_quality_hai/vp2_jugram_qa/g' *.md)",
-      "Bash(sed -i '' 's/ag_greed_optimize_son/vp2_askin_complexity/g' *.md)",
-      "Bash(sed -i '' 's/ag_bellion_auditor_ops/cs1_shunsui_operations/g' *.md)",
-      "Bash(sed -i '' 's/ag_kira_security_son/cs1_suifeng_security/g' *.md)",
-      "Bash(sed -i '' 's/You are Ashborn\\\\./You are Ōetsu./g' *.md)",
-      "Bash(sed -i '' 's/You are Ashborn,/You are Ōetsu,/g' *.md)",
-      "Bash(sed -i '' 's/You are Bellion, Grand Marshal of the Shadow Army\\\\./You are Shunsui Kyoraku, COO./g' *.md)",
-      "Bash(sed -i '' \"s/You are Bellion's documentation arm\\\\./You are Shunsui's documentation arm./g\" *.md)",
-      "Bash(sed -i '' 's/You are Antares, the Dragon Monarch\\\\./You are Aizen, the CIO./g' *.md)"
+      "Bash(python3 -)"
     ]
   }
 }
