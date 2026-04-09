@@ -58,6 +58,8 @@ jest.mock("@/lib/storage", () => ({
       paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
       seenNotificationIds: [],
       checkEditWarningAcked: false,
+      goals: [],
+      milestones: [],
     };
   },
   loadState: jest.fn(() => ({
@@ -72,6 +74,8 @@ jest.mock("@/lib/storage", () => ({
     paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
     seenNotificationIds: [],
     checkEditWarningAcked: false,
+    goals: [],
+    milestones: [],
   })),
   saveState: jest.fn(),
   clearState: jest.fn(),

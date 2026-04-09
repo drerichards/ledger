@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
 import { useAffirmNotifications } from "@/hooks/useAffirmNotifications";
+import { useMilestones } from "@/hooks/useMilestones";
+import { MilestoneToast } from "@/components/ui/MilestoneToast";
+import { getUnseenMilestones } from "@/lib/milestones";
 import { createClient } from "@/lib/supabase/client";
 import { withErrorBoundary } from "@/components/ui/withErrorBoundary/withErrorBoundary";
 import { Header } from "@/components/AppShell/Header/Header";
@@ -94,6 +97,10 @@ export function AppShell() {
   // Derive notifications from paid-off Affirm plans
   const notifications = useAffirmNotifications(s.plans);
 
+  // Derive new milestones from state changes and persist them
+  useMilestones(s, actions.addMilestone);
+  const unseenMilestones = getUnseenMilestones(s);
+
   const deps = {
     state: s,
     actions,
@@ -180,6 +187,10 @@ export function AppShell() {
           </>
         )}
       </main>
+      <MilestoneToast
+        milestones={unseenMilestones}
+        onDismiss={actions.markMilestoneSeen}
+      />
     </div>
   );
 }

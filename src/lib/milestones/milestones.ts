@@ -18,7 +18,7 @@ function milestoneId(type: MilestoneType, key: string): string {
  * The caller is responsible for dispatching ADD_MILESTONE for each returned item.
  */
 export function deriveNewMilestones(state: AppState): Milestone[] {
-  const existingIds = new Set(state.milestones.map((m) => m.id));
+  const existingIds = new Set((state.milestones ?? []).map((m) => m.id));
   const now = new Date().toISOString();
   const month = currentMonth();
   const newMilestones: Milestone[] = [];

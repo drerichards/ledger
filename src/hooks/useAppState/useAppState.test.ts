@@ -5,9 +5,11 @@ import type {
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
+  Milestone,
   MonthlyIncome,
   MonthSnapshot,
   PaycheckWeek,
+  SavingsGoal,
 } from "@/types";
 
 // ─── Mock storage ──────────────────────────────────────────────────────────────
@@ -36,6 +38,8 @@ const mockInitialState = {
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
   checkEditWarningAcked: false,
+  goals: [],
+  milestones: [],
 };
 
 jest.mock("@/lib/storage", () => ({
@@ -710,6 +714,98 @@ describe("useAppState — Supabase hydration", () => {
     expect(syncSpy).not.toHaveBeenCalled();
 
     jest.useRealTimers();
+  });
+});
+
+describe("useAppState — ADD_GOAL / UPDATE_GOAL / DELETE_GOAL", () => {
+  const makeGoal = (overrides: Partial<SavingsGoal> = {}): SavingsGoal => ({
+    id: "g1",
+    label: "Emergency Fund",
+    targetCents: 100000,
+    targetDate: "2026-12",
+    createdAt: "2026-01-01T00:00:00Z",
+    ...overrides,
+  });
+
+  it("adds a goal", () => {
+    const { result } = setup();
+    act(() => { result.current.addGoal(makeGoal()); });
+    expect(result.current.state.goals).toHaveLength(1);
+    expect(result.current.state.goals[0].id).toBe("g1");
+  });
+
+  it("updates an existing goal", () => {
+    const { result } = setup();
+    act(() => { result.current.addGoal(makeGoal()); });
+    act(() => {
+      result.current.updateGoal(makeGoal({ label: "Big Emergency Fund" }));
+    });
+    expect(result.current.state.goals[0].label).toBe("Big Emergency Fund");
+  });
+
+  it("does not affect other goals on update", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addGoal(makeGoal({ id: "g1" }));
+      result.current.addGoal(makeGoal({ id: "g2", label: "Car Fund" }));
+    });
+    act(() => {
+      result.current.updateGoal(makeGoal({ id: "g1", label: "Updated" }));
+    });
+    expect(result.current.state.goals[1].label).toBe("Car Fund");
+  });
+
+  it("deletes a goal by id", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addGoal(makeGoal({ id: "g1" }));
+      result.current.addGoal(makeGoal({ id: "g2", label: "Car Fund" }));
+    });
+    act(() => { result.current.deleteGoal("g1"); });
+    expect(result.current.state.goals).toHaveLength(1);
+    expect(result.current.state.goals[0].id).toBe("g2");
+  });
+});
+
+describe("useAppState — ADD_MILESTONE / MARK_MILESTONE_SEEN", () => {
+  const makeMilestone = (overrides: Partial<Milestone> = {}): Milestone => ({
+    id: "m1",
+    type: "affirm_payoff",
+    payload: { label: "Samsung TV" },
+    achievedAt: "2026-04-01T00:00:00Z",
+    seen: false,
+    ...overrides,
+  });
+
+  it("adds a milestone", () => {
+    const { result } = setup();
+    act(() => { result.current.addMilestone(makeMilestone()); });
+    expect(result.current.state.milestones).toHaveLength(1);
+    expect(result.current.state.milestones[0].id).toBe("m1");
+  });
+
+  it("deduplicates milestone by id (ADD_MILESTONE does not add duplicates)", () => {
+    const { result } = setup();
+    act(() => { result.current.addMilestone(makeMilestone()); });
+    act(() => { result.current.addMilestone(makeMilestone()); });
+    expect(result.current.state.milestones).toHaveLength(1);
+  });
+
+  it("marks a milestone as seen", () => {
+    const { result } = setup();
+    act(() => { result.current.addMilestone(makeMilestone()); });
+    act(() => { result.current.markMilestoneSeen("m1"); });
+    expect(result.current.state.milestones[0].seen).toBe(true);
+  });
+
+  it("does not affect other milestones when marking seen", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addMilestone(makeMilestone({ id: "m1" }));
+      result.current.addMilestone(makeMilestone({ id: "m2" }));
+    });
+    act(() => { result.current.markMilestoneSeen("m1"); });
+    expect(result.current.state.milestones[1].seen).toBe(false);
   });
 });
 

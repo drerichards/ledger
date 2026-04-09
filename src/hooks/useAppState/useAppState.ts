@@ -271,12 +271,12 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, checkEditWarningAcked: true };
 
     case "ADD_GOAL":
-      return { ...state, goals: [...(state.goals ?? []), action.payload] };
+      return { ...state, goals: [...state.goals, action.payload] };
 
     case "UPDATE_GOAL":
       return {
         ...state,
-        goals: (state.goals ?? []).map((g) =>
+        goals: state.goals.map((g) =>
           g.id === action.payload.id ? action.payload : g,
         ),
       };
@@ -284,23 +284,23 @@ function reducer(state: AppState, action: Action): AppState {
     case "DELETE_GOAL":
       return {
         ...state,
-        goals: (state.goals ?? []).filter((g) => g.id !== action.payload.id),
+        goals: state.goals.filter((g) => g.id !== action.payload.id),
       };
 
     case "MARK_MILESTONE_SEEN":
       return {
         ...state,
-        milestones: (state.milestones ?? []).map((m) =>
+        milestones: state.milestones.map((m) =>
           m.id === action.payload.id ? { ...m, seen: true } : m,
         ),
       };
 
     case "ADD_MILESTONE": {
-      const existing = (state.milestones ?? []).some(
+      const existing = state.milestones.some(
         (m) => m.id === action.payload.id,
       );
       if (existing) return state;
-      return { ...state, milestones: [...(state.milestones ?? []), action.payload] };
+      return { ...state, milestones: [...state.milestones, action.payload] };
     }
 
     // istanbul ignore next — typed switch is exhaustive; no unknown action can reach this

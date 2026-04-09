@@ -112,3 +112,22 @@
     color: var(--color-olive-dark);
     font-weight: 600;
 }
+
+/* ── Milestone rows ─────────────────────────────────────────────────────────── */
+
+.milestoneRow {
+    background: color-mix(in srgb, var(--color-olive, #5c6b2e) 6%, white);
+}
+
+.milestoneRow:hover {
+    background: color-mix(in srgb, var(--color-olive, #5c6b2e) 10%, white);
+}
+
+.milestoneCell {
+    font-weight: 600;
+    color: var(--color-olive-dark, #41521f);
+}
+
+.milestoneEmoji {
+    margin-right: 0.5rem;
+}

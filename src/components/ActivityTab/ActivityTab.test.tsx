@@ -1,10 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { ActivityTab } from "@/components/ActivityTab";
-import type { Bill } from "@/types";
+import type { Bill, Milestone } from "@/types";
 
 // ─── Mock useAppState ─────────────────────────────────────────────────────────
 
-const mockState = { bills: [] as Bill[] };
+const mockState = { bills: [] as Bill[], milestones: [] as Milestone[] };
 
 jest.mock("@/hooks/useAppState", () => ({
   useAppState: () => ({ state: mockState }),
@@ -31,24 +31,39 @@ function makeBill(overrides: Partial<Bill> = {}): Bill {
   };
 }
 
+function makeMilestone(overrides: Partial<Milestone> = {}): Milestone {
+  return {
+    id: "affirm_payoff:plan-1",
+    type: "affirm_payoff",
+    payload: { label: "Samsung TV", mc: 15000, month: "2026-03" },
+    achievedAt: "2026-04-01T00:00:00Z",
+    seen: false,
+    ...overrides,
+  };
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("ActivityTab — empty state", () => {
-  beforeEach(() => { mockState.bills = []; });
+  beforeEach(() => {
+    mockState.bills = [];
+    mockState.milestones = [];
+  });
 
   it("renders the heading", () => {
     render(<ActivityTab />);
     expect(screen.getByRole("heading", { name: "Activity" })).toBeInTheDocument();
   });
 
-  it("renders empty state message when no amount changes exist", () => {
+  it("renders empty state message when no activity exists", () => {
     render(<ActivityTab />);
-    expect(screen.getByText(/No amount changes recorded yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No activity recorded yet/)).toBeInTheDocument();
   });
 });
 
-describe("ActivityTab — with history", () => {
+describe("ActivityTab — with bill history", () => {
   beforeEach(() => {
+    mockState.milestones = [];
     mockState.bills = [
       makeBill({
         id: "b1",
@@ -89,31 +104,32 @@ describe("ActivityTab — with history", () => {
 
   it("does not render the empty state message", () => {
     render(<ActivityTab />);
-    expect(screen.queryByText(/No amount changes recorded yet/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/No activity recorded yet/)).not.toBeInTheDocument();
   });
 });
 
 describe("ActivityTab — bill with no amountHistory", () => {
+  beforeEach(() => { mockState.milestones = []; });
+
   it("skips bills with empty amountHistory (continue branch)", () => {
-    // A bill exists in state but has never had an amount change.
-    // buildActivityLog should skip it and show the empty state message.
     mockState.bills = [makeBill({ amountHistory: [] })];
     render(<ActivityTab />);
-    expect(screen.getByText(/No amount changes recorded yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No activity recorded yet/)).toBeInTheDocument();
   });
 
   it("skips bills with undefined amountHistory", () => {
     const bill = makeBill();
-    // @ts-expect-error — testing the undefined guard on line 29
+    // @ts-expect-error — testing the undefined guard
     bill.amountHistory = undefined;
     mockState.bills = [bill];
     render(<ActivityTab />);
-    expect(screen.getByText(/No amount changes recorded yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No activity recorded yet/)).toBeInTheDocument();
   });
 });
 
 describe("ActivityTab — decrease change", () => {
   beforeEach(() => {
+    mockState.milestones = [];
     mockState.bills = [
       makeBill({
         cents: 8000,
@@ -130,8 +146,8 @@ describe("ActivityTab — decrease change", () => {
 });
 
 describe("ActivityTab — sort comparator coverage", () => {
-  it("sorts events newest-first when multiple history entries exist (invokes sort comparator)", () => {
-    // Two bills with history — results in ≥2 events, forcing the sort comparator to run.
+  it("sorts events newest-first when multiple history entries exist", () => {
+    mockState.milestones = [];
     mockState.bills = [
       makeBill({
         id: "b1",
@@ -151,5 +167,66 @@ describe("ActivityTab — sort comparator coverage", () => {
     // Newest first: Mar 1 before Feb 1
     expect(rows[0]).toHaveTextContent("Mar 1, 2026");
     expect(rows[1]).toHaveTextContent("Feb 1, 2026");
+  });
+});
+
+describe("ActivityTab — milestones", () => {
+  beforeEach(() => {
+    mockState.bills = [];
+  });
+
+  it("renders a milestone row when a milestone exists", () => {
+    mockState.milestones = [makeMilestone()];
+    render(<ActivityTab />);
+    expect(screen.getByText("Samsung TV is paid off")).toBeInTheDocument();
+  });
+
+  it("renders the milestone date", () => {
+    mockState.milestones = [makeMilestone()];
+    render(<ActivityTab />);
+    expect(screen.getByText("Apr 1, 2026")).toBeInTheDocument();
+  });
+
+  it("renders milestone emoji", () => {
+    mockState.milestones = [makeMilestone({ type: "affirm_payoff" })];
+    render(<ActivityTab />);
+    expect(screen.getByText(/🎉/)).toBeInTheDocument();
+  });
+
+  it("renders savings threshold milestone", () => {
+    mockState.milestones = [
+      makeMilestone({
+        id: "savings_threshold:50000",
+        type: "savings_threshold",
+        payload: { threshold: 50000, totalSaved: 55000 },
+      }),
+    ];
+    render(<ActivityTab />);
+    expect(screen.getByText("Saved $500!")).toBeInTheDocument();
+  });
+
+  it("shows no empty state when only milestones present", () => {
+    mockState.milestones = [makeMilestone()];
+    render(<ActivityTab />);
+    expect(screen.queryByText(/No activity recorded yet/)).not.toBeInTheDocument();
+  });
+
+  it("interleaves milestones and bill changes by date (newest first)", () => {
+    mockState.bills = [
+      makeBill({
+        id: "b1",
+        name: "T-Mobile",
+        cents: 12000,
+        amountHistory: [{ date: "2026-04-10", cents: 10800 }],
+      }),
+    ];
+    mockState.milestones = [
+      makeMilestone({ achievedAt: "2026-04-01T12:00:00Z" }),
+    ];
+    render(<ActivityTab />);
+    const rows = screen.getAllByRole("row").slice(1); // skip header
+    // Bill change (Apr 10) should come before milestone (Apr 1)
+    expect(rows[0]).toHaveTextContent("Apr 10, 2026");
+    expect(rows[1]).toHaveTextContent("Apr 1, 2026");
   });
 });
