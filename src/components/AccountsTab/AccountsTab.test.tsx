@@ -313,12 +313,11 @@ describe("AccountsTab — toolbar actions", () => {
     expect(exportBillsCSV).toHaveBeenCalledTimes(1);
   });
 
-  it("Today button sets viewMonth to advanceMonth(currentMonth(), 1) = '2026-05' (line 173)", () => {
+  it("Today button sets viewMonth to currentMonth() = '2026-04'", () => {
     const onViewMonthChange = jest.fn();
     renderTab({ viewMonth: "2026-03", onViewMonthChange });
     fireEvent.click(screen.getByText("Today"));
-    // advanceMonth("2026-04", 1) = "2026-05"
-    expect(onViewMonthChange).toHaveBeenCalledWith("2026-05");
+    expect(onViewMonthChange).toHaveBeenCalledWith("2026-04");
   });
 });
 

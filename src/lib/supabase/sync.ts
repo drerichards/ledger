@@ -394,6 +394,39 @@ export async function deletePlanRemote(id: string): Promise<void> {
 }
 
 /**
+ * DEV ONLY — wipes all rows for the authenticated user across all 7 tables,
+ * then re-seeds from SEED_STATE. Calling this in production is a no-op guarded
+ * by the NODE_ENV check at the call site (AppShell).
+ */
+export async function resetRemoteToSeed(state: AppState): Promise<void> {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const uid = user.id;
+
+    // Delete all rows for this user first
+    await Promise.all([
+      supabase.from("bills").delete().eq("user_id", uid),
+      supabase.from("installment_plans").delete().eq("user_id", uid),
+      supabase.from("income").delete().eq("user_id", uid),
+      supabase.from("snapshots").delete().eq("user_id", uid),
+      supabase.from("paycheck_weeks").delete().eq("user_id", uid),
+      supabase.from("check_log").delete().eq("user_id", uid),
+      supabase.from("savings_log").delete().eq("user_id", uid),
+    ]);
+
+    // Re-seed from the provided state (caller passes SEED_STATE)
+    await syncStateToSupabase(state);
+  } catch (err) {
+    console.error("[sync] resetRemoteToSeed failed:", err);
+  }
+}
+
+/**
  * Deletes a check log entry from Supabase by week_of.
  */
 export async function deleteCheckEntryRemote(weekOf: string): Promise<void> {

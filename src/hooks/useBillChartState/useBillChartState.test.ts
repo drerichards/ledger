@@ -181,10 +181,11 @@ describe("useBillChartState — income and shortfall", () => {
     expect(result.current.otherIncomeCents).toBe(124190 + 33447 + 77500);
   });
 
-  it("returns 0 otherIncomeCents when no income record exists for viewMonth", () => {
+  it("returns INCOME_DEFAULTS sum for otherIncomeCents when no income record exists for viewMonth", () => {
     const income = [makeIncome({ month: "2026-05" })]; // different month
     const { result } = setup([], income, [], "2026-04");
-    expect(result.current.otherIncomeCents).toBe(0);
+    // No record for 2026-04 → defaults: 124190 + 33447 + 77500 = 235137
+    expect(result.current.otherIncomeCents).toBe(124190 + 33447 + 77500);
   });
 
   it("shortfall is positive when other income bills exceed other income", () => {

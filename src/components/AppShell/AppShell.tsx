@@ -92,6 +92,14 @@ export function AppShell() {
     router.push("/login");
   };
 
+  const handleDevReset =
+    process.env.NODE_ENV === "development"
+      ? async () => {
+          if (!confirm("Reset all data to seed state? This cannot be undone.")) return;
+          await actions.resetToSeed();
+        }
+      : undefined;
+
   const { state: s, ...actions } = appState;
 
   // Derive notifications from paid-off Affirm plans
@@ -131,6 +139,7 @@ export function AppShell() {
           onPrintTab={handlePrintTab}
           onPrintAll={handlePrintAll}
           onSignOut={handleSignOut}
+          onResetToSeed={handleDevReset}
         />
         <nav className={styles.tabBar}>
           {TABS.map((tab) => (

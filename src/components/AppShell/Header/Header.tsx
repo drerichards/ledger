@@ -15,6 +15,7 @@ type Props = {
   onPrintTab: () => void;
   onPrintAll: () => void;
   onSignOut: () => void;
+  onResetToSeed?: () => void;
 };
 
 export function Header({
@@ -27,6 +28,7 @@ export function Header({
   onPrintTab,
   onPrintAll,
   onSignOut,
+  onResetToSeed,
 }: Props) {
   return (
     <header className={styles.header}>
@@ -48,6 +50,7 @@ export function Header({
           onPrintTab={onPrintTab}
           onPrintAll={onPrintAll}
           onSignOut={onSignOut}
+          onResetToSeed={onResetToSeed}
         />
       </div>
     </header>

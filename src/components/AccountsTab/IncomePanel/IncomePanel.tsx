@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { MonthlyIncome } from "@/types";
 import { toCents, fmtMoney, sumCents, calcShortfall } from "@/lib/money";
+import { INCOME_DEFAULTS } from "@/lib/income";
 import styles from "./IncomePanel.module.css";
 
 type Props = {
@@ -21,14 +22,8 @@ const FIELDS: { key: Field; label: string }[] = [
   { key: "social_security", label: "Social Security" },
 ];
 
-const FIXED_DEFAULTS: Record<Field, number> = {
-  military_pay: 124190,
-  retirement: 33447,
-  social_security: 77500,
-};
-
 function fieldCents(income: MonthlyIncome | undefined, key: Field): number {
-  return income ? income[key] : FIXED_DEFAULTS[key];
+  return income ? income[key] : INCOME_DEFAULTS[key];
 }
 
 export function IncomePanel({

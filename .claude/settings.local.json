@@ -23,7 +23,8 @@
       "Bash(pnpm add:*)",
       "Bash(npx shadcn@latest add alert-dialog:*)",
       "mcp__memory__create_relations",
-      "mcp__memory__read_graph"
+      "mcp__memory__read_graph",
+      "WebSearch"
     ]
   }
 }

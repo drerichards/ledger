@@ -29,6 +29,7 @@ const config = {
     "<rootDir>/node_modules/",
     "<rootDir>/.next/",
     "<rootDir>/e2e/",
+    "<rootDir>/.claude/",
   ],
 
   // Coverage targets the pure business logic — lib/ and hooks/ are highest priority

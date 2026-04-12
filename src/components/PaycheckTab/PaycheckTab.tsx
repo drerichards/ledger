@@ -791,6 +791,7 @@ export function PaycheckTab({
                   setCurrentMonthStr(weekMonth);
                   setSelectedWeekOf(weekOf);
                   setExpandedWeeks(new Set([weekOf]));
+                  setCollapsed((prev) => ({ ...prev, [weekMonth]: false }));
                   onSetViewScope("weekly");
                 }}
               />

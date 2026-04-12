@@ -17,6 +17,7 @@ import type {
 } from "@/types";
 import { newColumnKey } from "@/lib/paycheck";
 import { INITIAL_STATE, loadState, saveState } from "@/lib/storage";
+import { SEED_STATE } from "@/lib/seed";
 import { today, mondayOf } from "@/lib/dates";
 import { generateId } from "@/lib/id";
 import {
@@ -25,6 +26,7 @@ import {
   deleteBillRemote,
   deletePlanRemote,
   deleteCheckEntryRemote,
+  resetRemoteToSeed,
 } from "@/lib/supabase/sync";
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
@@ -528,6 +530,12 @@ export function useAppState() {
     [],
   );
 
+  const resetToSeed = useCallback(async () => {
+    dispatch({ type: "HYDRATE", payload: SEED_STATE });
+    saveState(SEED_STATE);
+    await resetRemoteToSeed(SEED_STATE);
+  }, []);
+
   return {
     state,
     addBill,
@@ -558,5 +566,6 @@ export function useAppState() {
     deleteGoal,
     markMilestoneSeen,
     addMilestone,
+    resetToSeed,
   };
 }

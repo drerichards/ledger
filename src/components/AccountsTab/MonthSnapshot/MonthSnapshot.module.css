@@ -12,6 +12,18 @@
     line-height: 1.5;
 }
 
+/* ── Empty state warning ─────────────────────────────────────────────────── */
+
+.emptyWarning {
+    font-size: var(--text-sm);
+    color: var(--color-rust);
+    background: var(--color-rust-light);
+    border: 1px solid var(--color-rust-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    line-height: 1.5;
+}
+
 /* ── Stats grid ──────────────────────────────────────────────────────────── */
 
 .statsGrid {
@@ -40,6 +52,11 @@
     background: var(--color-rust);
     color: var(--color-white);
     font-family: var(--font-body);
+}
+
+.btnPrimary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .btnGhost {

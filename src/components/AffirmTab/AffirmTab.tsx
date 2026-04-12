@@ -56,7 +56,6 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                   <th
                     className={`${styles.th} ${styles.thPlan}`}
                     scope="col"
-                    style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
                   >
                     Plan
                   </th>
@@ -65,7 +64,6 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                       key={m}
                       scope="col"
                       className={`${styles.th} ${m === now ? styles.thCurrent : ""}`}
-                      style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
                     >
                       {fmtMonthLabel(m)}
                     </th>
@@ -73,7 +71,6 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                   <th
                     className={`${styles.th} ${styles.thTotal}`}
                     scope="col"
-                    style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
                   >
                     Total Owed
                   </th>

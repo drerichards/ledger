@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Bill, MonthlyIncome, PaycheckWeek } from "@/types";
 import { sumCents, calcShortfall } from "@/lib/money";
 import { advanceMonth } from "@/lib/dates";
+import { INCOME_DEFAULTS } from "@/lib/income";
 
 /**
  * Derives all computed values for the Bill Chart tab.
@@ -38,9 +39,9 @@ export function useBillChartState(
 
     const thisMonthIncome = income.find((i) => i.month === viewMonth);
     const otherIncomeCents = sumCents([
-      thisMonthIncome?.military_pay ?? 0,
-      thisMonthIncome?.retirement ?? 0,
-      thisMonthIncome?.social_security ?? 0,
+      thisMonthIncome?.military_pay ?? INCOME_DEFAULTS.military_pay,
+      thisMonthIncome?.retirement ?? INCOME_DEFAULTS.retirement,
+      thisMonthIncome?.social_security ?? INCOME_DEFAULTS.social_security,
     ]);
 
     // SHORT is only against Other Income bills — never Kia's Pay bills.

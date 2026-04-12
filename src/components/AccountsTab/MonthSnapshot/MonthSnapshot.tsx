@@ -57,6 +57,8 @@ export function MonthSnapshot({
     checkLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
   );
 
+  const canSave = totalBilled > 0;
+
   const handleSave = () => {
     onSave({ month, totalBilled, totalPaid, shortfall, savingsMoved, kiasPayActual });
     onClose();
@@ -68,6 +70,12 @@ export function MonthSnapshot({
         Snapshot for <strong>{fmtMonthFull(month)}</strong>. Review the figures
         then confirm to lock in the record.
       </p>
+
+      {!canSave && (
+        <p className={styles.emptyWarning}>
+          No bills have been entered for this month. Add bills before saving a snapshot.
+        </p>
+      )}
 
       <div className={styles.statsGrid}>
         <Stat label="Total Billed" value={fmtMoney(totalBilled)} />
@@ -85,7 +93,12 @@ export function MonthSnapshot({
         <button type="button" className={styles.btnGhost} onClick={onClose}>
           Cancel
         </button>
-        <button type="button" className={styles.btnPrimary} onClick={handleSave}>
+        <button
+          type="button"
+          className={styles.btnPrimary}
+          onClick={handleSave}
+          disabled={!canSave}
+        >
           Confirm &amp; Save Snapshot
         </button>
       </div>

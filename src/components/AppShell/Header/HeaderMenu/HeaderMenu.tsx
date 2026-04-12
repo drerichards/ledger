@@ -7,9 +7,10 @@ type Props = {
   onPrintTab: () => void;
   onPrintAll: () => void;
   onSignOut: () => void;
+  onResetToSeed?: () => void;
 };
 
-export function HeaderMenu({ onPrintTab, onPrintAll, onSignOut }: Props) {
+export function HeaderMenu({ onPrintTab, onPrintAll, onSignOut, onResetToSeed }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,6 +57,18 @@ export function HeaderMenu({ onPrintTab, onPrintAll, onSignOut }: Props) {
           >
             Print All Tabs
           </button>
+          {onResetToSeed && (
+            <>
+              <div className={styles.divider} />
+              <button
+                className={`${styles.item} ${styles.itemDanger}`}
+                role="menuitem"
+                onClick={() => { onResetToSeed(); close(); }}
+              >
+                ⚠ Reset to Seed Data
+              </button>
+            </>
+          )}
           <div className={styles.divider} />
           <button
             className={`${styles.item} ${styles.itemDanger}`}

@@ -139,25 +139,6 @@ export function AccountsTab({
 
   return (
     <div className={styles.container}>
-      {/* ── Summary Cards ─────────────────────────────────────────── */}
-      <div className={styles.summaryRow}>
-        <StatCard
-          label="Monthly Total"
-          color="navy"
-          subRows={[
-            { label: "From Kia's Pay", value: fmtMoney(kiasBillsCents) },
-            { label: "From Other Income", value: fmtMoney(otherBillsCents) },
-          ]}
-        />
-        <StatCard label="Paid"   value={fmtMoney(paidCents)}   color="olive" />
-        <StatCard label="Unpaid" value={fmtMoney(unpaidCents)} color="rust" />
-        <StatCard
-          label={shortfall > 0 ? "Short" : "Surplus"}
-          value={fmtMoney(Math.abs(shortfall))}
-          color={shortfall > 0 ? "rust" : "olive"}
-        />
-      </div>
-
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
@@ -172,7 +153,7 @@ export function AccountsTab({
             </button>
             <button
               className={styles.navBtn}
-              onClick={() => setViewMonth(advanceMonth(currentMonth(), 1))}
+              onClick={() => setViewMonth(currentMonth())}
             >
               Today
             </button>
@@ -206,6 +187,25 @@ export function AccountsTab({
             + Add Bill
           </button>
         </div>
+      </div>
+
+      {/* ── Summary Cards ─────────────────────────────────────────── */}
+      <div className={styles.summaryRow}>
+        <StatCard
+          label="Monthly Total"
+          color="navy"
+          subRows={[
+            { label: "From Kia's Pay", value: fmtMoney(kiasBillsCents) },
+            { label: "From Other Income", value: fmtMoney(otherBillsCents) },
+          ]}
+        />
+        <StatCard label="Paid"   value={fmtMoney(paidCents)}   color="olive" />
+        <StatCard label="Unpaid" value={fmtMoney(unpaidCents)} color="rust" />
+        <StatCard
+          label={shortfall > 0 ? "Short" : "Surplus"}
+          value={fmtMoney(Math.abs(shortfall))}
+          color={shortfall > 0 ? "rust" : "olive"}
+        />
       </div>
 
       {/* ── Rollover Prompt ───────────────────────────────────────── */}

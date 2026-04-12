@@ -203,6 +203,40 @@ describe("MonthSnapshot — actions", () => {
   });
 });
 
+describe("MonthSnapshot — canSave gate", () => {
+  it("disables Confirm button and shows warning when no bills exist", () => {
+    render(
+      <MonthSnapshot
+        month="2026-04"
+        bills={[]}
+        income={[]}
+        savingsLog={[]}
+        checkLog={[]}
+        onSave={noop}
+        onClose={noop}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Confirm/i })).toBeDisabled();
+    expect(screen.getByText(/No bills have been entered/i)).toBeInTheDocument();
+  });
+
+  it("enables Confirm button when bills exist", () => {
+    render(
+      <MonthSnapshot
+        month="2026-04"
+        bills={[makeBill()]}
+        income={[]}
+        savingsLog={[]}
+        checkLog={[]}
+        onSave={noop}
+        onClose={noop}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Confirm/i })).not.toBeDisabled();
+    expect(screen.queryByText(/No bills have been entered/i)).not.toBeInTheDocument();
+  });
+});
+
 describe("MonthSnapshot — income edge cases", () => {
   it("shows zero income when no income entry exists for the month", () => {
     render(
@@ -229,7 +263,7 @@ describe("MonthSnapshot — income edge cases", () => {
     render(
       <MonthSnapshot
         month="2026-04"
-        bills={[]}
+        bills={[makeBill()]}
         income={[]}
         savingsLog={savingsLog}
         checkLog={[]}
@@ -248,7 +282,7 @@ describe("MonthSnapshot — income edge cases", () => {
     render(
       <MonthSnapshot
         month="2026-04"
-        bills={[]}
+        bills={[makeBill()]}
         income={[]}
         savingsLog={savingsLog}
         checkLog={[]}

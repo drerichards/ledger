@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     // Config files that legitimately use require()
     "jest.config.js",
     "tailwind.config.ts",
+    // Git worktrees created by Claude Code — not project source
+    ".claude/**",
   ]),
   {
     rules: {

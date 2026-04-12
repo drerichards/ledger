@@ -47,10 +47,11 @@
     --color-gold-alpha-20: color-mix(in srgb, var(--color-gold) 20%, transparent);
 
     /* ── Typography ──────────────────────────────────────────────── */
-    --font-primary: 'Poppins', sans-serif;
-    /* headings, body, UI */
-    --font-mono: 'DM Mono', monospace;
-    /* currency, numbers in tables */
+    /* next/font injects --font-poppins / --font-dm-sans / --font-dm-mono on <html> */
+    --font-heading: var(--font-poppins, 'Poppins', sans-serif);   /* display headings, brand name */
+    --font-primary: var(--font-dm-sans, 'DM Sans', sans-serif);   /* UI labels, tab buttons */
+    --font-body: var(--font-dm-sans, 'DM Sans', sans-serif);      /* body text, inputs, prose */
+    --font-mono: var(--font-dm-mono, 'DM Mono', monospace);       /* currency, numbers in tables */
 
     --text-2xs: 8px;
     /* tiny badge text */

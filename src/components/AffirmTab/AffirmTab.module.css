@@ -55,7 +55,7 @@
     background: #ffffff;
     border-radius: var(--radius-xl);
     box-shadow: 0 4px 24px rgba(28, 47, 64, 0.13), 0 1px 4px rgba(28, 47, 64, 0.06);
-    clip-path: inset(0 round var(--radius-xl));
+    overflow: hidden;
 }
 
 .tableWrapper {
@@ -197,6 +197,8 @@
     border-right: 1px solid rgba(0, 0, 0, 0.08);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: background var(--anim-speed) ease;
+    overflow: hidden;
+    max-width: 200px;
 }
 
 .planLabel {
@@ -206,6 +208,9 @@
     font-size: var(--text-sm);
     color: var(--color-navy);
     line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .planRate {
