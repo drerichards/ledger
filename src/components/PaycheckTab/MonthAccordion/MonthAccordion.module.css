@@ -77,7 +77,7 @@
 
 .monthStatValue {
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-white);
 }
 
@@ -160,7 +160,7 @@
 
 .monthTotalsStatValue {
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-navy);
 }
 

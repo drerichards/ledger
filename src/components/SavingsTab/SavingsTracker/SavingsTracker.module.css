@@ -19,7 +19,7 @@
 .savingsTotal {
     font-family: var(--font-mono);
     font-size: var(--text-2xl);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-olive);
 }
 
@@ -109,7 +109,7 @@
 .logAmount {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-olive);
     flex: 1;
 }

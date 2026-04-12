@@ -126,9 +126,10 @@
 
 .dateLabel {
     position: relative;
-    font-family: var(--font-mono);
+    font-family: var(--font-heading);
     font-size: var(--text-xs);
-    color: var(--color-text-mid);
+    font-weight: 400;
+    color: var(--color-navy);
     letter-spacing: 0.02em;
 }
 
@@ -137,7 +138,7 @@
 .amountFilled {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-navy);
 }
 
@@ -160,7 +161,7 @@
     padding: 3px 6px;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-navy);
     background: var(--color-white);
     border: 1.5px solid var(--color-navy);
@@ -277,7 +278,7 @@
 .modalChangeOld {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-text-mid);
     text-decoration: line-through;
 }
@@ -290,7 +291,7 @@
 .modalChangeNew {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-navy);
 }
 

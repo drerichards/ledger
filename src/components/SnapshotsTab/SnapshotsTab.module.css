@@ -11,8 +11,9 @@
 }
 
 .heading {
-    font-family: var(--font-body);
-    font-size: var(--text-lg);
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 700;
     color: var(--color-navy);
 }
 

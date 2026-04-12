@@ -5,8 +5,9 @@
 }
 
 .heading {
-    font-family: var(--font-body);
-    font-size: var(--text-lg);
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 700;
     color: var(--color-navy);
 }
 
@@ -19,6 +20,40 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+}
+
+/* ── Section nav pills ───────────────────────────────────────────────────────── */
+
+.sectionNav {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-3);
+}
+
+.sectionPill {
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-mid);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.sectionPill:hover {
+  background: var(--color-navy-tint);
+  color: var(--color-navy);
+  border-color: var(--color-navy);
+}
+
+.sectionPillActive {
+  background: var(--color-navy);
+  color: #fff;
+  border-color: var(--color-navy);
 }
 
 /* ── Tab link ────────────────────────────────────────────────────────────────── */

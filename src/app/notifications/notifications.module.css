@@ -121,7 +121,7 @@
 
 .amount {
     font-family: var(--font-mono);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-olive);
 }
 

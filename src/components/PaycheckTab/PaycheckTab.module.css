@@ -3,7 +3,7 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-6);
 }
 
 /* ── Header ───────────────────────────────────────────────────────────────── */
@@ -17,9 +17,9 @@
 }
 
 .heading {
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     color: var(--color-navy);
-    font-family: var(--font-body);
+    font-family: var(--font-heading);
     font-weight: 700;
 }
 

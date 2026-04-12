@@ -4,7 +4,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
-    padding: var(--space-6);
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
@@ -16,7 +15,7 @@
 }
 
 .heading {
-    font-family: var(--font-primary);
+    font-family: var(--font-heading);
     font-size: var(--text-xl);
     font-weight: 700;
     color: var(--color-navy);
@@ -52,7 +51,7 @@
 /* ── Card + table wrapper ─────────────────────────────────────────────────── */
 
 .cardWrapper {
-    background: #ffffff;
+    background: var(--color-white);
     border-radius: var(--radius-xl);
     box-shadow: 0 4px 24px rgba(28, 47, 64, 0.13), 0 1px 4px rgba(28, 47, 64, 0.06);
     overflow: hidden;
@@ -106,27 +105,23 @@
     border-right: none;
 }
 
-/* Plan column — sticky left + top, dark frosted */
+/* Plan column — sticky left + top, fully opaque so scrolling columns are occluded */
 .thPlan {
     text-align: left;
     min-width: 160px;
     position: sticky;
     left: 0;
     z-index: 5;
-    background: rgba(28, 47, 64, 0.86);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--color-navy);
     box-shadow: 4px 0 20px rgba(28, 47, 64, 0.18);
 }
 
-/* Total Owed column — sticky right + top, dark frosted */
+/* Total Owed column — sticky right + top, fully opaque */
 .thTotal {
     position: sticky;
     right: 0;
     z-index: 5;
-    background: rgba(28, 47, 64, 0.86);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--color-navy);
     min-width: 140px;
     box-shadow: -4px 0 20px rgba(28, 47, 64, 0.18);
 }
@@ -163,9 +158,8 @@
     border-bottom: none;
 }
 
-.row:hover .tdPlan,
-.row:hover .tdTotalOwed {
-    background: rgba(39, 64, 88, 0.08);
+.row:hover .tdPlan {
+    background: #eef0f2; /* solid equiv of rgba(navy, 0.08) over white — sticky must be opaque */
 }
 
 .row:hover td:not(.tdPlan):not(.tdTotalOwed):not(.tdFinal) {
@@ -192,7 +186,7 @@
     position: sticky;
     left: 0;
     z-index: 2;
-    background: #ffffff;
+    background: var(--color-white);
     box-shadow: 3px 0 12px rgba(28, 47, 64, 0.10);
     border-right: 1px solid rgba(0, 0, 0, 0.08);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -225,16 +219,16 @@
 
 /* Inactive — outside plan range: cool grey, visually recedes */
 .tdInactive {
-    background: #f0f3f7;
+    background: var(--color-cream);
     border-right: 1px solid rgba(0, 0, 0, 0.06);
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 /* Active month — olive leaf tint, clearly distinct from inactive */
 .tdActive {
-    background: rgba(65, 82, 31, 0.13);
-    border-right: 1px solid rgba(65, 82, 31, 0.18);
-    border-bottom: 1px solid rgba(65, 82, 31, 0.14);
+    background: var(--color-olive-alpha-15);
+    border-right: 1px solid var(--color-olive-border);
+    border-bottom: 1px solid var(--color-olive-border);
     text-align: center;
     padding: 11px 8px;
     vertical-align: middle;
@@ -280,7 +274,7 @@
     position: sticky;
     right: 0;
     z-index: 2;
-    background: #ffffff;
+    background: var(--color-white);
     box-shadow: -3px 0 12px rgba(28, 47, 64, 0.10);
     border-left: 1px solid rgba(0, 0, 0, 0.08);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -294,7 +288,7 @@
 .totalOwedAmount {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-navy);
 }
 
@@ -396,7 +390,7 @@
     padding: 13px 10px;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: rgba(255, 255, 255, 0.75);
     text-align: center;
     border-right: 1px solid rgba(255, 255, 255, 0.08);

@@ -33,16 +33,38 @@
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
 
+.expandBtn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: var(--text-base);
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color 0.1s;
+    flex-shrink: 0;
+}
+
+.expandBtn:hover {
+    color: var(--color-white);
+}
+
 .tableWrapper {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: 380px;
-    transition: max-height 0.25s ease;
+    max-height: calc(50vh - 170px);
+    transition: max-height 0.3s ease;
 }
 
 .tableWrapperCollapsed {
     max-height: 0 !important;
     overflow: hidden;
+}
+
+.tableWrapperExpanded {
+    height: calc(100vh - 360px);
+    max-height: calc(100vh - 360px);
 }
 
 .table {
@@ -124,7 +146,7 @@
 .totalValue {
     padding: 10px 12px;
     font-family: var(--font-mono);
-    font-weight: 700;
+    font-weight: 500;
     font-size: var(--text-md);
     color: var(--color-white);
 }

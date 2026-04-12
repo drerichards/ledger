@@ -48,12 +48,12 @@
 
 .positive {
     color: var(--color-olive);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .negative {
     color: var(--color-rust);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 /* ── Sticky helpers for the monthly total row ────────────────────────────── */

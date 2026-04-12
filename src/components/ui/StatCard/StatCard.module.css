@@ -33,7 +33,7 @@
     display: block;
     font-family: var(--font-mono);
     font-size: var(--text-lg);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .card_navy .value {
