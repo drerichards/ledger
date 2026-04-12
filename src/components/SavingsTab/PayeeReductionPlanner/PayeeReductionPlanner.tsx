@@ -1,156 +1,120 @@
 "use client";
 
 import type { InstallmentPlan } from "@/types";
-import { fmtMoney, sumCents } from "@/lib/money";
-import { fmtMonthFull, currentMonth, monthsBetween } from "@/lib/dates";
-import { getAffirmTotalForMonth } from "@/lib/affirm";
+import { fmtMoney } from "@/lib/money/money";
+import { fmtMonthLabel, currentMonth, getMonthRange } from "@/lib/dates/dates";
+import { getAffirmTotalForMonth } from "@/lib/affirm/affirm";
+import { AffirmBurdenChart } from "./AffirmBurdenChart";
+import { InsightCard } from "@/components/shared/InsightCard";
+import { affirmPayoffInsights } from "@/lib/insights/debtInsights";
 import styles from "./PayeeReductionPlanner.module.css";
 
 type Props = {
   plans: InstallmentPlan[];
 };
 
-/**
- * Affirm Payee Reduction Planner.
- *
- * Shows only Affirm plans (from the InstallmentPlan list), sorted by end date
- * ascending so the next-to-go plan is most prominent. Displays:
- * - Remaining months until payoff
- * - End date
- * - Monthly amount freed when this plan ends
- * - Cumulative view: "By [Date], Affirm burden drops from $X → $Y"
- */
+type MonthRow = {
+  month: string;
+  owed: number;
+  relief: number; // positive = burden dropped vs prior month
+  isFinal: boolean;
+};
+
 export function PayeeReductionPlanner({ plans }: Props) {
   const month = currentMonth();
 
-  // Only plans still active (not yet ended)
-  const activePlans = plans
-    .filter((p) => p.end >= month)
-    .sort((a, b) => a.end.localeCompare(b.end));
-
-  const currentBurden = getAffirmTotalForMonth(plans, month);
+  const activePlans = plans.filter((p) => p.end >= month);
 
   if (activePlans.length === 0) {
     return (
       <div className={styles.container}>
-        <h3 className={styles.title}>Affirm Payoff Timeline</h3>
+        <p className={styles.sectionLabel}>Affirm Payoff Timeline</p>
         <p className={styles.empty}>All Affirm plans are paid off.</p>
       </div>
     );
   }
 
-  // Build cumulative burden milestones: as each plan ends, burden drops
-  const milestones = buildMilestones(activePlans, currentBurden);
+  const currentBurden = getAffirmTotalForMonth(plans, month);
+  const lastEnd = activePlans.reduce(
+    (max, p) => (p.end > max ? p.end : max),
+    activePlans[0].end,
+  );
+  const allMonths = getMonthRange(month, lastEnd);
+
+  const rows: MonthRow[] = allMonths.map((m, i) => {
+    const owed = getAffirmTotalForMonth(plans, m);
+    const prevOwed =
+      i === 0 ? owed : getAffirmTotalForMonth(plans, allMonths[i - 1]);
+    const relief = Math.max(0, prevOwed - owed);
+    return { month: m, owed, relief, isFinal: owed === 0 };
+  });
+
+  const chartData = rows.map((r) => ({
+    month: r.month,
+    owed: r.owed,
+    isStep: r.relief > 0,
+  }));
+
+  const insights = affirmPayoffInsights(rows);
+
+  // Only show milestone rows — months where burden drops or hits $0.
+  // Flat months are already covered by the chart above.
+  const milestoneRows = rows.filter((r) => r.relief > 0 || r.isFinal);
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>Affirm Payoff Timeline</h3>
-      <p className={styles.subtitle}>
-        Current burden:{" "}
-        <strong className={styles.amount}>{fmtMoney(currentBurden)}/mo</strong>
-      </p>
-
-      <div className={styles.planList}>
-        {activePlans.map((plan) => {
-          const monthsLeft = monthsBetween(month, plan.end);
-          const isThisMonth = plan.end === month;
-
-          return (
-            <div
-              key={plan.id}
-              className={`${styles.planCard} ${isThisMonth ? styles.planCardFinal : ""}`}
-            >
-              <div className={styles.planHeader}>
-                <span className={styles.planLabel}>{plan.label}</span>
-                {isThisMonth && (
-                  <span className={styles.finalBadge}>FINAL</span>
-                )}
-              </div>
-              <div className={styles.planMeta}>
-                <span className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Ends</span>
-                  <span className={styles.metaValue}>
-                    {fmtMonthFull(plan.end)}
-                  </span>
-                </span>
-                <span className={styles.metaDivider} />
-                <span className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Months left</span>
-                  <span className={styles.metaValue}>
-                    {isThisMonth ? "Last month" : monthsLeft}
-                  </span>
-                </span>
-                <span className={styles.metaDivider} />
-                <span className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Freed up</span>
-                  <span className={`${styles.metaValue} ${styles.freed}`}>
-                    {fmtMoney(plan.mc)}/mo
-                  </span>
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      <div className={styles.header}>
+        <span className={styles.sectionLabel}>Affirm Payoff Timeline</span>
+        <span className={styles.burden}>{fmtMoney(currentBurden)}/mo now</span>
       </div>
 
-      {/* Cumulative burden projection */}
-      <div className={styles.projection}>
-        <h4 className={styles.projectionTitle}>Cumulative Payoff</h4>
-        <div className={styles.milestoneList}>
-          {milestones.map((m) => (
-            <div key={m.month} className={styles.milestone}>
-              <span className={styles.milestoneDate}>
-                {fmtMonthFull(m.month)}
-              </span>
-              <span className={styles.milestoneBurden}>
-                <span className={styles.fromBurden}>
-                  {fmtMoney(m.fromCents)}
-                </span>
-                <span className={styles.arrow}> → </span>
-                <span
-                  className={`${styles.toBurden} ${m.toCents === 0 ? styles.toBurdenZero : ""}`}
-                >
-                  {m.toCents === 0 ? "$0" : fmtMoney(m.toCents)}
-                </span>
-              </span>
-            </div>
+      <AffirmBurdenChart data={chartData} />
+
+      {milestoneRows.length > 0 && (
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th className={styles.th}>When</th>
+              <th className={`${styles.th} ${styles.thNum}`}>New burden</th>
+              <th className={`${styles.th} ${styles.thNum}`}>Freed up</th>
+            </tr>
+          </thead>
+          <tbody>
+            {milestoneRows.map((row) => (
+              <tr
+                key={row.month}
+                className={row.isFinal ? styles.rowFinal : styles.rowStep}
+              >
+                <td className={styles.td}>
+                  <span className={row.isFinal ? styles.monthFinal : styles.monthStep}>
+                    {fmtMonthLabel(row.month)}
+                  </span>
+                </td>
+                <td className={`${styles.td} ${styles.tdNum}`}>
+                  <span className={row.isFinal ? styles.zero : styles.mono}>
+                    {row.isFinal ? "$0" : fmtMoney(row.owed)}
+                  </span>
+                </td>
+                <td className={`${styles.td} ${styles.tdNum}`}>
+                  {row.relief > 0 ? (
+                    <span className={styles.freed}>↓ {fmtMoney(row.relief)}</span>
+                  ) : (
+                    <span className={styles.dim}>—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {insights.length > 0 && (
+        <div className={styles.insights}>
+          {insights.map((insight, i) => (
+            <InsightCard key={i} {...insight} />
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
-}
-
-type BurdenMilestone = {
-  month: string;
-  fromCents: number;
-  toCents: number;
-};
-
-function buildMilestones(
-  sortedPlans: InstallmentPlan[],
-  initialBurden: number,
-): BurdenMilestone[] {
-  const milestones: BurdenMilestone[] = [];
-  let remaining = initialBurden;
-
-  // Group plans ending in the same month
-  const byMonth = new Map<string, InstallmentPlan[]>();
-  for (const plan of sortedPlans) {
-    const group = byMonth.get(plan.end) ?? [];
-    group.push(plan);
-    byMonth.set(plan.end, group);
-  }
-
-  for (const [month, plansEnding] of [...byMonth.entries()].sort()) {
-    const freed = sumCents(plansEnding.map((p) => p.mc));
-    milestones.push({
-      month,
-      fromCents: remaining,
-      toCents: Math.max(0, remaining - freed),
-    });
-    remaining = Math.max(0, remaining - freed);
-  }
-
-  return milestones;
 }

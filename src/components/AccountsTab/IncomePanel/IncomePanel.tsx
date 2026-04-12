@@ -12,6 +12,8 @@ type Props = {
   kiasPayCents: number;
   totalBillsCents: number;
   onUpdate: (income: MonthlyIncome) => void;
+  /** Stacks edit form fields vertically — use when rendered in a narrow rail. */
+  compact?: boolean;
 };
 
 type Field = "military_pay" | "retirement" | "social_security";
@@ -32,6 +34,7 @@ export function IncomePanel({
   kiasPayCents,
   totalBillsCents,
   onUpdate,
+  compact = false,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<Field, string>>({
@@ -78,7 +81,7 @@ export function IncomePanel({
       {editing ? (
         <div className={styles.editForm}>
           {FIELDS.map(({ key, label }) => (
-            <div key={key} className={styles.editRow}>
+            <div key={key} className={compact ? styles.editRowStacked : styles.editRow}>
               <label className={styles.editLabel} htmlFor={`income-${key}`}>
                 {label}
               </label>

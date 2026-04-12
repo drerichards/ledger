@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type {
   InstallmentPlan,
   KiasCheckEntry,
@@ -12,6 +13,14 @@ import { SavingsProjection } from "./SavingsProjection";
 import { PayeeReductionPlanner } from "./PayeeReductionPlanner";
 import { GoalSetter } from "./GoalSetter";
 import styles from "./SavingsTab.module.css";
+
+type Section = "savings" | "debt" | "projection";
+
+const SECTIONS: { id: Section; label: string }[] = [
+  { id: "savings",    label: "Savings" },
+  { id: "debt",       label: "Debt" },
+  { id: "projection", label: "Projection" },
+];
 
 type Props = {
   plans: InstallmentPlan[];
@@ -41,6 +50,8 @@ export function SavingsTab({
   onDeleteGoal,
   onGoToPaycheck,
 }: Props) {
+  const [section, setSection] = useState<Section>("savings");
+
   return (
     <div className={styles.container}>
       <div>
@@ -63,29 +74,47 @@ export function SavingsTab({
         </p>
       </div>
 
-      <div className={styles.panels}>
-        <SavingsTracker
-          log={savingsLog}
-          onAdd={onAddSavings}
-          onUpdate={onUpdateSavings}
-          onDelete={onDeleteSavings}
-        />
+      <div className={styles.sectionNav}>
+        {SECTIONS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            className={`${styles.sectionPill} ${section === s.id ? styles.sectionPillActive : ""}`}
+            onClick={() => setSection(s.id)}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
-      <GoalSetter
-        goals={goals}
-        savingsLog={savingsLog}
-        onAdd={onAddGoal}
-        onDelete={onDeleteGoal}
-      />
+      {section === "savings" && (
+        <div className={styles.panels}>
+          <SavingsTracker
+            log={savingsLog}
+            onAdd={onAddSavings}
+            onUpdate={onUpdateSavings}
+            onDelete={onDeleteSavings}
+          />
+          <GoalSetter
+            goals={goals}
+            savingsLog={savingsLog}
+            onAdd={onAddGoal}
+            onDelete={onDeleteGoal}
+          />
+        </div>
+      )}
 
-      <PayeeReductionPlanner plans={plans} />
+      {section === "debt" && (
+        <PayeeReductionPlanner plans={plans} />
+      )}
 
-      <SavingsProjection
-        plans={plans}
-        checkLog={checking}
-        paycheck={paycheck}
-      />
+      {section === "projection" && (
+        <SavingsProjection
+          plans={plans}
+          checkLog={checking}
+          paycheck={paycheck}
+        />
+      )}
     </div>
   );
 }

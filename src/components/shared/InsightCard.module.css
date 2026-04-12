@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border-left: 3px solid transparent;
+}
+
+.positive { background: var(--color-olive-light);  border-color: var(--color-olive); }
+.neutral  { background: var(--color-navy-tint);    border-color: var(--color-fawn); }
+.warning  { background: var(--color-gold-light);   border-color: var(--color-gold); }
+.critical { background: var(--color-rust-tint);    border-color: var(--color-rust); }
+
+.icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  line-height: 1;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.headline {
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.context {
+  font-family: var(--font-primary);
+  font-size: var(--text-xs);
+  color: var(--color-text-mid);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.teaching {
+  font-family: var(--font-primary);
+  font-size: var(--text-xs);
+  color: var(--color-text-mid);
+  font-style: italic;
+  margin: 4px 0 0;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  line-height: 1.5;
+}

@@ -14,7 +14,9 @@ type Props = {
   sortKey: SortKey;
   sortDir: SortDir;
   isCollapsed: boolean;
+  isFocused?: boolean;
   onToggle: () => void;
+  onExpand?: () => void;
   onSort: (key: SortKey) => void;
   onEdit: (bill: Bill) => void;
   onDelete: (id: string) => void;
@@ -45,7 +47,9 @@ export const BillGroup = React.memo(function BillGroup({
   sortKey,
   sortDir,
   isCollapsed,
+  isFocused = false,
   onToggle,
+  onExpand,
   onSort,
   onEdit,
   onDelete,
@@ -58,10 +62,20 @@ export const BillGroup = React.memo(function BillGroup({
       <div className={styles.groupHeader} onClick={onToggle}>
         <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
         {label}
+        {onExpand && (
+          <button
+            type="button"
+            className={styles.expandBtn}
+            onClick={(e) => { e.stopPropagation(); onExpand(); }}
+            title={isFocused ? "Restore split view" : "Expand to full width"}
+          >
+            {isFocused ? "⤡" : "⤢"}
+          </button>
+        )}
       </div>
 
       <div
-        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""}`}
+        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""} ${isFocused ? styles.tableWrapperExpanded : ""}`}
       >
         <table className={styles.table}>
           <colgroup>

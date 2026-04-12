@@ -8,6 +8,8 @@ import type {
   KiasCheckEntry,
   MonthlyIncome,
   PaycheckWeek,
+  SavingsEntry,
+  SavingsGoal,
 } from "@/types";
 import { generateId } from "@/lib/id";
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
@@ -312,6 +314,62 @@ const CHECK_LOG: KiasCheckEntry[] = [
   { weekOf: "2026-03-27", amount: 81684 }, // $816.84
 ];
 
+// ─── Savings Log — rolling deposits Dec 2025 – Apr 2026 ──────────────────────
+// Represents consistent $250/week allocations with a few missed weeks.
+// Total: ~$3,250 → enough to show meaningful goal progress across all states.
+
+const se = (date: string, dollars: number): SavingsEntry => ({
+  id: generateId(),
+  date,
+  amount: Math.round(dollars * 100),
+});
+
+const SAVINGS_LOG: SavingsEntry[] = [
+  se("2025-12-26", 250.0),
+  se("2026-01-09", 250.0),
+  se("2026-01-16", 250.0),
+  se("2026-01-30", 250.0),
+  se("2026-02-06", 250.0),
+  se("2026-02-13", 500.0), // double week — good check
+  se("2026-02-27", 250.0),
+  se("2026-03-06", 250.0),
+  se("2026-03-20", 250.0),
+  se("2026-03-27", 250.0),
+  se("2026-04-07", 250.0),
+  se("2026-04-14", 250.0),
+  se("2026-04-21", 250.0), // total = $3,250.00
+];
+
+// ─── Savings Goals ────────────────────────────────────────────────────────────
+// Three goals covering the three status states: on track, behind, achieved.
+
+const GOALS: SavingsGoal[] = [
+  {
+    id: generateId(),
+    label: "Emergency Fund",
+    targetCents: 500000, // $5,000
+    targetDate: "2026-10",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    priority: 1,
+  },
+  {
+    id: generateId(),
+    label: "Car Down Payment",
+    targetCents: 300000, // $3,000 — current balance is $3,250 → achieved
+    targetDate: "2026-06",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    priority: 2,
+  },
+  {
+    id: generateId(),
+    label: "Vacation Fund",
+    targetCents: 200000, // $2,000 — only $3,250 total but due next month → behind
+    targetDate: "2026-05",
+    createdAt: "2026-03-01T00:00:00.000Z",
+    priority: 3,
+  },
+];
+
 // ─── Seed State ───────────────────────────────────────────────────────────────
 
 export const SEED_STATE: AppState = {
@@ -321,11 +379,11 @@ export const SEED_STATE: AppState = {
   plans: PLANS,
   paycheck: PAYCHECK_WEEKS,
   checkLog: CHECK_LOG,
-  savingsLog: [],
+  savingsLog: SAVINGS_LOG,
   paycheckViewScope: "monthly",
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
   checkEditWarningAcked: false,
-  goals: [],
+  goals: GOALS,
   milestones: [],
 };

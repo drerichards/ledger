@@ -66,7 +66,8 @@ export function AccountsTab({
     from: string;
     to: string;
   } | null>(null);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  type FocusedGroup = "split" | "kias_pay" | "other_income";
+  const [focusedGroup, setFocusedGroup] = useState<FocusedGroup>("split");
 
   // All derived values live in the domain hook — no inline computation here.
   const {
@@ -189,25 +190,6 @@ export function AccountsTab({
         </div>
       </div>
 
-      {/* ── Summary Cards ─────────────────────────────────────────── */}
-      <div className={styles.summaryRow}>
-        <StatCard
-          label="Monthly Total"
-          color="navy"
-          subRows={[
-            { label: "From Kia's Pay", value: fmtMoney(kiasBillsCents) },
-            { label: "From Other Income", value: fmtMoney(otherBillsCents) },
-          ]}
-        />
-        <StatCard label="Paid"   value={fmtMoney(paidCents)}   color="olive" />
-        <StatCard label="Unpaid" value={fmtMoney(unpaidCents)} color="rust" />
-        <StatCard
-          label={shortfall > 0 ? "Short" : "Surplus"}
-          value={fmtMoney(Math.abs(shortfall))}
-          color={shortfall > 0 ? "rust" : "olive"}
-        />
-      </div>
-
       {/* ── Rollover Prompt ───────────────────────────────────────── */}
       {rolloverPrompt && (
         <div className={styles.rolloverPrompt}>
@@ -232,44 +214,78 @@ export function AccountsTab({
         </div>
       )}
 
-      {/* ── Group A: Kia's Pay ────────────────────────────────────── */}
-      <BillGroup
-        label="From Kia's Pay"
-        bills={kiasBills}
-        sortKey={sortKey}
-        sortDir={sortDir}
-        isCollapsed={!!collapsed["kias_pay"]}
-        onToggle={() => setCollapsed((p) => ({ ...p, kias_pay: !p.kias_pay }))}
-        onSort={handleSort}
-        onEdit={handleEdit}
-        onDelete={onDelete}
-        onTogglePaid={onTogglePaid}
-      />
+      {/* ── Rail + Main layout ────────────────────────────────────── */}
+      <div className={styles.tabLayout}>
 
-      {/* ── Group B: Other Income ─────────────────────────────────── */}
-      <BillGroup
-        label="From Other Income"
-        bills={otherBills}
-        sortKey={sortKey}
-        sortDir={sortDir}
-        isCollapsed={!!collapsed["other_income"]}
-        onToggle={() =>
-          setCollapsed((p) => ({ ...p, other_income: !p.other_income }))
-        }
-        onSort={handleSort}
-        onEdit={handleEdit}
-        onDelete={onDelete}
-        onTogglePaid={onTogglePaid}
-      />
+        {/* Left rail — KPI cards + income summary */}
+        <div className={styles.leftRail}>
+          <StatCard
+            label="Monthly Total"
+            color="navy"
+            subRows={[
+              { label: "From Kia's Pay", value: fmtMoney(kiasBillsCents) },
+              { label: "From Other Income", value: fmtMoney(otherBillsCents) },
+            ]}
+          />
+          <StatCard label="Paid"   value={fmtMoney(paidCents)}   color="olive" />
+          <StatCard label="Unpaid" value={fmtMoney(unpaidCents)} color="rust" />
+          <StatCard
+            label={shortfall > 0 ? "Short" : "Surplus"}
+            value={fmtMoney(Math.abs(shortfall))}
+            color={shortfall > 0 ? "rust" : "olive"}
+          />
+          <div className={styles.railDivider} />
+          <IncomePanel
+            month={viewMonth}
+            income={thisMonthIncome}
+            kiasPayCents={kiasPayCents}
+            totalBillsCents={otherBillsCents}
+            onUpdate={onUpdateIncome}
+            compact
+          />
+        </div>
 
-      {/* ── Income Reconciliation ─────────────────────────────────── */}
-      <IncomePanel
-        month={viewMonth}
-        income={thisMonthIncome}
-        kiasPayCents={kiasPayCents}
-        totalBillsCents={otherBillsCents}
-        onUpdate={onUpdateIncome}
-      />
+        {/* Right main — bill groups stacked */}
+        <div className={styles.rightMain}>
+          <BillGroup
+            label="From Kia's Pay"
+            bills={kiasBills}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            isCollapsed={focusedGroup === "other_income"}
+            isFocused={focusedGroup === "kias_pay"}
+            onToggle={() => setFocusedGroup((f) => {
+              if (f === "split") return "other_income";   // collapse kias → open other
+              if (f === "kias_pay") return "split";       // un-focus → restore split
+              return f;                                    // already collapsed — no-op
+            })}
+            onExpand={() => setFocusedGroup((f) => f === "kias_pay" ? "split" : "kias_pay")}
+            onSort={handleSort}
+            onEdit={handleEdit}
+            onDelete={onDelete}
+            onTogglePaid={onTogglePaid}
+          />
+          <BillGroup
+            label="From Other Income"
+            bills={otherBills}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            isCollapsed={focusedGroup === "kias_pay"}
+            isFocused={focusedGroup === "other_income"}
+            onToggle={() => setFocusedGroup((f) => {
+              if (f === "split") return "kias_pay";       // collapse other → open kias
+              if (f === "other_income") return "split";   // un-focus → restore split
+              return f;                                    // already collapsed — no-op
+            })}
+            onExpand={() => setFocusedGroup((f) => f === "other_income" ? "split" : "other_income")}
+            onSort={handleSort}
+            onEdit={handleEdit}
+            onDelete={onDelete}
+            onTogglePaid={onTogglePaid}
+          />
+        </div>
+
+      </div>
 
       {/* ── Month Snapshot Modal ──────────────────────────────────── */}
       {showSnapshot && (
