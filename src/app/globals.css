@@ -40,6 +40,30 @@ button:active:not(:disabled) {
     color: var(--color-navy);
 }
 
+/* ── Ripple ──────────────────────────────────────────────────────────────── */
+
+@keyframes rippleOut {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(14);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transform: scale(1);
+  animation: rippleOut 0.5s ease-out forwards;
+}
+
 /* ── Reset ───────────────────────────────────────────────────────────────── */
 
 *,
@@ -55,6 +79,8 @@ button:active:not(:disabled) {
 html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
+    height: 100%;
+    overflow: hidden;
 }
 
 body {
@@ -62,7 +88,8 @@ body {
     font-size: var(--text-base);
     color: var(--color-text);
     background-color: var(--color-cream);
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
 }
 
 /* ── Typography ──────────────────────────────────────────────────────────── */

@@ -50,9 +50,9 @@ describe("ActivityTab — empty state", () => {
     mockState.milestones = [];
   });
 
-  it("renders the heading", () => {
+  it("renders the activity subheading", () => {
     render(<ActivityTab />);
-    expect(screen.getByRole("heading", { name: "Activity" })).toBeInTheDocument();
+    expect(screen.getByText(/Bill changes and financial milestones/)).toBeInTheDocument();
   });
 
   it("renders empty state message when no activity exists", () => {

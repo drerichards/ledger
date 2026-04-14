@@ -1,14 +1,85 @@
+/* ── Orb float keyframes ─────────────────────────────────────────────────── */
+
+@keyframes orbFloat1 {
+  0%,  100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(28px, -18px) scale(1.05); }
+  66%       { transform: translate(-18px, 14px) scale(0.96); }
+}
+
+@keyframes orbFloat2 {
+  0%,  100% { transform: translate(0, 0) scale(1); }
+  40%       { transform: translate(-22px, 20px) scale(1.04); }
+  75%       { transform: translate(16px, -12px) scale(0.97); }
+}
+
+@keyframes orbFloat3 {
+  0%,  100% { transform: translate(0, 0) scale(1); }
+  25%       { transform: translate(18px, 16px) scale(0.95); }
+  60%       { transform: translate(-24px, -10px) scale(1.06); }
+}
+
+/* ── Shell ───────────────────────────────────────────────────────────────── */
+
 .shell {
-  min-height: 100vh;
-  background:
-    linear-gradient(180deg,
-      #b8c8d8 0%,
-      #c8d5e2 18%,
-      #d4dfe9 45%,
-      #dde6ef 100%
-    );
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    #aac8c0 0%,
+    #b8c4a8 20%,
+    #c0c0a0 35%,
+    #ccc0a0 50%,
+    #d8c4a8 65%,
+    #e0ccb0 80%,
+    #ecdac0 100%
+  );
+  background-attachment: fixed;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* ── Background orbs ─────────────────────────────────────────────────────── */
+
+.bgOrbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+}
+
+.orb1 {
+  width: 520px;
+  height: 520px;
+  top: -120px;
+  left: -100px;
+  background: radial-gradient(circle, #98c4b8 0%, #aad4c8 60%, transparent 100%);
+  animation: orbFloat1 18s ease-in-out infinite;
+}
+
+.orb2 {
+  width: 440px;
+  height: 440px;
+  top: 30%;
+  right: -80px;
+  background: radial-gradient(circle, #c8c8a0 0%, #d4d4ac 60%, transparent 100%);
+  animation: orbFloat2 22s ease-in-out infinite;
+}
+
+.orb3 {
+  width: 380px;
+  height: 380px;
+  bottom: -80px;
+  left: 35%;
+  background: radial-gradient(circle, #d8c4a0 0%, #e4d0ac 60%, transparent 100%);
+  animation: orbFloat3 26s ease-in-out infinite;
 }
 
 .stickyTop {
@@ -69,6 +140,21 @@
   width: 100%;
   margin: 0 auto;
   padding: var(--space-6) var(--space-8);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── Tab fade-in keyframe ─────────────────────────────────────────────────── */
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Tab panel visibility — CSS toggle keeps all tabs mounted, only active one visible */
@@ -78,6 +164,13 @@
 
 .tabPanelActive {
   display: block;
+  animation: tabFadeIn 0.22s ease-out both;
+}
+
+/* Orbs sit behind content */
+.content {
+  position: relative;
+  z-index: 1;
 }
 
 @media print {
@@ -85,3 +178,4 @@
     page-break-after: always;
   }
 }
+

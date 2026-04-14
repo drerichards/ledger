@@ -19,15 +19,10 @@ describe("SnapshotsTab — empty state", () => {
     render(<SnapshotsTab snapshots={[]} />);
     expect(screen.getByText(/No monthly summaries yet/)).toBeInTheDocument();
   });
-
-  it("does not render a table when empty", () => {
-    render(<SnapshotsTab snapshots={[]} />);
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
-  });
 });
 
 describe("SnapshotsTab — with snapshots", () => {
-  it("renders a row for each snapshot", () => {
+  it("renders a card for each snapshot", () => {
     const snapshots = [
       makeSnapshot({ month: "2026-04" }),
       makeSnapshot({ month: "2026-03", totalBilled: 200000 }),
@@ -38,22 +33,17 @@ describe("SnapshotsTab — with snapshots", () => {
     expect(screen.getByText("March 2026")).toBeInTheDocument();
   });
 
-  it("sorts snapshots newest-first", () => {
+  it("sorts snapshot cards newest-first", () => {
     const snapshots = [
       makeSnapshot({ month: "2026-03" }),
       makeSnapshot({ month: "2026-05" }),
       makeSnapshot({ month: "2026-04" }),
     ];
-    render(<SnapshotsTab snapshots={snapshots} />);
-    const rows = screen.getAllByRole("row").slice(1); // skip header
-    expect(rows[0]).toHaveTextContent("May 2026");
-    expect(rows[1]).toHaveTextContent("April 2026");
-    expect(rows[2]).toHaveTextContent("March 2026");
-  });
-
-  it("renders the heading", () => {
-    render(<SnapshotsTab snapshots={[makeSnapshot()]} />);
-    expect(screen.getByRole("heading", { name: "Snapshots" })).toBeInTheDocument();
+    const { container } = render(<SnapshotsTab snapshots={snapshots} />);
+    // CSS modules hash class names, so match substring on "snapshotMonth"
+    const monthCells = container.querySelectorAll("[class*='snapshotMonth']");
+    const texts = Array.from(monthCells).map((el) => el.textContent);
+    expect(texts).toEqual(["May 2026", "April 2026", "March 2026"]);
   });
 
   it("renders billed amount formatted as money", () => {
@@ -61,13 +51,14 @@ describe("SnapshotsTab — with snapshots", () => {
     expect(screen.getByText("$2,598.63")).toBeInTheDocument();
   });
 
-  it("shows − prefix for shortfall (short)", () => {
+  it("shows − prefix for shortfall", () => {
     render(<SnapshotsTab snapshots={[makeSnapshot({ shortfall: 24726 })]} />);
-    expect(screen.getByText(/−\$247\.26/)).toBeInTheDocument();
+    // Appears in both the trend bar (avg surplus) and the card's Net pill
+    expect(screen.getAllByText(/−\$247\.26/).length).toBeGreaterThan(0);
   });
 
   it("shows + prefix for surplus (shortfall < 0)", () => {
     render(<SnapshotsTab snapshots={[makeSnapshot({ shortfall: -10000 })]} />);
-    expect(screen.getByText(/\+\$100\.00/)).toBeInTheDocument();
+    expect(screen.getAllByText(/\+\$100\.00/).length).toBeGreaterThan(0);
   });
 });

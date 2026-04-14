@@ -10,13 +10,13 @@ export type SortDir = "asc" | "desc";
 
 type Props = {
   label: string;
+  variant: "navy" | "olive";
+  footerLabel: string;
   bills: Bill[];
   sortKey: SortKey;
   sortDir: SortDir;
   isCollapsed: boolean;
-  isFocused?: boolean;
   onToggle: () => void;
-  onExpand?: () => void;
   onSort: (key: SortKey) => void;
   onEdit: (bill: Bill) => void;
   onDelete: (id: string) => void;
@@ -38,96 +38,94 @@ const sortBills = (bills: Bill[], key: SortKey, dir: SortDir): Bill[] =>
 
 /**
  * Collapsible, sortable bill group (presenter).
- * Renders one section of the Bill Chart table — either "From Kia's Pay"
- * or "From Other Income". Receives sorted/filtered data via props.
+ * Renders one section of the Bill Chart table — either "Fixed Bills"
+ * or "Affirm Payments". Receives sorted/filtered data via props.
  */
 export const BillGroup = React.memo(function BillGroup({
   label,
+  variant,
+  footerLabel,
   bills,
   sortKey,
   sortDir,
   isCollapsed,
-  isFocused = false,
   onToggle,
-  onExpand,
   onSort,
   onEdit,
   onDelete,
   onTogglePaid,
 }: Props) {
   const sorted = sortBills(bills, sortKey, sortDir);
+  const headerClass = variant === "olive" ? styles.groupHeaderOlive : styles.groupHeaderNavy;
 
   return (
     <div className={styles.group}>
-      <div className={styles.groupHeader} onClick={onToggle}>
+      <button
+        type="button"
+        className={`${styles.groupHeader} ${headerClass}`}
+        onClick={onToggle}
+      >
         <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
-        {label}
-        {onExpand && (
-          <button
-            type="button"
-            className={styles.expandBtn}
-            onClick={(e) => { e.stopPropagation(); onExpand(); }}
-            title={isFocused ? "Restore split view" : "Expand to full width"}
-          >
-            {isFocused ? "⤡" : "⤢"}
-          </button>
-        )}
-      </div>
+        <span className={styles.groupLabel}>{label}</span>
+        <span className={styles.groupTotal}>
+          {fmtMoney(sumCents(bills.map((b) => b.cents)))}
+        </span>
+      </button>
 
       <div
-        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""} ${isFocused ? styles.tableWrapperExpanded : ""}`}
+        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""}`}
       >
-        <table className={styles.table}>
-          <colgroup>
-            <col className={styles.colDue} />
-            <col className={styles.colMethod} />
-            <col className={styles.colPayee} />
-            <col className={styles.colAmount} />
-            <col className={styles.colPaid} />
-            <col className={styles.colCategory} />
-            <col className={styles.colActions} />
-          </colgroup>
-          <thead>
-            <tr>
-              <SortableHeader label="Date"   sortKey="due"    activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Method" sortKey="method" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Payee"  sortKey="name"   activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortableHeader label="Amount" sortKey="cents"  activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} alignRight />
-              <th scope="col" className={`${styles.th} ${styles.thCenter}`}>Paid</th>
-              <th scope="col" className={styles.th}>Notes</th>
-              <th scope="col" className={`${styles.th} ${styles.thCenter}`}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((bill) => (
-              <BillRow
-                key={bill.id}
-                bill={bill}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onTogglePaid={onTogglePaid}
-              />
-            ))}
-            {sorted.length === 0 && (
+        <div className={styles.tableWrapperInner}>
+          <table className={styles.table}>
+            <colgroup>
+              <col className={styles.colPayee} />
+              <col className={styles.colDue} />
+              <col className={styles.colMethod} />
+              <col className={styles.colAmount} />
+              <col className={styles.colStatus} />
+              <col className={styles.colActions} />
+            </colgroup>
+            <thead>
               <tr>
-                <td colSpan={7} className={styles.emptyState}>
-                  No bills yet — click + Add Bill to get started.
-                </td>
+                <SortableHeader label="Payee"  sortKey="name"   activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortableHeader label="Due"    sortKey="due"    activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortableHeader label="Method" sortKey="method" activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortableHeader label="Amount" sortKey="cents"  activeSortKey={sortKey} sortDir={sortDir} onSort={onSort} alignRight />
+                <th scope="col" className={`${styles.th} ${styles.thCenter}`}>Status</th>
+                <th scope="col" className={`${styles.th} ${styles.thCenter}`} aria-label="Actions" />
               </tr>
+            </thead>
+            <tbody>
+              {sorted.map((bill) => (
+                <BillRow
+                  key={bill.id}
+                  bill={bill}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onTogglePaid={onTogglePaid}
+                />
+              ))}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={6} className={styles.emptyState}>
+                    No bills yet — click + Add Bill to get started.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {sorted.length > 0 && (
+              <tfoot>
+                <tr className={`${styles.totalRow} ${variant === "olive" ? styles.totalRowOlive : ""}`}>
+                  <td colSpan={3} className={styles.totalLabel}>{footerLabel}</td>
+                  <td className={`${styles.totalValue} ${styles.thRight}`}>
+                    {fmtMoney(sumCents(bills.map((b) => b.cents)))}
+                  </td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
             )}
-          </tbody>
-          {sorted.length > 0 && (
-            <tfoot>
-              <tr className={styles.totalRow}>
-                <td colSpan={3} className={styles.totalLabel}>Group Total</td>
-                <td className={`${styles.totalValue} ${styles.thRight}`}>
-                  {fmtMoney(sumCents(bills.map((b) => b.cents)))}
-                </td>
-                <td colSpan={3} />
-              </tr>
-            </tfoot>
-          )}
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import type {
   AppState,
+  BankAccount,
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
@@ -60,7 +61,11 @@ type Action =
   | { type: "UPDATE_GOAL"; payload: SavingsGoal }
   | { type: "DELETE_GOAL"; payload: { id: string } }
   | { type: "MARK_MILESTONE_SEEN"; payload: { id: string } }
-  | { type: "ADD_MILESTONE"; payload: Milestone };
+  | { type: "ADD_MILESTONE"; payload: Milestone }
+  | { type: "SET_CHECKING_BALANCE"; payload: { balance: number; date: string } }
+  | { type: "ADD_BANK_ACCOUNT"; payload: BankAccount }
+  | { type: "UPDATE_BANK_ACCOUNT"; payload: BankAccount }
+  | { type: "DELETE_BANK_ACCOUNT"; payload: { id: string } };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
@@ -305,6 +310,30 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, milestones: [...state.milestones, action.payload] };
     }
 
+    case "SET_CHECKING_BALANCE":
+      return {
+        ...state,
+        checkingBalance: action.payload.balance,
+        checkingBalanceDate: action.payload.date,
+      };
+
+    case "ADD_BANK_ACCOUNT":
+      return { ...state, bankAccounts: [...(state.bankAccounts ?? []), action.payload] };
+
+    case "UPDATE_BANK_ACCOUNT":
+      return {
+        ...state,
+        bankAccounts: (state.bankAccounts ?? []).map((a) =>
+          a.id === action.payload.id ? action.payload : a,
+        ),
+      };
+
+    case "DELETE_BANK_ACCOUNT":
+      return {
+        ...state,
+        bankAccounts: (state.bankAccounts ?? []).filter((a) => a.id !== action.payload.id),
+      };
+
     // istanbul ignore next — typed switch is exhaustive; no unknown action can reach this
     default:
       return state;
@@ -530,6 +559,27 @@ export function useAppState() {
     [],
   );
 
+  const setCheckingBalance = useCallback(
+    (balance: number, date: string) =>
+      dispatch({ type: "SET_CHECKING_BALANCE", payload: { balance, date } }),
+    [],
+  );
+
+  const addBankAccount = useCallback(
+    (account: BankAccount) => dispatch({ type: "ADD_BANK_ACCOUNT", payload: account }),
+    [],
+  );
+
+  const updateBankAccount = useCallback(
+    (account: BankAccount) => dispatch({ type: "UPDATE_BANK_ACCOUNT", payload: account }),
+    [],
+  );
+
+  const deleteBankAccount = useCallback(
+    (id: string) => dispatch({ type: "DELETE_BANK_ACCOUNT", payload: { id } }),
+    [],
+  );
+
   const resetToSeed = useCallback(async () => {
     dispatch({ type: "HYDRATE", payload: SEED_STATE });
     saveState(SEED_STATE);
@@ -566,6 +616,10 @@ export function useAppState() {
     deleteGoal,
     markMilestoneSeen,
     addMilestone,
+    setCheckingBalance,
+    addBankAccount,
+    updateBankAccount,
+    deleteBankAccount,
     resetToSeed,
   };
 }

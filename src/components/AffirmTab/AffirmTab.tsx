@@ -23,11 +23,10 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
 
   return (
     <div className={styles.container}>
-      {/* ── Toolbar ───────────────────────────────────────────────── */}
-      <div className={styles.toolbar}>
-        <h2 className={styles.heading}>Affirm Plans</h2>
+      {/* ── Toolbar ──────────────────────────────────────────────── */}
+      <div className={styles.toolbarEnd}>
         <button
-          className={styles.btnPrimary}
+          className={styles.btnGlass}
           onClick={() => setShowForm(true)}
         >
           + Add Plan
@@ -119,6 +118,7 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
           />
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

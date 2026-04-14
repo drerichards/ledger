@@ -4,13 +4,11 @@ import { useRef, useState, useEffect } from "react";
 import styles from "./HeaderMenu.module.css";
 
 type Props = {
-  onPrintTab: () => void;
-  onPrintAll: () => void;
   onSignOut: () => void;
   onResetToSeed?: () => void;
 };
 
-export function HeaderMenu({ onPrintTab, onPrintAll, onSignOut, onResetToSeed }: Props) {
+export function HeaderMenu({ onSignOut, onResetToSeed }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -43,33 +41,16 @@ export function HeaderMenu({ onPrintTab, onPrintAll, onSignOut, onResetToSeed }:
 
       {open && (
         <div className={styles.dropdown} role="menu">
-          <button
-            className={styles.item}
-            role="menuitem"
-            onClick={() => { onPrintTab(); close(); }}
-          >
-            Print This Tab
-          </button>
-          <button
-            className={styles.item}
-            role="menuitem"
-            onClick={() => { onPrintAll(); close(); }}
-          >
-            Print All Tabs
-          </button>
           {onResetToSeed && (
-            <>
-              <div className={styles.divider} />
-              <button
-                className={`${styles.item} ${styles.itemDanger}`}
-                role="menuitem"
-                onClick={() => { onResetToSeed(); close(); }}
-              >
-                ⚠ Reset to Seed Data
-              </button>
-            </>
+            <button
+              className={`${styles.item} ${styles.itemDanger}`}
+              role="menuitem"
+              onClick={() => { onResetToSeed(); close(); }}
+            >
+              ⚠ Reset to Seed Data
+            </button>
           )}
-          <div className={styles.divider} />
+          {onResetToSeed && <div className={styles.divider} />}
           <button
             className={`${styles.item} ${styles.itemDanger}`}
             role="menuitem"

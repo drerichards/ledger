@@ -1,4 +1,5 @@
 import type {
+  BankAccount,
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
@@ -10,9 +11,11 @@ import type {
   SavingsEntry,
   SavingsGoal,
 } from "@/types";
+
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 
 type AppActions = {
+  setCheckingBalance: (balance: number, date: string) => void;
   addBill: (bill: Bill) => void;
   updateBill: (bill: Bill) => void;
   deleteBill: (id: string) => void;
@@ -38,9 +41,15 @@ type AppActions = {
   markNotificationsSeen: (ids: string[]) => void;
   addGoal: (goal: SavingsGoal) => void;
   deleteGoal: (id: string) => void;
+  addBankAccount: (account: BankAccount) => void;
+  updateBankAccount: (account: BankAccount) => void;
+  deleteBankAccount: (id: string) => void;
 };
 
 type AppState = {
+  checkingBalance: number;
+  checkingBalanceDate: string;
+  bankAccounts: BankAccount[];
   bills: Bill[];
   income: MonthlyIncome[];
   savingsLog: SavingsEntry[];
@@ -131,4 +140,18 @@ export const buildSavingsTabProps = (
   onAddGoal: actions.addGoal,
   onDeleteGoal: actions.deleteGoal,
   onGoToPaycheck,
+});
+
+export const buildHomeTabProps = ({ state, actions }: TabPropsDeps) => ({
+  checkingBalance: state.checkingBalance,
+  checkingBalanceDate: state.checkingBalanceDate,
+  bankAccounts: state.bankAccounts ?? [],
+  bills: state.bills,
+  plans: state.plans,
+  checkLog: state.checkLog,
+  savingsLog: state.savingsLog,
+  onSetBalance: actions.setCheckingBalance,
+  onAddBankAccount: actions.addBankAccount,
+  onUpdateBankAccount: actions.updateBankAccount,
+  onDeleteBankAccount: actions.deleteBankAccount,
 });

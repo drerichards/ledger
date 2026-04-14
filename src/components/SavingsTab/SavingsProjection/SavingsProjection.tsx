@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { InstallmentPlan, KiasCheckEntry, PaycheckWeek } from "@/types";
+import type { InstallmentPlan, KiasCheckEntry, PaycheckWeek, SavingsEntry, SavingsGoal } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm";
 import { fmtMoney } from "@/lib/money";
 import {
@@ -15,9 +15,11 @@ type Props = {
   plans: InstallmentPlan[];
   checkLog: KiasCheckEntry[];
   paycheck: PaycheckWeek[];
+  goals?: SavingsGoal[];
+  savingsLog?: SavingsEntry[];
 };
 
-export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
+export function SavingsProjection({ plans, checkLog, paycheck, goals = [], savingsLog = [] }: Props) {
   const [scenario, setScenario] = useState<ProjectionScenario>("conservative");
   const baseline = calcCheckBaseline(checkLog);
   if (!baseline) {
@@ -32,6 +34,26 @@ export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
     advanceMonth(currentMonth(), i),
   );
 
+  // First month within the 12-month window where Affirm burden reaches zero
+  const affirmNow = getAffirmTotalForMonth(plans, months[0]);
+  const clearanceMonth = affirmNow > 0
+    ? (months.find((m) => getAffirmTotalForMonth(plans, m) === 0) ?? null)
+    : null;
+
+  // Goal-connect: after Affirm clears, how long to fund the nearest unfunded goal?
+  const totalSaved = savingsLog.reduce((sum, e) => sum + e.amount, 0);
+  const nearestGoal = goals.length > 0
+    ? goals
+        .filter((g) => g.targetCents > totalSaved)
+        .sort((a, b) => {
+          if (a.priority !== undefined && b.priority !== undefined) return a.priority - b.priority;
+          return a.targetCents - b.targetCents; // fallback: smallest goal first
+        })[0] ?? null
+    : null;
+  const goalConnectMonths = (nearestGoal && affirmNow > 0)
+    ? Math.ceil((nearestGoal.targetCents - totalSaved) / affirmNow)
+    : null;
+
   // Fixed recurring bill allocations per week — pulled from the most recently entered week
   const latestWeek = paycheck[paycheck.length - 1];
   const weeklyFixed = latestWeek
@@ -43,7 +65,7 @@ export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
       latestWeek.deductions
     : 0;
   const monthlyFixed = weeklyFixed * 4;
-  const affirmMonthlyTotal = getAffirmTotalForMonth(plans, months[0]);
+  const affirmMonthlyTotal = affirmNow;
 
   return (
     <div className={styles.projection}>
@@ -70,12 +92,48 @@ export function SavingsProjection({ plans, checkLog, paycheck }: Props) {
           `Optimistic: based on Kia's highest check of ${fmtMoney(baseline.high)}/week.`}
       </p>
 
+      {clearanceMonth && (
+        <div className={styles.bottomLine}>
+          <span className={styles.bottomLineLabel}>
+            Affirm clears in <strong>{fmtMonthLabel(clearanceMonth)}</strong>
+          </span>
+          <span className={styles.bottomLineStat}>+{fmtMoney(affirmNow)}/mo freed</span>
+        </div>
+      )}
+
+      {clearanceMonth && nearestGoal && goalConnectMonths !== null && (
+        <div className={styles.goalConnect}>
+          <span className={styles.goalConnectEmoji}>🎯</span>
+          <span className={styles.goalConnectText}>
+            Redirect that{" "}
+            <span className={styles.goalConnectMono}>{fmtMoney(affirmNow)}/mo</span> to savings
+            after clearance →{" "}
+            <strong>{nearestGoal.label}</strong> funded in{" "}
+            <strong>{goalConnectMonths} month{goalConnectMonths !== 1 ? "s" : ""}</strong>
+          </span>
+        </div>
+      )}
+
       {scenario === "conservative" &&
         baseline.low < affirmMonthlyTotal + monthlyFixed && (
           <div className={styles.warning}>
             ⚠️ On a low week, Kia&apos;s check may not cover all allocations.
           </div>
         )}
+
+      <div className={styles.ctaCallout}>
+        <span className={styles.ctaCalloutIcon}>💡</span>
+        <div className={styles.ctaCalloutBody}>
+          <p className={styles.ctaCalloutTitle}>What this means for you</p>
+          <p className={styles.ctaCalloutText}>
+            <strong>Est. Remainder</strong> is money that&apos;s yours after the bills are paid. It won&apos;t go to savings on its own — you have to move it on purpose.
+          </p>
+          <p className={styles.ctaCalloutAction}>
+            → The habit: move some of this money to a savings goal before spending it on anything else. Even $20 a month adds up.
+            {clearanceMonth && ` Good news: once Affirm is paid off (${fmtMonthLabel(clearanceMonth)}), you&apos;ll have even more left over — start thinking now about what you want to do with it.`}
+          </p>
+        </div>
+      </div>
 
       <div className={styles.projTableWrapper}>
         <table className={styles.projTable}>

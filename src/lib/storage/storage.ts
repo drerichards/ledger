@@ -20,6 +20,9 @@ export const INITIAL_STATE: AppState = {
   checkEditWarningAcked: false,
   goals: [],
   milestones: [],
+  checkingBalance: 0,
+  checkingBalanceDate: "",
+  bankAccounts: [],
 };
 
 /**
@@ -55,7 +58,8 @@ export function loadState(): AppState {
           ? e
           : { ...e, id: `${e.weekOf ?? "unknown"}-${e.amount}`, date: e.weekOf ?? "" },
       ),
-      snapshots: parsed.snapshots ?? [],
+      // If stored state has no snapshots, backfill from seed so the Snapshots tab is testable
+      snapshots: (parsed.snapshots ?? []).length > 0 ? parsed.snapshots : SEED_STATE.snapshots,
       // If stored state has no plans, backfill from seed
       plans: (parsed.plans ?? []).length > 0 ? parsed.plans : SEED_STATE.plans,
       // Stamp missing extra field on older paycheck weeks
@@ -69,6 +73,9 @@ export function loadState(): AppState {
       checkEditWarningAcked: parsed.checkEditWarningAcked ?? false,
       goals: parsed.goals ?? [],
       milestones: parsed.milestones ?? [],
+      checkingBalance: parsed.checkingBalance ?? 0,
+      checkingBalanceDate: parsed.checkingBalanceDate ?? "",
+      bankAccounts: parsed.bankAccounts ?? [],
     };
   } catch {
     return SEED_STATE;

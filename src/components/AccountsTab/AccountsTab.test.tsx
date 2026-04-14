@@ -80,9 +80,9 @@ function renderTab(overrides: {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("AccountsTab — rendering", () => {
-  it("renders the Bill Chart heading", () => {
+  it("renders the Monthly Total stat card", () => {
     renderTab();
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
   });
 
   it("renders the view month label", () => {
@@ -96,9 +96,9 @@ describe("AccountsTab — rendering", () => {
     expect(screen.getByLabelText("Next month")).toBeInTheDocument();
   });
 
-  it("renders + Add Bill button", () => {
+  it("renders the Add Bill FAB", () => {
     renderTab();
-    expect(screen.getByText("+ Add Bill")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add bill" })).toBeInTheDocument();
   });
 });
 
@@ -172,9 +172,9 @@ describe("AccountsTab — rollover prompt", () => {
 });
 
 describe("AccountsTab — Add Bill modal", () => {
-  it("opens the BillForm when '+ Add Bill' is clicked", () => {
+  it("opens the BillForm when FAB is clicked", () => {
     renderTab();
-    fireEvent.click(screen.getByText("+ Add Bill"));
+    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
     // Custom Modal has no role="dialog" — assert the modal title heading instead
     // Modal renders <h3>{title}</h3>; BillForm passes title="Add Bill"
     expect(screen.getByRole("heading", { name: "Add Bill" })).toBeInTheDocument();
@@ -182,16 +182,18 @@ describe("AccountsTab — Add Bill modal", () => {
 
   it("opens Month Summary modal when 'Month Summary' is clicked", () => {
     renderTab();
+    // Month Summary is inside the More dropdown — open it first
+    fireEvent.click(screen.getByRole("button", { name: /More/ }));
     fireEvent.click(screen.getByText("Month Summary"));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
   });
 });
 
 describe("AccountsTab — sorting", () => {
-  it("renders SortableHeader columns (Date, Method, Payee, Amount)", () => {
+  it("renders SortableHeader columns (Due, Method, Payee, Amount)", () => {
     renderTab();
     // There are 2 BillGroups — each has these headers (use getAllByText)
-    expect(screen.getAllByText(/Date/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Due/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Payee/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Amount/).length).toBeGreaterThan(0);
   });
@@ -199,13 +201,13 @@ describe("AccountsTab — sorting", () => {
   it("clicking a sort header changes sort direction (handleSort)", () => {
     const bills = [makeBill()];
     renderTab({ bills });
-    // Click the "Date" columnheader — first instance (kias_pay group)
-    const dateHeaders = screen.getAllByRole("columnheader", { name: /Date/ });
-    fireEvent.click(dateHeaders[0]);
+    // Click the "Due" columnheader — first instance (kias_pay group)
+    const dueHeaders = screen.getAllByRole("columnheader", { name: /Due/ });
+    fireEvent.click(dueHeaders[0]);
     // Click again to toggle direction
-    fireEvent.click(dateHeaders[0]);
+    fireEvent.click(dueHeaders[0]);
     // No crash — sort state updated internally
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
   });
 
   it("clicking a different sort header changes sort key (handleSort branch)", () => {
@@ -213,9 +215,9 @@ describe("AccountsTab — sorting", () => {
     renderTab({ bills });
     const payeeHeaders = screen.getAllByRole("columnheader", { name: /Payee/ });
     fireEvent.click(payeeHeaders[0]); // sets sortKey to "name"
-    const dateHeaders = screen.getAllByRole("columnheader", { name: /Date/ });
-    fireEvent.click(dateHeaders[0]); // switches to different key
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    const dueHeaders = screen.getAllByRole("columnheader", { name: /Due/ });
+    fireEvent.click(dueHeaders[0]); // switches to different key
+    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
   });
 });
 
@@ -223,13 +225,14 @@ describe("AccountsTab — edit bill", () => {
   it("opens BillForm in edit mode when Edit is clicked on a bill (handleEdit)", () => {
     const bills = [makeBill()];
     renderTab({ bills });
-    fireEvent.click(screen.getByLabelText("Edit T-Mobile"));
+    fireEvent.click(screen.getByRole("button", { name: /actions for t-mobile/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /edit t-mobile/i }));
     expect(screen.getByRole("heading", { name: "Edit Bill" })).toBeInTheDocument();
   });
 
   it("closes BillForm when Cancel is clicked (handleFormClose)", () => {
     renderTab();
-    fireEvent.click(screen.getByText("+ Add Bill"));
+    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
     fireEvent.click(screen.getByText("Cancel"));
     expect(screen.queryByRole("heading", { name: "Add Bill" })).not.toBeInTheDocument();
   });
@@ -254,7 +257,7 @@ describe("AccountsTab — edit bill", () => {
         onRollover={noop}
       />,
     );
-    fireEvent.click(screen.getByText("+ Add Bill"));
+    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
     expect(screen.getByRole("heading", { name: "Add Bill" })).toBeInTheDocument();
     // Fill required fields — Zod rejects an empty form and never calls onSave
     fireEvent.change(screen.getByLabelText("Payee Name"), {
@@ -294,8 +297,9 @@ describe("AccountsTab — edit bill", () => {
         onRollover={noop}
       />,
     );
-    // Open edit mode for the bill
-    fireEvent.click(screen.getByLabelText("Edit T-Mobile"));
+    // Open edit mode for the bill — open ⋯ menu first, then click Edit
+    fireEvent.click(screen.getByRole("button", { name: /actions for t-mobile/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /edit t-mobile/i }));
     expect(screen.getByRole("heading", { name: "Edit Bill" })).toBeInTheDocument();
     // RHF + zodResolver validates async — flush the microtask queue before asserting
     await act(async () => {
@@ -309,6 +313,8 @@ describe("AccountsTab — toolbar actions", () => {
   it("calls exportBillsCSV when Export CSV is clicked", () => {
     const { exportBillsCSV } = jest.requireMock("@/lib/export");
     renderTab();
+    // Export CSV is inside the More dropdown — open it first
+    fireEvent.click(screen.getByRole("button", { name: /More/ }));
     fireEvent.click(screen.getByText("Export CSV"));
     expect(exportBillsCSV).toHaveBeenCalledTimes(1);
   });
@@ -324,6 +330,8 @@ describe("AccountsTab — toolbar actions", () => {
 describe("AccountsTab — MonthSnapshot modal close", () => {
   it("closes MonthSnapshot modal via the Modal × button (onClose on Modal — line 276)", () => {
     renderTab();
+    // Month Summary is inside the More dropdown — open it first
+    fireEvent.click(screen.getByRole("button", { name: /More/ }));
     fireEvent.click(screen.getByText("Month Summary"));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
     // Modal renders a × close button with aria-label "Close"
@@ -333,6 +341,8 @@ describe("AccountsTab — MonthSnapshot modal close", () => {
 
   it("closes MonthSnapshot modal via Cancel button inside panel (onClose on panel — line 286)", () => {
     renderTab();
+    // Month Summary is inside the More dropdown — open it first
+    fireEvent.click(screen.getByRole("button", { name: /More/ }));
     fireEvent.click(screen.getByText("Month Summary"));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
     // MonthSnapshot renders its own Cancel button
@@ -369,7 +379,7 @@ describe("AccountsTab — BillGroup collapse toggle", () => {
     // "From Kia's Pay" appears in StatCard subLabel [0] AND BillGroup header [1]
     fireEvent.click(screen.getAllByText("From Kia's Pay")[1]);
     // Group is now collapsed — component doesn't crash
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
   });
 
   it("toggles the other_income group collapse state", () => {
@@ -377,6 +387,6 @@ describe("AccountsTab — BillGroup collapse toggle", () => {
     renderTab({ bills });
     // "From Other Income" appears in StatCard subLabel [0] AND BillGroup header [1]
     fireEvent.click(screen.getAllByText("From Other Income")[1]);
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
   });
 });

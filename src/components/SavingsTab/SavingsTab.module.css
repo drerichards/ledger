@@ -4,6 +4,20 @@
     gap: var(--space-6);
 }
 
+/* ── Goals stat row ──────────────────────────────────────────────────────── */
+
+.statsRow {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+}
+
+.statsRow > * {
+    flex: 1;
+    min-width: 160px;
+}
+
 .heading {
     font-family: var(--font-heading);
     font-size: var(--text-xl);
@@ -16,10 +30,50 @@
     color: var(--color-text-mid);
 }
 
-.panels {
+/* ── Affirm projection callout ───────────────────────────────────────────── */
+
+.callout {
+    padding: 12px 16px;
+    background: rgba(65, 82, 31, 0.18);
+    border: 1px solid rgba(65, 82, 31, 0.4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--color-olive-dark);
+    line-height: 1.5;
+    margin-bottom: var(--space-4);
+}
+
+/* ── Savings log section ─────────────────────────────────────────────────── */
+
+.logSection {
     display: flex;
     flex-direction: column;
+    gap: var(--space-2);
+}
+
+.logSectionLabel {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-mid);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+/* ── Goals + Log two-column grid ────────────────────────────────────────────── */
+
+.goalsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-4);
+    align-items: start;
+}
+
+@media (max-width: 800px) {
+    .goalsGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── Section nav pills ───────────────────────────────────────────────────────── */
@@ -34,8 +88,10 @@
 .sectionPill {
   padding: 6px 16px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-family: var(--font-primary);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -56,21 +112,3 @@
   border-color: var(--color-navy);
 }
 
-/* ── Tab link ────────────────────────────────────────────────────────────────── */
-
-.tabLink {
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    color: var(--color-navy);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
-    transition: color 0.1s;
-}
-
-.tabLink:hover {
-    color: var(--color-rust);
-}

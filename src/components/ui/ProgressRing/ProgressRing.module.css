@@ -15,8 +15,14 @@
   stroke: var(--color-cream);
 }
 
+@keyframes arcDraw {
+  from { stroke-dashoffset: var(--arc-full, 283); }
+  to   { stroke-dashoffset: var(--arc-offset, 0); }
+}
+
 .arc {
   fill: none;
+  animation: arcDraw 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
   transition: stroke-dashoffset 0.5s ease;
 }
 

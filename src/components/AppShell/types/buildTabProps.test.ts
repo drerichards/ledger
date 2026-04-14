@@ -19,6 +19,8 @@ import type {
 
 // Re-export AppState shape so the test doesn't need to import from internal paths
 type MinimalState = {
+  checkingBalance: number;
+  checkingBalanceDate: string;
   bills: Bill[];
   income: MonthlyIncome[];
   savingsLog: SavingsEntry[];
@@ -31,11 +33,14 @@ type MinimalState = {
   seenNotificationIds: string[];
   checkEditWarningAcked: boolean;
   goals: never[];
+  bankAccounts: never[];
 };
 
 // ─── Minimal state & actions ──────────────────────────────────────────────────
 
 const emptyState: MinimalState = {
+  checkingBalance: 0,
+  checkingBalanceDate: "",
   bills: [],
   income: [],
   savingsLog: [],
@@ -48,11 +53,13 @@ const emptyState: MinimalState = {
   seenNotificationIds: [],
   checkEditWarningAcked: false,
   goals: [],
+  bankAccounts: [],
 };
 
 const noop = jest.fn();
 
 const actions = {
+  setCheckingBalance: noop,
   addBill: noop, updateBill: noop, deleteBill: noop, toggleBillPaid: noop,
   upsertIncome: noop, addSnapshot: noop, rolloverBills: noop,
   addPlan: noop, deletePlan: noop,
@@ -62,6 +69,7 @@ const actions = {
   deleteSavingsEntry: noop, renamePaycheckColumn: noop, addPaycheckColumn: noop,
   hidePaycheckColumn: noop, restorePaycheckColumn: noop, markNotificationsSeen: noop,
   addGoal: noop, deleteGoal: noop,
+  addBankAccount: noop, updateBankAccount: noop, deleteBankAccount: noop,
 };
 
 const deps = {

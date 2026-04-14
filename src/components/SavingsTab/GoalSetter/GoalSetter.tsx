@@ -3,10 +3,11 @@
 import { useState } from "react";
 import type { SavingsGoal, SavingsEntry } from "@/types";
 import { fmtMoney, sumCents, toCents } from "@/lib/money";
-import { fmtMonthFull, currentMonth } from "@/lib/dates";
+import { currentMonth } from "@/lib/dates";
 import { calcGoalMetrics } from "@/lib/goals";
 import { generateId } from "@/lib/id";
-import { ProgressRing } from "@/components/ui/ProgressRing";
+import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import styles from "./GoalSetter.module.css";
 
 type Props = {
@@ -15,6 +16,96 @@ type Props = {
   onAdd: (goal: SavingsGoal) => void;
   onDelete: (id: string) => void;
 };
+
+// ── Individual goal card with local contribution slider ────────────────────
+
+type GoalCardProps = {
+  goal: SavingsGoal;
+  currentSavedCents: number;
+  onDelete: (id: string) => void;
+};
+
+function GoalCard({ goal, currentSavedCents, onDelete }: GoalCardProps) {
+  const metrics = calcGoalMetrics(goal, currentSavedCents);
+  const pct = Math.round(metrics.progressRatio * 100);
+
+  // Local slider — projects ETA at a hypothetical monthly contribution.
+  // Defaults to what the user actually needs; dragging explores scenarios.
+  const defaultContrib = Math.max(5000, Math.round(metrics.monthlyContributionNeeded / 2500) * 2500);
+  const [contrib, setContrib] = useState(defaultContrib);
+
+  const remaining = Math.max(0, goal.targetCents - currentSavedCents);
+  const projMonths = contrib > 0 ? Math.ceil(remaining / contrib) : null;
+
+  const etaLabel = (() => {
+    if (metrics.status === "achieved") return "Goal reached! 🎉";
+    if (projMonths === null) return "Set a monthly amount to see ETA";
+    const d = new Date();
+    d.setMonth(d.getMonth() + projMonths);
+    const mo = d.toLocaleString("default", { month: "short", year: "numeric" });
+    return `At ${fmtMoney(contrib)}/mo → funded in ${projMonths} months (${mo})`;
+  })();
+
+  const statusClass =
+    metrics.status === "achieved"
+      ? styles.statusAchieved
+      : metrics.status === "behind"
+      ? styles.statusBehind
+      : styles.statusOnTrack;
+
+  const progressVariant: "olive" | "rust" =
+    metrics.status === "behind" ? "rust" : "olive";
+
+  return (
+    <div className={styles.goalCard}>
+      <div className={styles.goalCardHeader}>
+        <div>
+          <p className={styles.goalName}>{goal.label}</p>
+          <p className={styles.goalTarget}>
+            {fmtMoney(currentSavedCents)} saved · {fmtMoney(goal.targetCents)} target
+          </p>
+        </div>
+        <div className={styles.goalCardRight}>
+          <span className={`${styles.pctBadge} ${statusClass}`}>{pct}%</span>
+          <button
+            type="button"
+            className={styles.deleteBtn}
+            onClick={() => onDelete(goal.id)}
+            aria-label={`Delete goal: ${goal.label}`}
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <Progress value={pct} variant={progressVariant} className={styles.progressBar} />
+
+      <p className={styles.goalEta}>{etaLabel}</p>
+
+      {metrics.status !== "achieved" && (
+        <div className={styles.sliderSection}>
+          <div className={styles.sliderHeader}>
+            <span className={styles.sliderLabel}>Monthly contribution</span>
+            <span className={styles.sliderVal}>{fmtMoney(contrib)}</span>
+          </div>
+          <Slider
+            min={5000}
+            max={60000}
+            step={2500}
+            value={[contrib]}
+            onValueChange={([v]) => setContrib(v)}
+          />
+          <div className={styles.sliderTicks}>
+            <span>$50/mo</span>
+            <span>$600/mo</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main GoalSetter ────────────────────────────────────────────────────────
 
 export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
   const [showForm, setShowForm] = useState(false);
@@ -41,39 +132,21 @@ export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
     setShowForm(false);
   };
 
-  const handleCancel = () => {
-    setLabelStr("");
-    setTargetStr("");
-    setTargetDate("");
-    setShowForm(false);
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h3 className={styles.title}>Savings Goals</h3>
         {!showForm && (
-          <button
-            type="button"
-            className={styles.addBtn}
-            onClick={() => setShowForm(true)}
-          >
+          <button type="button" className={styles.addBtn} onClick={() => setShowForm(true)}>
             + Add Goal
           </button>
         )}
       </div>
 
-      <p className={styles.subtitle}>
-        Current balance:{" "}
-        <strong className={styles.balance}>{fmtMoney(currentSaved)}</strong>
-      </p>
-
       {showForm && (
         <div className={styles.form}>
           <div className={styles.formRow}>
-            <label className={styles.formLabel} htmlFor="goal-label">
-              Goal name
-            </label>
+            <label className={styles.formLabel} htmlFor="goal-label">Goal name</label>
             <input
               id="goal-label"
               className={styles.input}
@@ -84,9 +157,7 @@ export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
             />
           </div>
           <div className={styles.formRow}>
-            <label className={styles.formLabel} htmlFor="goal-target">
-              Target amount ($)
-            </label>
+            <label className={styles.formLabel} htmlFor="goal-target">Target amount ($)</label>
             <input
               id="goal-target"
               className={styles.input}
@@ -99,9 +170,7 @@ export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
             />
           </div>
           <div className={styles.formRow}>
-            <label className={styles.formLabel} htmlFor="goal-date">
-              Target month
-            </label>
+            <label className={styles.formLabel} htmlFor="goal-date">Target month</label>
             <input
               id="goal-date"
               className={styles.input}
@@ -112,17 +181,15 @@ export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
             />
           </div>
           <div className={styles.formActions}>
-            <button
-              type="button"
-              className={styles.saveBtn}
-              onClick={handleAdd}
-            >
+            <button type="button" className={styles.saveBtn} onClick={handleAdd}>
               Save Goal
             </button>
             <button
               type="button"
               className={styles.cancelBtn}
-              onClick={handleCancel}
+              onClick={() => {
+                setLabelStr(""); setTargetStr(""); setTargetDate(""); setShowForm(false);
+              }}
             >
               Cancel
             </button>
@@ -130,81 +197,20 @@ export function GoalSetter({ goals, savingsLog, onAdd, onDelete }: Props) {
         </div>
       )}
 
-      {goals.length === 0 && !showForm && (
-        <p className={styles.empty}>No goals set yet. Add one to track your progress.</p>
+      {goals.length === 0 && !showForm ? (
+        <p className={styles.empty}>No goals yet — add one to start tracking.</p>
+      ) : (
+        <div className={styles.goalList}>
+          {goals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              currentSavedCents={currentSaved}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
       )}
-
-      <div className={styles.goalList}>
-        {goals.map((goal) => {
-          const metrics = calcGoalMetrics(goal, currentSaved);
-          const ringColor =
-            metrics.status === "achieved"
-              ? "olive"
-              : metrics.status === "behind"
-              ? "rust"
-              : "navy";
-
-          return (
-            <div key={goal.id} className={styles.goalCard}>
-              <div className={styles.goalLeft}>
-                <ProgressRing
-                  ratio={metrics.progressRatio}
-                  size={64}
-                  strokeWidth={7}
-                  color={ringColor}
-                  label={`${Math.round(metrics.progressRatio * 100)}%`}
-                />
-              </div>
-              <div className={styles.goalBody}>
-                <div className={styles.goalTop}>
-                  <span className={styles.goalLabel}>{goal.label}</span>
-                  <span
-                    className={`${styles.statusBadge} ${styles[`status_${metrics.status}`]}`}
-                  >
-                    {metrics.status === "achieved"
-                      ? "Achieved"
-                      : metrics.status === "behind"
-                      ? "Behind"
-                      : "On Track"}
-                  </span>
-                </div>
-                <div className={styles.goalMeta}>
-                  <span className={styles.metaItem}>
-                    <span className={styles.metaLabel}>Target</span>
-                    <span className={styles.metaValue}>
-                      {fmtMoney(goal.targetCents)} by {fmtMonthFull(goal.targetDate)}
-                    </span>
-                  </span>
-                  {metrics.status !== "achieved" && (
-                    <span className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Need/mo</span>
-                      <span className={styles.metaValue}>
-                        {fmtMoney(metrics.monthlyContributionNeeded)}
-                      </span>
-                    </span>
-                  )}
-                  {metrics.status !== "achieved" && metrics.monthsRemaining > 0 && (
-                    <span className={styles.metaItem}>
-                      <span className={styles.metaLabel}>Months left</span>
-                      <span className={styles.metaValue}>
-                        {metrics.monthsRemaining}
-                      </span>
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                type="button"
-                className={styles.deleteBtn}
-                onClick={() => onDelete(goal.id)}
-                aria-label={`Delete goal: ${goal.label}`}
-              >
-                ×
-              </button>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

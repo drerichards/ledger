@@ -20,6 +20,7 @@ import {
 import { getVisibleMonths, usePaycheckTabState } from "@/hooks/usePaycheckTabState";
 import { calcCheckBaseline } from "@/lib/projection";
 import { CheckLog } from "@/components/SavingsTab/CheckLog";
+import { DateToggle } from "@/components/ui/DateToggle";
 import { MonthAccordion } from "./MonthAccordion";
 import styles from "./PaycheckTab.module.css";
 
@@ -464,40 +465,19 @@ export function PaycheckTab({
     <div className={styles.container}>
       {/* ── Header ───────────────────────────────────────────────── */}
       <div className={styles.header}>
-        <div>
-          <h2 className={styles.heading}>{headingLabel}</h2>
-          <p className={styles.subheading}>
-            Plan this month&apos;s checks against next month&apos;s bills
-          </p>
-        </div>
+        {/* Period navigation — left side, matches Bills tab toolbar position */}
+        <DateToggle
+          label={headingLabel}
+          onPrev={handleNavPrev}
+          onNext={handleNavNext}
+          onToday={handleNavToday}
+          canPrev={canNavPrev}
+          canNext={canNavNext}
+          prevAriaLabel={viewScope === "weekly" ? "Previous week" : "Previous month"}
+          nextAriaLabel={viewScope === "weekly" ? "Next week" : "Next month"}
+        />
 
         <div className={styles.controls}>
-          {/* Period navigation (week or month depending on view scope) */}
-          <div className={styles.nav}>
-            <button
-              className={styles.navBtn}
-              onClick={handleNavPrev}
-              disabled={!canNavPrev}
-              aria-label={viewScope === "weekly" ? "Previous week" : "Previous month"}
-            >
-              ‹
-            </button>
-            <button
-              className={styles.navBtn}
-              onClick={handleNavToday}
-            >
-              Today
-            </button>
-            <button
-              className={styles.navBtn}
-              onClick={handleNavNext}
-              disabled={!canNavNext}
-              aria-label={viewScope === "weekly" ? "Next week" : "Next month"}
-            >
-              ›
-            </button>
-          </div>
-
           {/* View scope */}
           <div className={styles.scopeToggle}>
             {SCOPES.map((s) => (
@@ -510,10 +490,9 @@ export function PaycheckTab({
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Menu dropdown — below cycles */}
-        <div className={styles.menuWrapper} ref={menuRef}>
+          {/* Menu dropdown */}
+          <div className={styles.menuWrapper} ref={menuRef}>
           <button
             className={`${styles.toolBtn} ${showMenu ? styles.toolBtnActive : ""}`}
             onClick={() => setShowMenu((v) => !v)}
@@ -564,8 +543,9 @@ export function PaycheckTab({
               </button>
             </div>
           )}
-        </div>
-      </div>
+          </div>{/* end menuWrapper */}
+        </div>{/* end controls */}
+      </div>{/* end header */}
 
       {/* ── Column manager modal ──────────────────────────────────── */}
       {showColumnModal && (

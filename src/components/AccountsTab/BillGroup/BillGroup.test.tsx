@@ -28,6 +28,8 @@ const noop = () => {};
 
 function renderGroup(overrides: {
   bills?: Bill[];
+  variant?: "navy" | "olive";
+  footerLabel?: string;
   sortKey?: SortKey;
   sortDir?: SortDir;
   isCollapsed?: boolean;
@@ -40,6 +42,8 @@ function renderGroup(overrides: {
   return render(
     <BillGroup
       label="From Kia's Pay"
+      variant={overrides.variant ?? "navy"}
+      footerLabel={overrides.footerLabel ?? "Subtotal"}
       bills={overrides.bills ?? []}
       sortKey={overrides.sortKey ?? "due"}
       sortDir={overrides.sortDir ?? "asc"}
@@ -76,16 +80,16 @@ describe("BillGroup — rendering", () => {
     expect(screen.getByText("Progressive")).toBeInTheDocument();
   });
 
-  it("renders group total when bills are present", () => {
+  it("renders footer label when bills are present", () => {
     renderGroup({ bills: [makeBill({ cents: 10800 })] });
-    expect(screen.getByText("Group Total")).toBeInTheDocument();
+    expect(screen.getByText("Subtotal")).toBeInTheDocument();
     // $108.00 appears in both the BillRow cell and the group total footer
     expect(screen.getAllByText("$108.00").length).toBeGreaterThan(0);
   });
 
-  it("does not render group total when bills are empty", () => {
+  it("does not render footer label when bills are empty", () => {
     renderGroup({ bills: [] });
-    expect(screen.queryByText("Group Total")).not.toBeInTheDocument();
+    expect(screen.queryByText("Subtotal")).not.toBeInTheDocument();
   });
 });
 

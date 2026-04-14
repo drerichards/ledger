@@ -1,4 +1,5 @@
 export {
+  buildHomeTabProps,
   buildAccountsTabProps,
   buildAffirmTabProps,
   buildPaycheckTabProps,

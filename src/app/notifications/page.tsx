@@ -48,31 +48,33 @@ export default function NotificationsPage() {
             <p>No paid-off plans yet. Notifications will appear here as plans reach their final payment month.</p>
           </div>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.th}>Plan</th>
-                <th className={`${styles.th} ${styles.thRight}`}>Final Month</th>
-                <th className={`${styles.th} ${styles.thRight}`}>Freed Up / Mo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notifications.map((n: AppNotification) => (
-                <tr key={n.id} className={styles.row}>
-                  <td className={styles.td}>
-                    <span className={styles.planLabel}>{n.planLabel}</span>
-                    <span className={styles.planSub}>Paid off</span>
-                  </td>
-                  <td className={`${styles.td} ${styles.tdRight}`}>
-                    {fmtMonthFull(n.month)}
-                  </td>
-                  <td className={`${styles.td} ${styles.tdRight} ${styles.amount}`}>
-                    {fmtMoney(n.mc)}
-                  </td>
+          <div className={styles.tableCard}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.th}>Plan</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>Final Month</th>
+                  <th className={`${styles.th} ${styles.thRight}`}>Freed Up / Mo</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {notifications.map((n: AppNotification) => (
+                  <tr key={n.id} className={styles.row}>
+                    <td className={styles.td}>
+                      <span className={styles.planLabel}>{n.planLabel}</span>
+                      <span className={styles.planSub}>Paid off</span>
+                    </td>
+                    <td className={`${styles.td} ${styles.tdRight}`}>
+                      {fmtMonthFull(n.month)}
+                    </td>
+                    <td className={`${styles.td} ${styles.tdRight} ${styles.amount}`}>
+                      {fmtMoney(n.mc)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

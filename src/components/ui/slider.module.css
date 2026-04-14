@@ -1,0 +1,46 @@
+.root {
+  position: relative;
+  display: flex;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  align-items: center;
+  cursor: pointer;
+}
+
+.track {
+  position: relative;
+  height: 4px;
+  width: 100%;
+  flex-grow: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.range {
+  position: absolute;
+  height: 100%;
+  background: var(--color-navy);
+  border-radius: 999px;
+}
+
+.thumb {
+  display: block;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-navy);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  transition: box-shadow 0.12s;
+}
+
+.thumb:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.thumb:hover {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-navy) 12%, transparent);
+}

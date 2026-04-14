@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ledger — Design Mockup</title>
+<style>
+/* ── Design Tokens ──────────────────────────────────────────────────── */
+:root {
+  --deep-space:  #1C2F40;
+  --yale:        #274058;
+  --ochre:       #C4522A;
+  --brown:       #835225;
+  --olive-dark:  #41521F;
+  --olive-mid:   #63552C;
+  --olive-light: #898B5F;
+  --sunflower:   #FDB833;
+  --fawn:        #C6AE82;
+  --cream:       #F2EBE0;
+  --bg:          #E8E1D6;
+  --white:       #FFFFFF;
+  --border:      #D4C9B8;
+  --text:        #1C2F40;
+  --text-mid:    #57504A;
+  --text-soft:   #8C867E;
+  --radius:      6px;
+  --radius-lg:   10px;
+  --glass-bg:          rgba(255,255,255,0.65);
+  --glass-border:      rgba(255,255,255,0.5);
+  --glass-shadow:      0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --glass-blur:        14px;
+  --glass-dark-bg:     rgba(28,47,64,0.82);
+  --glass-dark-border: rgba(255,255,255,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,
+    #aac8c0 0%, #b8c4a8 20%, #c0c0a0 35%,
+    #ccc0a0 50%, #d8c4a8 65%, #e0ccb0 80%, #ecdac0 100%
+  ) fixed;
+  color: var(--text);
+  font-size: 16px;
+}
+
+/* ── Glass helpers ──────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+.glass-dark {
+  background: var(--glass-dark-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-dark-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ── Background orbs — animated ────────────────────────────────────── */
+.bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.bg-orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+.orb-1 { width: 520px; height: 520px; background: radial-gradient(circle, rgba(154,200,192,.55), transparent 70%); top: -140px; left: -140px; animation: orbFloat1 18s ease-in-out infinite; }
+.orb-2 { width: 420px; height: 420px; background: radial-gradient(circle, rgba(232,200,160,.5), transparent 70%); bottom: -110px; right: -110px; animation: orbFloat2 22s ease-in-out infinite; }
+.orb-3 { width: 280px; height: 280px; background: radial-gradient(circle, rgba(198,174,130,.4), transparent 70%); top: 38%; left: 42%; animation: orbFloat3 15s ease-in-out infinite; }
+@keyframes orbFloat1 { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(28px,-18px) scale(1.05); } 66% { transform: translate(-18px,14px) scale(.96); } }
+@keyframes orbFloat2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-24px,-28px) scale(1.07); } }
+@keyframes orbFloat3 { 0%,100% { transform: translate(0,0) scale(1); } 40% { transform: translate(18px,18px) scale(1.09); } 80% { transform: translate(-14px,-10px) scale(.92); } }
+
+/* ── App shell ──────────────────────────────────────────────────────── */
+.app-shell { height: 100%; display: flex; flex-direction: column; position: relative; z-index: 1; overflow: hidden; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.app-header {
+  background: rgba(28,47,64,.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px; flex-shrink: 0;
+}
+.app-brand { display: flex; flex-direction: column; }
+.app-brand-name { color: var(--white); font-size: 17px; font-weight: 800; letter-spacing: .02em; }
+.app-brand-sub  { color: var(--fawn); font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+.app-header-right { display: flex; align-items: center; gap: 12px; color: var(--fawn); font-size: 12px; font-weight: 700; letter-spacing: .08em; opacity: .75; }
+.notif-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.1); color: rgba(255,255,255,.75); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; position: relative; }
+.notif-badge { position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; background: var(--ochre); border-radius: 50%; border: 2px solid var(--deep-space); font-size: 8px; color: #fff; display: flex; align-items: center; justify-content: center; }
+
+/* ── Tab nav ────────────────────────────────────────────────────────── */
+.tab-nav {
+  background: rgba(39,64,88,.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; padding: 0 24px;
+  height: 44px; gap: 2px; flex-shrink: 0;
+}
+.tab-btn {
+  padding: 6px 16px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(255,255,255,.5);
+  cursor: pointer; border: none; background: none;
+  border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent;
+  transition: color .1s; font-family: inherit;
+}
+.tab-btn:hover { color: rgba(255,255,255,.8); }
+.tab-btn.active { color: var(--white); border-bottom-color: var(--ochre); }
+.tab-month { margin-left: auto; color: var(--fawn); font-size: 12px; font-weight: 700; letter-spacing: .1em; opacity: .75; }
+
+/* ── Tab panels ─────────────────────────────────────────────────────── */
+.tab-panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.tab-panel.active { display: flex; animation: tabFadeIn .28s cubic-bezier(.22,1,.36,1) both; }
+@keyframes tabFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Frosted toolbar (below tab nav, per-tab) ────────────────────────── */
+.toolbar {
+  flex-shrink: 0;
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  background: rgba(215,206,192,.78);
+  border-bottom: 1px solid rgba(255,255,255,.4);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.toolbar-title { font-size: 18px; font-weight: 800; color: var(--deep-space); flex: 1; letter-spacing: -.01em; }
+
+/* ── Scrollable body ─────────────────────────────────────────────────── */
+.tab-body { flex: 1; min-height: 0; overflow-y: auto; padding: 24px clamp(24px, calc((100% - 960px) / 2), 15%) 64px; }
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: none; cursor: pointer; font-family: inherit; position: relative; overflow: hidden; }
+.btn-primary { background: var(--ochre); color: var(--white); }
+.btn-primary:hover { background: #b04822; }
+.btn-ghost { background: rgba(255,255,255,.6); color: var(--deep-space); border: 1px solid rgba(255,255,255,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.btn-ghost:hover { background: rgba(255,255,255,.85); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-navy { background: var(--deep-space); color: #fff; }
+.btn-navy:hover { opacity: .88; }
+@keyframes rippleOut { from { transform: scale(0); opacity: .5; } to { transform: scale(4); opacity: 0; } }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.6); width: 20px; height: 20px; pointer-events: none; animation: rippleOut .5s ease-out forwards; }
+
+/* ── Month nav ─────────────────────────────────────────────────────── */
+.month-nav { display: flex; align-items: center; gap: 6px; }
+.month-nav-arrow { width: 28px; height: 28px; background: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.55); backdrop-filter: blur(8px); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: var(--deep-space); }
+.month-nav-label { font-size: 16px; font-weight: 700; color: var(--deep-space); margin: 0 4px; }
+
+/* ── Stat cards ─────────────────────────────────────────────────────── */
+.stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-card {
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg); padding: 14px 16px; flex: 1; min-width: 130px;
+  position: relative; overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+.stat-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+.stat-card.navy::before  { background: var(--deep-space); }
+.stat-card.olive::before { background: var(--olive-dark); }
+.stat-card.ochre::before { background: var(--ochre); }
+.stat-card.sun::before   { background: var(--sunflower); }
+.stat-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.45) 50%, transparent 60%); background-size: 200% 100%; border-radius: inherit; pointer-events: none; opacity: 0; }
+.stat-card:hover::after { animation: shimmerSwipe .5s ease forwards; opacity: 1; }
+@keyframes shimmerSwipe { from { background-position: -100% 0; } to { background-position: 200% 0; } }
+.stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-soft); margin-bottom: 4px; }
+.stat-value { font-size: 22px; font-weight: 800; color: var(--deep-space); font-variant-numeric: tabular-nums; }
+.stat-value.olive  { color: var(--olive-dark); }
+.stat-value.ochre  { color: var(--ochre); }
+.stat-value.sun    { color: #B8830A; }
+.stat-sub-rows { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.stat-sub-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-mid); }
+.stat-sub-row span:last-child { font-weight: 600; color: var(--text); }
+.stat-bar-track { height: 4px; background: rgba(0,0,0,.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 2px; transform-origin: left; animation: barScaleX .9s cubic-bezier(.22,1,.36,1) .3s both; }
+@keyframes barScaleX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.stat-bar-fill.olive { background: var(--olive-dark); }
+.stat-bar-fill.ochre { background: var(--ochre); }
+@keyframes pulseGlow { 0%,100% { box-shadow: var(--glass-shadow); } 50% { box-shadow: var(--glass-shadow), 0 0 20px rgba(65,82,31,.25); } }
+.stat-card.olive { animation: pulseGlow 3s ease-in-out infinite; }
+
+/* ── Tables (shared) ────────────────────────────────────────────────── */
+.tbl-wrap {
+  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { padding: 7px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-soft); background: rgba(255,255,255,.45); border-bottom: 2px solid rgba(0,0,0,.07); text-align: right; white-space: nowrap; }
+.tbl th:first-child { text-align: left; }
+.tbl td { padding: 9px 12px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,.05); text-align: right; vertical-align: middle; color: var(--text); }
+.tbl td:first-child { text-align: left; }
+.tbl tr { background: rgba(255,255,255,.35); transition: background .1s; }
+.tbl tr:nth-child(even) { background: rgba(255,255,255,.55); }
+.tbl tr:hover { background: rgba(255,255,255,.88); }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl .tfoot-row { background: rgba(28,47,64,.82); }
+.tbl .tfoot-row td { color: rgba(255,255,255,.55); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; border-bottom: none; }
+.tbl .tfoot-row .total-val { color: var(--white); font-size: 15px; font-weight: 800; }
+.mono { font-variant-numeric: tabular-nums; }
+
+/* ── Callout/banner rows ────────────────────────────────────────────── */
+.callout { border-radius: var(--radius); padding: 10px 14px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+.callout-olive { background: rgba(65,82,31,.1); border: 1px solid rgba(65,82,31,.25); color: var(--olive-dark); }
+.callout-ochre { background: rgba(196,82,42,.09); border: 1px solid rgba(196,82,42,.25); color: var(--ochre); }
+.callout-navy  { background: rgba(28,47,64,.08); border: 1px solid rgba(28,47,64,.18); color: var(--deep-space); justify-content: space-between; }
+.callout-sun   { background: rgba(253,184,51,.15); border: 1px solid rgba(253,184,51,.35); color: #7A6200; }
+
+/* ── Section label ──────────────────────────────────────────────────── */
+.section-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); padding: 6px 0; margin: 18px 0 8px; border-bottom: 1px solid rgba(0,0,0,.08); }
+
+/* ── Badge ──────────────────────────────────────────────────────────── */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.badge-olive { background: rgba(65,82,31,.15); color: var(--olive-dark); border: 1px solid rgba(65,82,31,.2); }
+.badge-ochre { background: rgba(196,82,42,.12); color: var(--ochre); border: 1px solid rgba(196,82,42,.2); }
+.badge-sun   { background: rgba(253,184,51,.18); color: #8A5F00; border: 1px solid rgba(253,184,51,.35); }
+.badge-faint { background: rgba(0,0,0,.07); color: var(--text-soft); border: 1px solid rgba(0,0,0,.1); }
+
+/* ── Progress bar ───────────────────────────────────────────────────── */
+.prog-track { height: 6px; background: rgba(0,0,0,.1); border-radius: 3px; overflow: hidden; margin: 6px 0; }
+.prog-fill { height: 100%; border-radius: 3px; transform-origin: left; animation: barScaleX .9s cubic-bezier(.22,1,.36,1) .3s both; }
+.prog-fill.olive { background: var(--olive-dark); }
+.prog-fill.sun   { background: var(--sunflower); }
+.prog-fill.ochre { background: var(--ochre); }
+
+/* ── Slider ──────────────────────────────────────────────────────────── */
+input[type=range] { width: 100%; accent-color: var(--ochre); cursor: pointer; }
+
+/* ── FABs ───────────────────────────────────────────────────────────── */
+.fab { position: fixed; bottom: 28px; right: 28px; width: 56px; height: 56px; border-radius: 50%; background: var(--deep-space); color: #fff; border: none; cursor: pointer; font-size: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,.28); display: none; align-items: center; justify-content: center; z-index: 50; transition: transform .15s, box-shadow .15s; }
+.fab:hover { transform: scale(1.07); box-shadow: 0 6px 28px rgba(0,0,0,.35); }
+.fab.visible { display: flex; }
+/* Message FAB — always visible, stacks above action FAB */
+.msg-fab-wrap { position: fixed; bottom: 96px; right: 28px; z-index: 51; }
+.msg-fab {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(28,47,64,.92); border: 1px solid rgba(255,255,255,.15);
+  color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.32); transition: transform .15s, box-shadow .15s;
+  position: relative;
+}
+.msg-fab:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+.msg-fab-badge {
+  position: absolute; top: -3px; right: -3px;
+  width: 16px; height: 16px; background: var(--ochre); border-radius: 50%;
+  border: 2px solid rgba(28,47,64,.92); font-size: 9px; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+/* Message popover */
+.msg-popover {
+  position: absolute; bottom: 56px; right: 0;
+  width: 320px;
+  background: rgba(10,16,22,0.97);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0,0,0,.5);
+  padding: 12px;
+  display: none; flex-direction: column; gap: 6px;
+  animation: popoverIn .2s cubic-bezier(.22,1,.36,1) both;
+}
+.msg-popover.open { display: flex; }
+@keyframes popoverIn { from { opacity:0; transform: translateY(8px) scale(.97); } to { opacity:1; transform: translateY(0) scale(1); } }
+.msg-popover-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 2px 4px 8px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 2px;
+}
+.msg-popover-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.msg-popover-action { font-size: 11px; color: var(--sunflower); font-weight: 600; cursor: pointer; text-decoration: none; opacity: .85; }
+.msg-popover-action:hover { opacity: 1; }
+/* Message cards — 21st.dev style */
+.msg-card {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 8px; padding: 10px 12px; cursor: pointer;
+  transition: background .1s, border-color .1s;
+}
+.msg-card:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.15); }
+.msg-card-icon {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.msg-card-body { flex: 1; min-width: 0; }
+.msg-card-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-card-preview { font-size: 11px; color: rgba(255,255,255,.45); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.msg-card-time { font-size: 10px; color: rgba(255,255,255,.35); }
+.msg-card-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ochre); }
+.msg-card.read .msg-card-dot { background: transparent; border: 1.5px solid rgba(255,255,255,.2); }
+
+/* ── Activity sub-section nav (mirrors SavingsTab pills) ─────────────── */
+.act-section-nav { display: flex; gap: 8px; margin-bottom: 16px; }
+.act-section-pill {
+  padding: 6px 18px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  border: 1.5px solid rgba(28,47,64,.18);
+  background: rgba(255,255,255,.55); backdrop-filter: blur(8px);
+  color: var(--text-mid); cursor: pointer; font-family: inherit;
+  transition: all .15s;
+}
+.act-section-pill:hover { background: rgba(255,255,255,.75); }
+.act-section-pill.active { background: var(--deep-space); color: #fff; border-color: var(--deep-space); }
+.act-section { display: none; }
+.act-section.active { display: block; }
+/* Message list in Activity > Messages */
+.msg-list { display: flex; flex-direction: column; gap: 6px; }
+.msg-list-card {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.55);
+  backdrop-filter: blur(10px); border-radius: 10px; padding: 12px 14px; cursor: pointer;
+  transition: background .1s, transform .1s;
+}
+.msg-list-card:hover { background: rgba(255,255,255,.85); transform: translateX(2px); }
+.msg-list-icon {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.msg-list-body { flex: 1; min-width: 0; }
+.msg-list-title { font-size: 13px; font-weight: 700; color: var(--deep-space); }
+.msg-list-preview { font-size: 12px; color: var(--text-mid); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-list-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.msg-list-time { font-size: 11px; color: var(--text-soft); }
+.msg-list-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ochre); }
+.msg-list-dot.read { background: transparent; border: 1.5px solid var(--text-soft); }
+
+/* ── Two-col layout ─────────────────────────────────────────────────── */
+.two-col { display: flex; gap: 20px; align-items: flex-start; }
+.two-col > * { flex: 1; min-width: 0; }
+@media (max-width: 720px) { .two-col { flex-direction: column; } }
+
+/* ═══════════════════════════════════════════════════
+   HOME TAB
+═══════════════════════════════════════════════════ */
+.balance-hero {
+  background: var(--glass-dark-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-dark-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  color: var(--white);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.balance-hero::after { content: ''; position: absolute; inset: -50%; background: conic-gradient(from 0deg at 30% 40%, rgba(170,200,192,.08) 0deg, rgba(65,82,31,.05) 90deg, rgba(196,82,42,.05) 180deg, rgba(253,184,51,.06) 270deg, rgba(170,200,192,.08) 360deg); animation: spin 20s linear infinite; pointer-events: none; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.balance-label-sm { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+.balance-amount   { font-size: 36px; font-weight: 800; color: var(--sunflower); font-variant-numeric: tabular-nums; }
+.balance-date     { font-size: 12px; color: rgba(255,255,255,.4); margin-top: 4px; }
+
+.streak-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(65,82,31,.12); border: 1px solid rgba(65,82,31,.28); border-radius: var(--radius); margin-bottom: 14px; }
+.streak-label { font-size: 13px; font-weight: 500; color: var(--olive-dark); }
+.streak-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 16px; color: var(--olive-dark); }
+
+/* Cash flow row tints */
+.cf-row-ok   { background: rgba(65,82,31,.07) !important; }
+.cf-row-warn { background: rgba(253,184,51,.1) !important; }
+.cf-row-bad  { background: rgba(196,82,42,.08) !important; }
+.cf-row-section td { font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-soft); background: rgba(0,0,0,.04); }
+
+/* ═══════════════════════════════════════════════════
+   BILLS TAB
+═══════════════════════════════════════════════════ */
+.bill-group { margin-bottom: 12px; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--glass-shadow); }
+.bill-group-header {
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+  background: rgba(28,47,64,.82); backdrop-filter: blur(12px);
+}
+.bill-group-header.olive-hdr { background: rgba(65,82,31,.85); }
+.bill-group-header.ochre-hdr { background: rgba(196,82,42,.85); }
+.bill-group-chevron { color: rgba(255,255,255,.6); font-size: 11px; transition: transform .25s cubic-bezier(.22,1,.36,1); display: inline-block; }
+.bill-group-chevron.open { transform: rotate(90deg); }
+.bill-group-label { color: var(--white); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+.bill-group-total { margin-left: auto; color: var(--fawn); font-size: 14px; font-weight: 700; }
+.bill-table-wrap { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .32s cubic-bezier(.22,1,.36,1), opacity .25s; opacity: 1; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.bill-table-wrap.collapsed { grid-template-rows: 0fr; opacity: 0; }
+.bill-table-inner { min-height: 0; overflow: hidden; }
+.method-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+.method-badge.trf { background: rgba(39,64,88,.12); border: 1px solid rgba(39,64,88,.2); color: var(--yale); }
+.method-badge.ach { background: rgba(65,82,31,.12); border: 1px solid rgba(65,82,31,.2); color: var(--olive-dark); }
+.method-badge.cc  { background: rgba(196,82,42,.12); border: 1px solid rgba(196,82,42,.2); color: var(--ochre); }
+.method-badge.aff { background: rgba(253,184,51,.18); border: 1px solid rgba(253,184,51,.35); color: #8A5F00; }
+
+@keyframes rowFadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+.tbl tbody tr { animation: rowFadeIn .22s ease both; }
+.tbl tbody tr:nth-child(1) { animation-delay: .04s; }
+.tbl tbody tr:nth-child(2) { animation-delay: .08s; }
+.tbl tbody tr:nth-child(3) { animation-delay: .12s; }
+.tbl tbody tr:nth-child(4) { animation-delay: .16s; }
+.tbl tbody tr:nth-child(5) { animation-delay: .20s; }
+.tbl tbody tr:nth-child(6) { animation-delay: .24s; }
+.tbl tbody tr:nth-child(7) { animation-delay: .28s; }
+.tbl tbody tr:nth-child(8) { animation-delay: .32s; }
+
+/* ═══════════════════════════════════════════════════
+   INCOME TAB
+═══════════════════════════════════════════════════ */
+.income-summary {
+  background: var(--glass-dark-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-dark-border); box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg); padding: 14px 20px; margin-bottom: 16px;
+  display: flex; gap: 32px; align-items: center;
+}
+.pay-sum-item  { display: flex; flex-direction: column; gap: 2px; }
+.pay-sum-lbl   { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.45); }
+.pay-sum-val   { font-size: 18px; font-weight: 800; color: var(--white); font-variant-numeric: tabular-nums; }
+.pay-sum-val.sun  { color: var(--sunflower); }
+.pay-sum-val.red  { color: #F08060; }
+
+.paycheck-tree { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); overflow: hidden; }
+.pay-month-row { background: rgba(39,64,88,.82); padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.pay-month-label { color: var(--white); font-size: 13px; font-weight: 700; }
+.pay-month-meta  { color: rgba(255,255,255,.45); font-size: 12px; }
+.pay-month-cols  { margin-left: auto; display: flex; gap: 24px; }
+.pay-col-head    { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: rgba(255,255,255,.4); text-align: right; min-width: 90px; }
+.pay-week-row { background: rgba(255,255,255,.4); padding: 10px 16px 10px 28px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(0,0,0,.05); cursor: pointer; transition: background .1s; }
+.pay-week-row:hover { background: rgba(255,255,255,.65); }
+.pay-week-label { font-size: 13px; font-weight: 700; color: var(--deep-space); }
+.pay-week-progress { flex: 1; max-width: 120px; }
+.pay-week-track { height: 4px; background: rgba(0,0,0,.1); border-radius: 2px; overflow: hidden; }
+.pay-week-fill { height: 100%; border-radius: 2px; background: var(--olive-dark); transform-origin: left; animation: barScaleX .9s cubic-bezier(.22,1,.36,1) .3s both; }
+.pay-week-cols  { margin-left: auto; display: flex; gap: 24px; }
+.pay-week-val   { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; min-width: 90px; }
+.pay-week-val.green { color: var(--olive-dark); }
+.pay-week-val.red   { color: var(--ochre); }
+.pay-bill-row { padding: 8px 16px 8px 44px; display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,.04); font-size: 13px; background: rgba(255,255,255,.25); }
+.pay-bill-name   { color: var(--text); flex: 1; }
+.pay-bill-amount { font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text-mid); min-width: 90px; text-align: right; }
+.pay-total-row { background: rgba(28,47,64,.82); backdrop-filter: blur(12px); padding: 11px 16px; display: flex; align-items: center; }
+.pay-total-label { color: rgba(255,255,255,.5); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.pay-total-vals  { margin-left: auto; display: flex; gap: 24px; }
+.pay-total-item  { display: flex; flex-direction: column; align-items: flex-end; min-width: 90px; }
+.pay-total-lbl   { font-size: 9px; color: rgba(255,255,255,.4); }
+.pay-total-val   { color: var(--white); font-size: 14px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.pay-total-val.sun { color: var(--sunflower); }
+.pay-total-val.red { color: #F08060; }
+
+/* ═══════════════════════════════════════════════════
+   DEBT TAB
+═══════════════════════════════════════════════════ */
+.affirm-stats { display: flex; gap: 12px; margin-bottom: 16px; }
+.affirm-stat { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); padding: 14px 20px; flex: 1; }
+.affirm-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-soft); margin-bottom: 4px; }
+.affirm-stat-val { font-size: 20px; font-weight: 800; color: var(--deep-space); font-variant-numeric: tabular-nums; }
+.affirm-stat-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+.affirm-stat-val.ochre { color: var(--ochre); }
+.affirm-stat-val.olive { color: var(--olive-dark); }
+.affirm-chart-wrap { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+.affirm-chart-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-soft); margin-bottom: 14px; }
+.affirm-bar-group { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.affirm-bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.affirm-bar { width: 100%; border-radius: 4px 4px 0 0; background: rgba(65,82,31,.5); min-height: 4px; transform-origin: bottom; animation: barScaleY .7s cubic-bezier(.22,1,.36,1) both; transition: height .35s cubic-bezier(.22,1,.36,1), background .2s; }
+@keyframes barScaleY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.affirm-bar.active { background: var(--ochre); }
+.affirm-bar-col:nth-child(1) .affirm-bar { animation-delay: .00s; }
+.affirm-bar-col:nth-child(2) .affirm-bar { animation-delay: .06s; }
+.affirm-bar-col:nth-child(3) .affirm-bar { animation-delay: .12s; }
+.affirm-bar-col:nth-child(4) .affirm-bar { animation-delay: .18s; }
+.affirm-bar-col:nth-child(5) .affirm-bar { animation-delay: .24s; }
+.affirm-bar-col:nth-child(6) .affirm-bar { animation-delay: .30s; }
+.affirm-bar-col:nth-child(7) .affirm-bar { animation-delay: .36s; }
+.affirm-bar-col:nth-child(8) .affirm-bar { animation-delay: .42s; }
+.affirm-bar-col:nth-child(9) .affirm-bar { animation-delay: .48s; }
+.affirm-bar-col:nth-child(10) .affirm-bar { animation-delay: .54s; }
+.affirm-bar-label { font-size: 9px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: .04em; }
+.affirm-bar-val { font-size: 10px; font-weight: 700; color: var(--text-mid); }
+.affirm-tbl th { background: rgba(255,255,255,.45); }
+.affirm-tbl th.active-col { background: rgba(196,82,42,.1); color: var(--ochre); border-bottom-color: var(--ochre); }
+.affirm-cell-final { background: var(--ochre); color: var(--white); font-weight: 700; font-size: 11px; border-radius: 20px; padding: 3px 9px; display: inline-block; }
+.affirm-cell-empty { color: rgba(0,0,0,.18); }
+
+/* Debt slider panel */
+.debt-slider-panel { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); padding: 18px 20px; margin-top: 16px; }
+.debt-slider-panel-title { font-size: 14px; font-weight: 800; color: var(--deep-space); margin-bottom: 4px; }
+.debt-slider-context { font-size: 12px; color: var(--text-soft); margin-bottom: 14px; line-height: 1.5; }
+.slider-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.slider-label { font-size: 13px; font-weight: 600; color: var(--deep-space); }
+.slider-live-val { font-size: 18px; font-weight: 800; color: var(--ochre); font-variant-numeric: tabular-nums; }
+.payoff-compare { display: flex; gap: 10px; margin-top: 14px; }
+.payoff-box { flex: 1; border-radius: var(--radius); padding: 10px 14px; text-align: center; }
+.payoff-box.before { background: rgba(196,82,42,.09); border: 1px solid rgba(196,82,42,.2); }
+.payoff-box.after  { background: rgba(65,82,31,.1); border: 1px solid rgba(65,82,31,.25); }
+.payoff-box-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 4px; }
+.payoff-box.before .payoff-box-label { color: var(--ochre); }
+.payoff-box.after  .payoff-box-label { color: var(--olive-dark); }
+.payoff-box-date { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.payoff-box.before .payoff-box-date { color: var(--ochre); }
+.payoff-box.after  .payoff-box-date  { color: var(--olive-dark); }
+.payoff-box-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════
+   GOALS TAB
+═══════════════════════════════════════════════════ */
+.goal-card { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; transition: box-shadow .15s; }
+.goal-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+.goal-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.goal-name   { font-size: 14px; font-weight: 700; color: var(--text); }
+.goal-target { font-size: 12px; color: var(--text-soft); }
+.goal-eta { font-size: 12px; color: var(--olive-dark); font-weight: 600; margin-top: 4px; }
+
+/* ═══════════════════════════════════════════════════
+   SNAPSHOTS TAB
+═══════════════════════════════════════════════════ */
+.trend-bar { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 18px; margin-bottom: 16px; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); }
+.trend-chip { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.6); border-radius: var(--radius); white-space: nowrap; }
+.trend-chip-label { font-size: 12px; color: var(--text-mid); }
+.trend-chip-val   { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 700; color: var(--olive-dark); }
+
+.snapshot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.snapshot-card { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.snapshot-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.14); transform: translateY(-2px); }
+.snapshot-hdr { padding: 12px 16px; }
+.snapshot-hdr.navy  { background: rgba(28,47,64,.82); }
+.snapshot-hdr.ochre { background: rgba(196,82,42,.82); }
+.snapshot-hdr.olive { background: rgba(65,82,31,.82); }
+.snapshot-hdr.sun   { background: rgba(180,130,10,.82); }
+.snapshot-month { color: var(--white); font-size: 14px; font-weight: 800; }
+.snapshot-year  { color: rgba(255,255,255,.55); font-size: 12px; }
+.snapshot-body  { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.snapshot-row   { display: flex; justify-content: space-between; font-size: 13px; }
+.snapshot-row-label { color: var(--text-mid); }
+.snapshot-row-val   { font-weight: 600; font-variant-numeric: tabular-nums; }
+.snapshot-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.snapshot-pill.surplus { background: rgba(65,82,31,.15); color: var(--olive-dark); }
+.snapshot-pill.short   { background: rgba(196,82,42,.15); color: var(--ochre); }
+
+/* ═══════════════════════════════════════════════════
+   ACTIVITY TAB
+═══════════════════════════════════════════════════ */
+.activity-feed { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-lg); overflow: hidden; }
+.activity-day-header { padding: 8px 20px; background: rgba(255,255,255,.3); border-bottom: 1px solid rgba(0,0,0,.05); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-soft); }
+.activity-entry { display: flex; align-items: flex-start; gap: 14px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,.04); transition: background .1s; animation: activityIn .25s ease both; }
+.activity-entry:nth-child(2) { animation-delay: .05s; }
+.activity-entry:nth-child(3) { animation-delay: .10s; }
+.activity-entry:nth-child(4) { animation-delay: .15s; }
+.activity-entry:hover { background: rgba(255,255,255,.5); }
+.activity-entry:last-child { border-bottom: none; }
+.activity-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-top: 1px; }
+.activity-dot.navy  { background: rgba(39,64,88,.1); color: var(--deep-space); }
+.activity-dot.olive { background: rgba(65,82,31,.12); color: var(--olive-dark); }
+.activity-dot.ochre { background: rgba(196,82,42,.1); color: var(--ochre); }
+.activity-body  { flex: 1; }
+.activity-desc  { font-size: 13px; color: var(--text); line-height: 1.4; }
+.activity-meta  { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
+.activity-delta { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; align-self: center; }
+.activity-delta.pos { color: var(--olive-dark); }
+.activity-delta.neg { color: var(--ochre); }
+@keyframes activityIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+</style>
+</head>
+<body>
+
+<!-- Animated background orbs -->
+<div class="bg-orbs">
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+</div>
+
+<div class="app-shell">
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="app-brand" style="display:flex;align-items:center;gap:10px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fawn)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.9">
+        <line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>
+      </svg>
+      <div style="display:flex;flex-direction:column;">
+        <span class="app-brand-name">Ledger</span>
+        <span class="app-brand-sub">Household Finances</span>
+      </div>
+    </div>
+    <div class="app-header-right" style="font-size:12px;opacity:.65;letter-spacing:.06em;">April 2026</div>
+  </header>
+
+  <!-- ── Tab Nav ─────────────────────────────────────────────────────── -->
+  <nav class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" data-tab="home">Home</button>
+    <button class="tab-btn" data-tab="income">Income</button>
+    <button class="tab-btn" data-tab="bills">Bills</button>
+    <button class="tab-btn" data-tab="debt">Debt</button>
+    <button class="tab-btn" data-tab="goals">Goals</button>
+    <button class="tab-btn" data-tab="snapshots">Snapshots</button>
+    <button class="tab-btn" data-tab="activity">Activity</button>
+  </nav>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       HOME
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-home">
+    <div class="toolbar">
+      <span class="toolbar-title" id="home-greeting">Good morning, Adriane</span>
+    </div>
+    <div class="tab-body">
+
+      <!-- Account balances — checking + savings (later: all Plaid accounts) -->
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <div class="stat-card navy" style="flex:1;min-width:160px;">
+          <div class="stat-label">Checking</div>
+          <div class="stat-value">$847<span style="font-size:16px;font-weight:500">.00</span></div>
+          <div style="font-size:12px;color:var(--text-soft);margin-top:4px;">Updated Apr 13 · <a href="#" style="color:var(--ochre);text-decoration:none;font-weight:600;">Update</a></div>
+        </div>
+        <div class="stat-card olive" style="flex:1;min-width:160px;">
+          <div class="stat-label">Savings</div>
+          <div class="stat-value olive">$320<span style="font-size:16px;font-weight:500">.00</span></div>
+          <div style="font-size:12px;color:var(--text-soft);margin-top:4px;">High-yield acct</div>
+        </div>
+        <div class="stat-card sun" style="flex:1;min-width:160px;">
+          <div class="stat-label">Total Liquid</div>
+          <div class="stat-value sun">$1,167<span style="font-size:16px;font-weight:500">.00</span></div>
+          <div style="font-size:12px;color:var(--text-soft);margin-top:4px;">+ Connect accounts via Plaid</div>
+        </div>
+      </div>
+
+      <!-- Surplus + Covered status — together as a single band -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:12px 16px;background:rgba(65,82,31,.12);border:1px solid rgba(65,82,31,.25);border-radius:var(--radius-lg);">
+        <div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--olive-dark);margin-bottom:2px;">Week Surplus</div>
+          <div style="font-size:22px;font-weight:800;color:var(--olive-dark);font-variant-numeric:tabular-nums;">+$127</div>
+          <div style="font-size:13px;color:var(--text-mid);margin-top:2px;">↑ Better than last week (+$43)</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:26px;margin-bottom:4px;">✅</div>
+          <div style="font-size:14px;font-weight:700;color:var(--olive-dark);">You're covered</div>
+          <div style="font-size:12px;color:var(--text-mid);">through Apr 26</div>
+        </div>
+      </div>
+
+      <!-- Two-column: upcoming bills (left) + cash flow table (right) -->
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start;">
+
+        <!-- Left: next 3 upcoming bills -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-soft);margin-bottom:4px;">Next Due</div>
+          <div class="glass" style="border-radius:var(--radius-lg);padding:12px 14px;">
+            <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px;">Apr 15</div>
+            <div style="font-size:15px;font-weight:700;color:var(--deep-space);">Rent</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ochre);font-variant-numeric:tabular-nums;margin-top:2px;">$450.00</div>
+          </div>
+          <div class="glass" style="border-radius:var(--radius-lg);padding:12px 14px;">
+            <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px;">Apr 15</div>
+            <div style="font-size:15px;font-weight:700;color:var(--deep-space);">Storage Unit</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ochre);font-variant-numeric:tabular-nums;margin-top:2px;">$65.00</div>
+          </div>
+          <div class="glass" style="border-radius:var(--radius-lg);padding:12px 14px;">
+            <div style="font-size:11px;color:var(--text-soft);margin-bottom:2px;">Apr 16</div>
+            <div style="font-size:15px;font-weight:700;color:var(--deep-space);">Jazmin</div>
+            <div style="font-size:18px;font-weight:800;color:var(--ochre);font-variant-numeric:tabular-nums;margin-top:2px;">$50.00</div>
+          </div>
+        </div>
+
+        <!-- Right: cash flow cascade — THIS week only, running balance -->
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-soft);margin-bottom:8px;">Cash flow this week — each bill as it hits, with your running balance</div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Date / Payee</th>
+                  <th>Amount</th>
+                  <th>Running Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="cf-row-section"><td colspan="3" style="font-size:11px;">THIS WEEK — Apr 13–19</td></tr>
+                <tr class="cf-row-ok">
+                  <td><strong>Apr 14</strong> &nbsp;Kia's Paycheck</td>
+                  <td class="mono" style="color:var(--olive-dark);font-weight:700">+$521.00</td>
+                  <td class="mono" style="color:var(--olive-dark);font-weight:700">$1,368.00</td>
+                </tr>
+                <tr>
+                  <td>Apr 15 &nbsp;Rent</td>
+                  <td class="mono" style="color:var(--ochre)">−$450.00</td>
+                  <td class="mono">$918.00</td>
+                </tr>
+                <tr>
+                  <td>Apr 15 &nbsp;Storage</td>
+                  <td class="mono" style="color:var(--ochre)">−$65.00</td>
+                  <td class="mono">$853.00</td>
+                </tr>
+                <tr>
+                  <td>Apr 16 &nbsp;Jazmin</td>
+                  <td class="mono" style="color:var(--ochre)">−$50.00</td>
+                  <td class="mono">$803.00</td>
+                </tr>
+                <tr class="cf-row-warn">
+                  <td>Apr 17 &nbsp;Affirm — Kay Jewelers</td>
+                  <td class="mono" style="color:var(--ochre)">−$94.13</td>
+                  <td class="mono" style="color:#B8830A;font-weight:600">$708.87</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       BILLS
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-bills">
+    <div class="toolbar">
+      <span class="toolbar-title">Bills</span>
+      <div class="month-nav">
+        <div class="month-nav-arrow">‹</div>
+        <span class="month-nav-label">April 2026</span>
+        <div class="month-nav-arrow">›</div>
+      </div>
+      <button class="btn btn-ghost btn-sm">More ···</button>
+      <button class="btn btn-primary btn-sm">+ Add Bill</button>
+    </div>
+    <div class="tab-body">
+
+      <div class="stat-row">
+        <div class="stat-card navy">
+          <div class="stat-label">Monthly Total</div>
+          <div class="stat-value">$1,114</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill olive" style="width:100%"></div></div>
+        </div>
+        <div class="stat-card olive">
+          <div class="stat-label">Paid</div>
+          <div class="stat-value olive">$672</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill olive" style="width:60%"></div></div>
+        </div>
+        <div class="stat-card ochre">
+          <div class="stat-label">Unpaid</div>
+          <div class="stat-value ochre">$442</div>
+          <div class="stat-bar-track"><div class="stat-bar-fill ochre" style="width:40%"></div></div>
+        </div>
+        <div class="stat-card sun">
+          <div class="stat-label">Est. Surplus</div>
+          <div class="stat-value sun">+$127</div>
+        </div>
+      </div>
+
+      <!-- Fixed bills group -->
+      <div class="bill-group">
+        <div class="bill-group-header" onclick="toggleGroup(this)">
+          <span class="bill-group-chevron open">▶</span>
+          <span class="bill-group-label">Fixed Bills</span>
+          <span class="bill-group-total">$670.00</span>
+        </div>
+        <div class="bill-table-wrap">
+          <div class="bill-table-inner">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Payee</th>
+                  <th>Due</th>
+                  <th>Method</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background:rgba(65,82,31,.06)">
+                  <td style="color:var(--text-soft);text-decoration:line-through">Storage</td>
+                  <td class="mono" style="color:var(--text-soft)">1st</td>
+                  <td><span class="method-badge trf">Transfer</span></td>
+                  <td class="mono" style="color:var(--text-soft)">$65.00</td>
+                  <td><span class="badge badge-olive">✓ Paid</span></td>
+                </tr>
+                <tr style="background:rgba(65,82,31,.06)">
+                  <td style="color:var(--text-soft);text-decoration:line-through">Rent</td>
+                  <td class="mono" style="color:var(--text-soft)">15th</td>
+                  <td><span class="method-badge trf">Transfer</span></td>
+                  <td class="mono" style="color:var(--text-soft)">$450.00</td>
+                  <td><span class="badge badge-olive">✓ Paid</span></td>
+                </tr>
+                <tr style="background:rgba(65,82,31,.06)">
+                  <td style="color:var(--text-soft);text-decoration:line-through">Jazmin</td>
+                  <td class="mono" style="color:var(--text-soft)">15th</td>
+                  <td><span class="method-badge trf">Transfer</span></td>
+                  <td class="mono" style="color:var(--text-soft)">$50.00</td>
+                  <td><span class="badge badge-olive">✓ Paid</span></td>
+                </tr>
+                <tr>
+                  <td>Dre (Gas/Food)</td>
+                  <td class="mono">20th</td>
+                  <td><span class="method-badge trf">Transfer</span></td>
+                  <td class="mono">$80.00</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+                <tr>
+                  <td>PayPal Credit</td>
+                  <td class="mono">22nd</td>
+                  <td><span class="method-badge cc">Credit</span></td>
+                  <td class="mono">$25.00</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="tfoot-row">
+                  <td colspan="3">Subtotal</td>
+                  <td class="mono total-val">$670.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Affirm group -->
+      <div class="bill-group">
+        <div class="bill-group-header ochre-hdr" onclick="toggleGroup(this)">
+          <span class="bill-group-chevron open">▶</span>
+          <span class="bill-group-label">Affirm Payments</span>
+          <span class="bill-group-total">$376.52</span>
+        </div>
+        <div class="bill-table-wrap">
+          <div class="bill-table-inner">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th>Due</th>
+                  <th>Method</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Kay Jewelers</td>
+                  <td class="mono">17th</td>
+                  <td><span class="method-badge aff">Affirm</span></td>
+                  <td class="mono">$94.13</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+                <tr>
+                  <td>Old Navy</td>
+                  <td class="mono">18th</td>
+                  <td><span class="method-badge aff">Affirm</span></td>
+                  <td class="mono">$28.00</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+                <tr>
+                  <td>Mattress Firm</td>
+                  <td class="mono">24th</td>
+                  <td><span class="method-badge aff">Affirm</span></td>
+                  <td class="mono">$154.52</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+                <tr>
+                  <td>Fashion Nova</td>
+                  <td class="mono">26th</td>
+                  <td><span class="method-badge aff">Affirm</span></td>
+                  <td class="mono">$41.87</td>
+                  <td><span class="badge badge-ochre">Unpaid</span></td>
+                </tr>
+                <tr>
+                  <td>Brilliant Earth</td>
+                  <td class="mono">28th</td>
+                  <td><span class="method-badge aff">Affirm</span></td>
+                  <td class="mono">$58.00</td>
+                  <td><span class="badge badge-faint">Upcoming</span></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="tfoot-row">
+                  <td colspan="3">Affirm Total</td>
+                  <td class="mono total-val" style="color:var(--sunflower)">$376.52</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       INCOME
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-income">
+    <div class="toolbar">
+      <span class="toolbar-title">Income</span>
+      <div class="month-nav">
+        <div class="month-nav-arrow">‹</div>
+        <span class="month-nav-label">April 2026</span>
+        <div class="month-nav-arrow">›</div>
+      </div>
+      <button class="btn btn-primary btn-sm">Log Check</button>
+    </div>
+    <div class="tab-body">
+
+      <!-- Log-check prompt — visible when no entry exists for the current week -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(65,82,31,.08);border:1.5px dashed rgba(65,82,31,.28);border-radius:8px;margin-bottom:16px;">
+        <span style="font-size:20px;flex-shrink:0;">💵</span>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:var(--deep-space);">Log this week's check</div>
+          <div style="font-size:12px;color:var(--text-mid);">Enter Kia's amount → we'll auto-allocate bills, Affirm, and savings</div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="flex-shrink:0;">+ Add Week of Apr 13</button>
+      </div>
+
+      <div class="income-summary">
+        <div class="pay-sum-item">
+          <div class="pay-sum-lbl">Month Income</div>
+          <div class="pay-sum-val sun">$2,078</div>
+        </div>
+        <div class="pay-sum-item">
+          <div class="pay-sum-lbl">Allocated</div>
+          <div class="pay-sum-val">$1,951</div>
+        </div>
+        <div class="pay-sum-item">
+          <div class="pay-sum-lbl">Surplus</div>
+          <div class="pay-sum-val sun">$127</div>
+        </div>
+        <div class="pay-sum-item">
+          <div class="pay-sum-lbl">Weeks Entered</div>
+          <div class="pay-sum-val">4</div>
+        </div>
+      </div>
+
+      <div class="paycheck-tree">
+        <div class="pay-month-row">
+          <span class="pay-month-label">April 2026</span>
+          <span class="pay-month-meta">4 weeks</span>
+          <div class="pay-month-cols">
+            <div class="pay-col-head">Allocated</div>
+            <div class="pay-col-head">Remainder</div>
+          </div>
+        </div>
+
+        <!-- Week open -->
+        <div class="pay-week-row">
+          <span class="pay-week-label">Week of Apr 13</span>
+          <div class="pay-week-progress"><div class="pay-week-track"><div class="pay-week-fill" style="width:94%"></div></div></div>
+          <div class="pay-week-cols">
+            <span class="pay-week-val">$521.00</span>
+            <span class="pay-week-val green">$27.00</span>
+          </div>
+        </div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Storage</span><span class="pay-bill-amount">$65.00</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Rent</span><span class="pay-bill-amount">$450.00</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Jazmin</span><span class="pay-bill-amount">$50.00</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Dre</span><span class="pay-bill-amount">$80.00</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">PayPal CC</span><span class="pay-bill-amount">$25.00</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Deductions</span><span class="pay-bill-amount">$68.52</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name">Affirm (week share)</span><span class="pay-bill-amount">$94.13</span></div>
+        <div class="pay-bill-row"><span class="pay-bill-name" style="color:var(--olive-dark)">Savings</span><span class="pay-bill-amount" style="color:var(--olive-dark)">+$25.00 saved</span></div>
+
+        <div class="pay-week-row">
+          <span class="pay-week-label">Week of Apr 6</span>
+          <div class="pay-week-progress"><div class="pay-week-track"><div class="pay-week-fill" style="width:88%"></div></div></div>
+          <div class="pay-week-cols">
+            <span class="pay-week-val">$498.00</span>
+            <span class="pay-week-val green">$58.00</span>
+          </div>
+        </div>
+
+        <div class="pay-week-row">
+          <span class="pay-week-label">Week of Mar 30</span>
+          <div class="pay-week-progress"><div class="pay-week-track"><div class="pay-week-fill" style="width:96%"></div></div></div>
+          <div class="pay-week-cols">
+            <span class="pay-week-val">$547.00</span>
+            <span class="pay-week-val red">−$24.00</span>
+          </div>
+        </div>
+
+        <div class="pay-week-row">
+          <span class="pay-week-label">Week of Mar 23</span>
+          <div class="pay-week-progress"><div class="pay-week-track"><div class="pay-week-fill" style="width:91%"></div></div></div>
+          <div class="pay-week-cols">
+            <span class="pay-week-val">$512.00</span>
+            <span class="pay-week-val green">$46.00</span>
+          </div>
+        </div>
+
+        <div class="pay-total-row">
+          <span class="pay-total-label">April Total</span>
+          <div class="pay-total-vals">
+            <div class="pay-total-item">
+              <span class="pay-total-lbl">Income</span>
+              <span class="pay-total-val sun">$2,078</span>
+            </div>
+            <div class="pay-total-item">
+              <span class="pay-total-lbl">Surplus</span>
+              <span class="pay-total-val sun">+$127</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       DEBT
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-debt">
+    <div class="toolbar">
+      <span class="toolbar-title">Debt</span>
+    </div>
+    <div class="tab-body">
+
+      <!-- Sub-section pills -->
+      <div class="act-section-nav">
+        <button class="act-section-pill active" data-debt="plans" onclick="switchDebtSection('plans',this)">Plans</button>
+        <button class="act-section-pill" data-debt="accelerate" onclick="switchDebtSection('accelerate',this)">Accelerate</button>
+      </div>
+
+      <!-- ── Plans: stats + grid table ──────────────────────────────────── -->
+      <div class="act-section active" id="debt-plans">
+        <div class="affirm-stats">
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">Total Owed</div>
+            <div class="affirm-stat-val ochre">$1,806</div>
+            <div class="affirm-stat-sub">across 5 active plans</div>
+          </div>
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">Monthly Burden</div>
+            <div class="affirm-stat-val ochre">$376.52</div>
+            <div class="affirm-stat-sub">from Kia's paycheck</div>
+          </div>
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">All Plans Clear</div>
+            <div class="affirm-stat-val olive">Jan 2027</div>
+            <div class="affirm-stat-sub">at current pace</div>
+          </div>
+        </div>
+
+        <div class="tbl-wrap" style="overflow-x:auto;">
+          <table class="tbl affirm-tbl" style="min-width:700px">
+            <thead>
+              <tr>
+                <th style="text-align:left">Plan</th>
+                <th class="active-col">Apr ←</th>
+                <th>May</th>
+                <th>Jun</th>
+                <th>Jul</th>
+                <th>Aug</th>
+                <th>Sep</th>
+                <th>Oct</th>
+                <th>Nov</th>
+                <th>Dec</th>
+                <th>Jan '27</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div style="font-weight:600">Kay Jewelers</div><div style="font-size:11px;color:var(--text-soft)">ends Nov 2026</div></td>
+                <td class="mono active-col" style="color:var(--ochre);font-weight:600">$94.13</td>
+                <td class="mono">$94.13</td><td class="mono">$94.13</td><td class="mono">$94.13</td>
+                <td class="mono">$94.13</td><td class="mono">$94.13</td><td class="mono">$94.13</td>
+                <td class="mono">$94.13</td>
+                <td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:600">Mattress Firm</div><div style="font-size:11px;color:var(--text-soft)">ends Jul 2026</div></td>
+                <td class="mono active-col" style="color:var(--ochre);font-weight:600">$154.52</td>
+                <td class="mono">$154.52</td><td class="mono">$154.52</td><td class="mono">$154.52</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:600">Brilliant Earth</div><div style="font-size:11px;color:var(--text-soft)">ends Jan 2027</div></td>
+                <td class="mono active-col" style="color:var(--ochre);font-weight:600">$58.00</td>
+                <td class="mono">$58.00</td><td class="mono">$58.00</td><td class="mono">$58.00</td>
+                <td class="mono">$58.00</td><td class="mono">$58.00</td><td class="mono">$58.00</td>
+                <td class="mono">$58.00</td><td class="mono">$58.00</td>
+                <td><span class="affirm-cell-final">Last</span></td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:600">Fashion Nova</div><div style="font-size:11px;color:var(--text-soft)">ends May 2026</div></td>
+                <td class="mono active-col" style="color:var(--ochre);font-weight:600">$41.87</td>
+                <td class="mono">$41.87</td>
+                <td><span class="affirm-cell-final">Last</span></td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td>
+              </tr>
+              <tr>
+                <td><div style="font-weight:600">Old Navy</div><div style="font-size:11px;color:var(--text-soft)">ends Jun 2026</div></td>
+                <td class="mono active-col" style="color:var(--ochre);font-weight:600">$28.00</td>
+                <td class="mono">$28.00</td><td class="mono">$28.00</td>
+                <td><span class="affirm-cell-final">Last</span></td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+                <td class="mono affirm-cell-empty">—</td><td class="mono affirm-cell-empty">—</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="tfoot-row">
+                <td>Monthly Total</td>
+                <td class="mono total-val active-col" style="color:var(--sunflower)">$376.52</td>
+                <td class="mono total-val">$376.52</td>
+                <td class="mono total-val">$234</td>
+                <td class="mono total-val">$206</td>
+                <td class="mono total-val">$152</td>
+                <td class="mono total-val">$152</td>
+                <td class="mono total-val">$152</td>
+                <td class="mono total-val">$152</td>
+                <td class="mono total-val">$58</td>
+                <td class="mono total-val">$58</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Accelerate: reactive bar chart + slider ─────────────────────── -->
+      <div class="act-section" id="debt-accelerate">
+        <div class="affirm-stats">
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">Total Owed</div>
+            <div class="affirm-stat-val ochre">$1,806</div>
+            <div class="affirm-stat-sub">across 5 active plans</div>
+          </div>
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">Strategy</div>
+            <div class="affirm-stat-val" style="font-size:14px;line-height:1.2;">Avalanche</div>
+            <div class="affirm-stat-sub">highest-burden plan first</div>
+          </div>
+          <div class="affirm-stat">
+            <div class="affirm-stat-label">Payoff Target</div>
+            <div class="affirm-stat-val olive" id="acc-payoff-stat">Jan 2027</div>
+            <div class="affirm-stat-sub" id="acc-payoff-stat-sub">at $0 extra/mo</div>
+          </div>
+        </div>
+
+        <!-- Reactive bar chart -->
+        <div class="affirm-chart-wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="affirm-chart-title" style="margin-bottom:0">Monthly Burden — drag slider to accelerate</div>
+            <div style="font-size:11px;color:var(--text-soft);">Bars shrink as you pay faster →</div>
+          </div>
+          <div class="affirm-bar-group" id="accelerate-bar-group">
+            <div class="affirm-bar-col">
+              <div class="affirm-bar active" style="height:80px"></div>
+              <div class="affirm-bar-label">Apr</div>
+              <div class="affirm-bar-val">$377</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar active" style="height:80px"></div>
+              <div class="affirm-bar-label">May</div>
+              <div class="affirm-bar-val">$377</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:50px"></div>
+              <div class="affirm-bar-label">Jun</div>
+              <div class="affirm-bar-val">$234</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:44px"></div>
+              <div class="affirm-bar-label">Jul</div>
+              <div class="affirm-bar-val">$206</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:32px"></div>
+              <div class="affirm-bar-label">Aug</div>
+              <div class="affirm-bar-val">$152</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:32px"></div>
+              <div class="affirm-bar-label">Sep</div>
+              <div class="affirm-bar-val">$152</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:32px"></div>
+              <div class="affirm-bar-label">Oct</div>
+              <div class="affirm-bar-val">$152</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:32px"></div>
+              <div class="affirm-bar-label">Nov</div>
+              <div class="affirm-bar-val">$152</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:12px"></div>
+              <div class="affirm-bar-label">Dec</div>
+              <div class="affirm-bar-val">$58</div>
+            </div>
+            <div class="affirm-bar-col">
+              <div class="affirm-bar" style="height:12px"></div>
+              <div class="affirm-bar-label">Jan</div>
+              <div class="affirm-bar-val">$58</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slider + payoff comparison -->
+        <div class="debt-slider-panel">
+          <div class="debt-slider-panel-title">Extra Toward Affirm Each Month</div>
+          <div class="debt-slider-context">
+            Avalanche method: extra goes to <strong>Mattress Firm first</strong> ($154.52/mo, highest burden). Once clear, that payment rolls into the next plan automatically.
+          </div>
+
+          <div class="slider-row">
+            <span class="slider-label">Extra per month</span>
+            <span class="slider-live-val" id="debt-slider-val">+$0</span>
+          </div>
+          <input type="range" min="0" max="500" step="25" value="0" id="debt-slider"
+            oninput="updateDebtSlider(this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-top:2px">
+            <span>$0 (no change)</span><span>$500/mo extra</span>
+          </div>
+
+          <div class="payoff-compare" id="payoff-compare">
+            <div class="payoff-box before">
+              <div class="payoff-box-label">Current path</div>
+              <div class="payoff-box-date">Jan 2027</div>
+              <div class="payoff-box-sub">$376.52/mo, 9 months left</div>
+            </div>
+            <div style="display:flex;align-items:center;font-size:20px;color:var(--text-soft)">→</div>
+            <div class="payoff-box after">
+              <div class="payoff-box-label">Your path</div>
+              <div class="payoff-box-date" id="payoff-date">Jan 2027</div>
+              <div class="payoff-box-sub" id="payoff-sub">Drag the slider to see your new payoff date</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       GOALS
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-goals">
+    <div class="toolbar">
+      <span class="toolbar-title">Goals</span>
+      <button class="btn btn-ghost btn-sm">+ New Goal</button>
+    </div>
+    <div class="tab-body">
+
+      <!-- Sub-tab nav -->
+      <div class="act-section-nav">
+        <button class="act-section-pill active" data-goal="goals" onclick="switchGoalSection('goals',this)">Goals</button>
+        <button class="act-section-pill" data-goal="strategy" onclick="switchGoalSection('strategy',this)">Strategy</button>
+      </div>
+
+      <!-- ── GOALS section ─────────────────────────────────────────────── -->
+      <div class="act-section active" id="goal-goals">
+
+        <div class="stat-row">
+          <div class="stat-card olive">
+            <div class="stat-label">Total Saved</div>
+            <div class="stat-value olive">$3,000</div>
+          </div>
+          <div class="stat-card sun">
+            <div class="stat-label">Monthly Surplus</div>
+            <div class="stat-value sun">$127</div>
+          </div>
+          <div class="stat-card navy">
+            <div class="stat-label">Affirm Clears</div>
+            <div class="stat-value">Jan '27</div>
+            <div class="stat-sub-rows">
+              <div class="stat-sub-row"><span>Frees up monthly</span><span>$376</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-olive" style="margin-bottom:16px">
+          🎯&nbsp; After Affirm clears (Jan 2027), redirect <strong>$376/mo</strong> → Emergency Fund fully funded in <strong>7 months</strong>
+        </div>
+
+        <!-- Emergency Fund goal card -->
+        <div class="goal-card">
+          <div class="goal-card-header">
+            <div>
+              <div class="goal-name">Emergency Fund</div>
+              <div class="goal-target">$3,000 saved · $10,000 target</div>
+            </div>
+            <span class="badge badge-olive">30%</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill olive" style="width:30%"></div></div>
+          <div class="goal-eta" id="goal1-eta">At $127/mo → fully funded in 55 months</div>
+
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.07)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <label style="font-size:12px;font-weight:600;color:var(--text-mid)">Monthly contribution</label>
+              <span style="font-size:16px;font-weight:800;color:var(--olive-dark);font-variant-numeric:tabular-nums" id="goal1-slider-val">$127</span>
+            </div>
+            <input type="range" min="50" max="600" step="25" value="127" id="goal1-slider"
+              oninput="updateGoal1(this.value)">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-soft);margin-top:2px">
+              <span>$50/mo</span><span>$600/mo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vacation goal card -->
+        <div class="goal-card">
+          <div class="goal-card-header">
+            <div>
+              <div class="goal-name">Vacation Fund</div>
+              <div class="goal-target">$0 saved · $2,000 target</div>
+            </div>
+            <span class="badge badge-faint">0%</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill sun" style="width:0%"></div></div>
+          <div class="goal-eta" style="color:var(--text-soft)">No contributions yet — add a monthly amount to see ETA</div>
+        </div>
+
+        <!-- New Car -->
+        <div class="goal-card">
+          <div class="goal-card-header">
+            <div>
+              <div class="goal-name">New Car</div>
+              <div class="goal-target">$0 saved · $5,000 target</div>
+            </div>
+            <span class="badge badge-faint">0%</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill ochre" style="width:0%"></div></div>
+          <div class="goal-eta" style="color:var(--text-soft)">No contributions yet</div>
+        </div>
+
+      </div><!-- /goal-goals -->
+
+      <!-- ── STRATEGY section ──────────────────────────────────────────── -->
+      <div class="act-section" id="goal-strategy">
+
+        <div class="section-label">Savings Strategy</div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.5);border-radius:10px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--olive-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">1</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:2px;">Pay yourself first — before bills</div>
+              <div style="font-size:13px;color:var(--text-mid);line-height:1.5;">When Kia's check lands, move a fixed amount to savings before paying anything. Even $20/week compounds to $1,040/year — with nothing left to "accidentally" spend.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.5);border-radius:10px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--olive-dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">2</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:2px;">Don't wait — route $50 of that $127 surplus right now</div>
+              <div style="font-size:13px;color:var(--text-mid);line-height:1.5;">You already have $127/mo not going anywhere. Move $50 of it to Emergency Fund today. That's $600 by October, while Affirm is still active.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:rgba(255,255,255,.65);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.5);border-radius:10px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--deep-space);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">3</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:2px;">Jan 2027 — redirect $376/mo the day Affirm clears</div>
+              <div style="font-size:13px;color:var(--text-mid);line-height:1.5;">Set a calendar reminder now. The moment that $376 payment stops, route it straight to savings before your budget absorbs it as "extra spending money."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Where to Put It</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:rgba(65,82,31,.08);border:1px solid rgba(65,82,31,.2);border-radius:10px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--olive-dark);margin-bottom:4px;">✦ High-Yield Savings (HYSA)</div>
+            <div style="font-size:13px;color:var(--text-mid);line-height:1.4;">4–5% APY. Your money earns interest while it sits. Best for emergency fund. Marcus, Ally, SoFi are all free to open.</div>
+          </div>
+          <div style="padding:12px 14px;background:rgba(28,47,64,.06);border:1px solid rgba(28,47,64,.15);border-radius:10px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--deep-space);margin-bottom:4px;">Regular Savings</div>
+            <div style="font-size:13px;color:var(--text-mid);line-height:1.4;">Where you are now. Earns ~0.01% APY. Fine for holding cash, but your money isn't growing.</div>
+          </div>
+          <div style="padding:12px 14px;background:rgba(253,184,51,.1);border:1px solid rgba(253,184,51,.3);border-radius:10px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#8A5F00;margin-bottom:4px;">CDs (Certificates of Deposit)</div>
+            <div style="font-size:13px;color:var(--text-mid);line-height:1.4;">Lock money for 6–12 months at ~5%. Good once you have a 3-month buffer locked in a HYSA first.</div>
+          </div>
+          <div style="padding:12px 14px;background:rgba(196,82,42,.07);border:1px solid rgba(196,82,42,.18);border-radius:10px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--ochre);margin-bottom:4px;">⚠ Checking Account</div>
+            <div style="font-size:13px;color:var(--text-mid);line-height:1.4;">Too easy to spend. Separate account = psychological barrier = meaningfully higher savings rate over time.</div>
+          </div>
+        </div>
+
+        <!-- Ask Ledger AI placeholder -->
+        <div style="display:flex;gap:14px;align-items:center;padding:16px 18px;background:rgba(28,47,64,.05);border:1.5px dashed rgba(28,47,64,.18);border-radius:10px;margin-bottom:8px;">
+          <div style="font-size:28px;flex-shrink:0;">🤖</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:var(--deep-space);margin-bottom:3px;">
+              Ask Ledger
+              <span style="font-size:11px;font-weight:600;padding:2px 8px;background:rgba(28,47,64,.1);border-radius:20px;margin-left:6px;color:var(--text-soft);">Coming Soon</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-mid);line-height:1.5;">AI that reads your actual numbers and tells you what to do next. <em>"You have $127 surplus this week — here's exactly where I'd put it based on your goals."</em></div>
+          </div>
+        </div>
+
+      </div><!-- /goal-strategy -->
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SNAPSHOTS
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-snapshots">
+    <div class="toolbar">
+      <span class="toolbar-title">Snapshots</span>
+    </div>
+    <div class="tab-body">
+
+      <div class="trend-bar">
+        <div class="trend-chip">📈 <span class="trend-chip-label">2-month surplus streak</span></div>
+        <div class="trend-chip">🏆 <span class="trend-chip-label">Best month</span> <span class="trend-chip-val">Feb 2026 (+$247)</span></div>
+        <div class="trend-chip">💰 <span class="trend-chip-label">Total to savings</span> <span class="trend-chip-val">$3,000</span></div>
+        <div class="trend-chip">📊 <span class="trend-chip-label">Avg surplus</span> <span class="trend-chip-val">+$127/mo</span></div>
+      </div>
+
+      <div class="snapshot-grid">
+        <div class="snapshot-card">
+          <div class="snapshot-hdr olive">
+            <div class="snapshot-month">February 2026</div>
+            <div class="snapshot-year">Best Month 🏆</div>
+          </div>
+          <div class="snapshot-body">
+            <div class="snapshot-row"><span class="snapshot-row-label">Income</span><span class="snapshot-row-val">$2,210</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Bills</span><span class="snapshot-row-val" style="color:var(--ochre)">$739</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Affirm</span><span class="snapshot-row-val" style="color:var(--ochre)">$376</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Savings</span><span class="snapshot-row-val" style="color:var(--olive-dark)">$847</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Net</span><span><span class="snapshot-pill surplus">+$247</span></span></div>
+            <div class="snapshot-paid-bar"><div class="snapshot-paid-track" style="margin-top:6px"><div class="snapshot-paid-fill" style="width:60%;transform-origin:left;animation:barScaleX .9s cubic-bezier(.22,1,.36,1) .3s both"></div></div></div>
+          </div>
+        </div>
+
+        <div class="snapshot-card">
+          <div class="snapshot-hdr navy">
+            <div class="snapshot-month">March 2026</div>
+            <div class="snapshot-year">2026</div>
+          </div>
+          <div class="snapshot-body">
+            <div class="snapshot-row"><span class="snapshot-row-label">Income</span><span class="snapshot-row-val">$2,058</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Bills</span><span class="snapshot-row-val" style="color:var(--ochre)">$739</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Affirm</span><span class="snapshot-row-val" style="color:var(--ochre)">$376</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Savings</span><span class="snapshot-row-val" style="color:var(--olive-dark)">$750</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Net</span><span><span class="snapshot-pill surplus">+$193</span></span></div>
+          </div>
+        </div>
+
+        <div class="snapshot-card">
+          <div class="snapshot-hdr ochre">
+            <div class="snapshot-month">January 2026</div>
+            <div class="snapshot-year">2026</div>
+          </div>
+          <div class="snapshot-body">
+            <div class="snapshot-row"><span class="snapshot-row-label">Income</span><span class="snapshot-row-val">$1,980</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Bills</span><span class="snapshot-row-val" style="color:var(--ochre)">$739</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Affirm</span><span class="snapshot-row-val" style="color:var(--ochre)">$376</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Savings</span><span class="snapshot-row-val" style="color:var(--olive-dark)">$600</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Net</span><span><span class="snapshot-pill surplus">+$265</span></span></div>
+          </div>
+        </div>
+
+        <div class="snapshot-card">
+          <div class="snapshot-hdr sun">
+            <div class="snapshot-month">December 2025</div>
+            <div class="snapshot-year">2025</div>
+          </div>
+          <div class="snapshot-body">
+            <div class="snapshot-row"><span class="snapshot-row-label">Income</span><span class="snapshot-row-val">$1,872</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Bills</span><span class="snapshot-row-val" style="color:var(--ochre)">$739</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Affirm</span><span class="snapshot-row-val" style="color:var(--ochre)">$376</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Savings</span><span class="snapshot-row-val" style="color:var(--olive-dark)">$375</span></div>
+            <div class="snapshot-row"><span class="snapshot-row-label">Net</span><span><span class="snapshot-pill surplus">+$381</span></span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ACTIVITY
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-activity">
+    <div class="toolbar">
+      <span class="toolbar-title">Activity</span>
+    </div>
+    <div class="tab-body">
+      <!-- Sub-section pills — mirrors SavingsTab pattern -->
+      <div class="act-section-nav">
+        <button class="act-section-pill active" data-act="changes" onclick="switchActSection('changes',this)">Changes</button>
+        <button class="act-section-pill" data-act="messages" onclick="switchActSection('messages',this)">Messages</button>
+      </div>
+
+      <!-- Changes: chronological action log + undo trail -->
+      <div class="act-section active" id="act-changes">
+        <div class="activity-feed">
+          <div class="activity-day-header">Today — April 13, 2026</div>
+          <div class="activity-entry">
+            <div class="activity-dot olive">💰</div>
+            <div class="activity-body">
+              <div class="activity-desc">Savings log updated — <strong>$25 added to savings</strong></div>
+              <div class="activity-meta">Goals Tab · 2:14 PM</div>
+            </div>
+            <div class="activity-delta pos">+$25</div>
+          </div>
+          <div class="activity-entry">
+            <div class="activity-dot ochre">💳</div>
+            <div class="activity-body">
+              <div class="activity-desc">Bill marked paid — <strong>Storage Unit $65</strong></div>
+              <div class="activity-meta">Bills Tab · 10:02 AM</div>
+            </div>
+            <div class="activity-delta neg">−$65</div>
+          </div>
+          <div class="activity-day-header">April 6, 2026</div>
+          <div class="activity-entry">
+            <div class="activity-dot navy">📋</div>
+            <div class="activity-body">
+              <div class="activity-desc">Week of Apr 6 paycheck entered — <strong>$498 gross</strong></div>
+              <div class="activity-meta">Income Tab · 8:45 AM</div>
+            </div>
+            <div class="activity-delta pos">+$498</div>
+          </div>
+          <div class="activity-entry">
+            <div class="activity-dot olive">🎯</div>
+            <div class="activity-body">
+              <div class="activity-desc">Snapshot taken — <strong>March 2026</strong></div>
+              <div class="activity-meta">Snapshots Tab · 9:00 AM</div>
+            </div>
+            <div class="activity-delta neutral" style="color:var(--text-soft)">View</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages: milestones, system updates, info — styled as day-labelled card list -->
+      <div class="act-section" id="act-messages">
+        <div class="msg-list">
+          <!-- Unread -->
+          <div class="msg-list-card">
+            <div class="msg-list-icon" style="background:rgba(65,82,31,.12);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#41521F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="msg-list-body">
+              <div class="msg-list-title">Milestone — Affirm plan paid off 🎉</div>
+              <div class="msg-list-preview">You completed your Mattress Firm installment plan. $154.52/mo freed up.</div>
+            </div>
+            <div class="msg-list-right">
+              <div class="msg-list-time">2:14 PM</div>
+              <div class="msg-list-dot"></div>
+            </div>
+          </div>
+          <!-- Unread -->
+          <div class="msg-list-card">
+            <div class="msg-list-icon" style="background:rgba(253,184,51,.1);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B8830A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="msg-list-body">
+              <div class="msg-list-title">Heads up — Income below average</div>
+              <div class="msg-list-preview">This week's check ($381) is below Kia's $447 average. Conservative projection applies.</div>
+            </div>
+            <div class="msg-list-right">
+              <div class="msg-list-time">9:00 AM</div>
+              <div class="msg-list-dot"></div>
+            </div>
+          </div>
+          <!-- Read -->
+          <div class="msg-list-card">
+            <div class="msg-list-icon" style="background:rgba(196,82,42,.1);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C4522A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="msg-list-body">
+              <div class="msg-list-title">Bills overdue this month</div>
+              <div class="msg-list-preview">2 bills still unpaid with 6 days left in April. Review in Bills tab.</div>
+            </div>
+            <div class="msg-list-right">
+              <div class="msg-list-time">Apr 6</div>
+              <div class="msg-list-dot read"></div>
+            </div>
+          </div>
+          <!-- Read -->
+          <div class="msg-list-card">
+            <div class="msg-list-icon" style="background:rgba(28,47,64,.08);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#274058" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="msg-list-body">
+              <div class="msg-list-title">Savings streak — 4 weeks</div>
+              <div class="msg-list-preview">You've added to savings every week for a month. Keep it up.</div>
+            </div>
+            <div class="msg-list-right">
+              <div class="msg-list-time">Apr 1</div>
+              <div class="msg-list-dot read"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message FAB — always visible, hover shows recent messages -->
+  <div class="msg-fab-wrap" id="msg-fab-wrap">
+    <div class="msg-popover" id="msg-popover">
+      <div class="msg-popover-header">
+        <span class="msg-popover-title">Recent Messages</span>
+        <span class="msg-popover-action" onclick="goToMessages()">View all →</span>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-icon" style="background:rgba(65,82,31,.25);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b8e23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Milestone — Affirm paid off 🎉</div>
+          <div class="msg-card-preview">Mattress Firm plan complete. $154.52/mo freed.</div>
+        </div>
+        <div class="msg-card-right">
+          <div class="msg-card-time">2:14 PM</div>
+          <div class="msg-card-dot"></div>
+        </div>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-icon" style="background:rgba(253,184,51,.15);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B8830A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Income below average this week</div>
+          <div class="msg-card-preview">$381 vs $447 avg — conservative mode on.</div>
+        </div>
+        <div class="msg-card-right">
+          <div class="msg-card-time">9:00 AM</div>
+          <div class="msg-card-dot"></div>
+        </div>
+      </div>
+      <div class="msg-card read">
+        <div class="msg-card-icon" style="background:rgba(28,47,64,.25);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="msg-card-body">
+          <div class="msg-card-title">Savings streak — 4 weeks</div>
+          <div class="msg-card-preview">Added to savings every week for a month.</div>
+        </div>
+        <div class="msg-card-right">
+          <div class="msg-card-time">Apr 1</div>
+          <div class="msg-card-dot"></div>
+        </div>
+      </div>
+    </div>
+    <button class="msg-fab" id="msg-fab" title="Messages"
+      onmouseenter="document.getElementById('msg-popover').classList.add('open')"
+      onmouseleave="document.getElementById('msg-popover').classList.remove('open')"
+      onclick="goToMessages()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+      </svg>
+      <span class="msg-fab-badge">2</span>
+    </button>
+  </div>
+
+</div><!-- /app-shell -->
+
+<!-- ── Interactive JS ──────────────────────────────────────────────────── -->
+<script>
+// Dynamic greeting
+(function() {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const el = document.getElementById('home-greeting');
+  if (el) el.textContent = greeting + ', Adriane';
+})();
+
+// Tab switching
+document.getElementById('tab-nav').addEventListener('click', function(e) {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  // Ripple
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  r.style.left = (e.clientX - rect.left - 10) + 'px';
+  r.style.top  = (e.clientY - rect.top  - 10) + 'px';
+  btn.style.position = 'relative'; btn.style.overflow = 'hidden';
+  btn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove(), { once: true });
+});
+
+// Bill group toggle
+function toggleGroup(header) {
+  const wrap = header.nextElementSibling;
+  const chevron = header.querySelector('.bill-group-chevron');
+  const collapsed = wrap.classList.toggle('collapsed');
+  chevron.classList.toggle('open', !collapsed);
+}
+
+// Debt sub-tab switching
+function switchGoalSection(id, btn) {
+  document.querySelectorAll('.act-section-pill[data-goal]').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#tab-goals .act-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('goal-' + id).classList.add('active');
+}
+
+function switchDebtSection(id, btn) {
+  document.querySelectorAll('.act-section-pill[data-debt]').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#tab-debt .act-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('debt-' + id).classList.add('active');
+}
+
+// Debt slider + reactive bar chart
+const payoffDates = [
+  'Jan 2027','Dec 2026','Nov 2026','Oct 2026',
+  'Oct 2026','Sep 2026','Sep 2026','Aug 2026',
+  'Aug 2026','Jul 2026','Jul 2026','Jun 2026',
+  'Jun 2026','May 2026','May 2026','Apr 2026',
+  'Apr 2026','Apr 2026','Mar 2026','Mar 2026','Feb 2026',
+];
+const baseHeights = [80, 80, 50, 44, 32, 32, 32, 32, 12, 12];
+const baseVals    = ['$377','$377','$234','$206','$152','$152','$152','$152','$58','$58'];
+
+function updateAccelerateBars(monthsSaved) {
+  const cols = document.querySelectorAll('#accelerate-bar-group .affirm-bar-col');
+  const barsToHide = Math.min(Math.floor(monthsSaved / 2), cols.length - 2); // always keep at least 2 bars
+  cols.forEach(function(col, i) {
+    const bar   = col.querySelector('.affirm-bar');
+    const label = col.querySelector('.affirm-bar-val');
+    const isActive = i < 2;
+    const hiddenFrom = cols.length - barsToHide;
+    if (i >= hiddenFrom) {
+      bar.style.height = '2px';
+      bar.style.background = 'rgba(0,0,0,.07)';
+      label.textContent = '—';
+      label.style.color = 'rgba(0,0,0,.2)';
+    } else {
+      bar.style.height = baseHeights[i] + 'px';
+      bar.style.background = isActive ? 'var(--ochre)' : 'rgba(65,82,31,.5)';
+      label.textContent = baseVals[i];
+      label.style.color = '';
+    }
+  });
+}
+
+function updateDebtSlider(val) {
+  const v = parseInt(val);
+  document.getElementById('debt-slider-val').textContent = v > 0 ? '+$' + v : '+$0';
+  const idx = Math.min(Math.floor(v / 25), payoffDates.length - 1);
+  const newDate = payoffDates[idx];
+  const monthsSaved = idx;
+
+  // Update payoff comparison boxes
+  document.getElementById('payoff-date').textContent = newDate;
+  document.getElementById('payoff-sub').textContent = monthsSaved > 0
+    ? monthsSaved + ' month' + (monthsSaved !== 1 ? 's' : '') + ' sooner'
+    : 'Drag the slider to see your new payoff date';
+
+  // Update top stat card in Accelerate section
+  const statEl = document.getElementById('acc-payoff-stat');
+  const statSubEl = document.getElementById('acc-payoff-stat-sub');
+  if (statEl) statEl.textContent = newDate;
+  if (statSubEl) statSubEl.textContent = v > 0 ? 'at +$' + v + '/mo extra' : 'at $0 extra/mo';
+
+  // Animate bars
+  updateAccelerateBars(monthsSaved);
+}
+
+// Activity sub-section switching (scoped to activity tab so debt sub-tabs are unaffected)
+function switchActSection(id, btn) {
+  document.querySelectorAll('#tab-activity .act-section-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#tab-activity .act-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('act-' + id).classList.add('active');
+}
+
+// Message FAB — click navigates to Activity > Messages
+function goToMessages() {
+  document.getElementById('msg-popover').classList.remove('open');
+  // Switch to Activity tab
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const actBtn = document.querySelector('[data-tab="activity"]');
+  actBtn.classList.add('active');
+  document.getElementById('tab-activity').classList.add('active');
+  // Switch to Messages sub-section (scoped)
+  document.querySelectorAll('#tab-activity .act-section-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#tab-activity .act-section').forEach(s => s.classList.remove('active'));
+  document.querySelector('[data-act="messages"]').classList.add('active');
+  document.getElementById('act-messages').classList.add('active');
+  // Dismiss FAB badge
+  const badge = document.querySelector('.msg-fab-badge');
+  if (badge) badge.style.display = 'none';
+}
+
+// Goal 1 slider
+function updateGoal1(val) {
+  const v = parseInt(val);
+  document.getElementById('goal1-slider-val').textContent = '$' + v;
+  const remaining = 10000 - 3000;
+  const months = Math.ceil(remaining / v);
+  const yr = 2026 + Math.floor((3 + months) / 12);
+  const mnthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mnth = mnthNames[(3 + months) % 12];
+  document.getElementById('goal1-eta').textContent =
+    'At $' + v + '/mo → fully funded in ' + months + ' months (' + mnth + ' ' + yr + ')';
+}
+</script>
+</body>
+</html>

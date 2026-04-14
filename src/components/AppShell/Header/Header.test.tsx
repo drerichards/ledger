@@ -10,8 +10,6 @@ const defaultProps = {
   onMarkNotificationsSeen: noop,
   onNavigateToAffirm: noop,
   onViewAllNotifications: noop,
-  onPrintTab: noop,
-  onPrintAll: noop,
   onSignOut: noop,
 };
 
@@ -33,12 +31,12 @@ describe("Header", () => {
 
   it("shows greeting when userName is provided", () => {
     render(<Header {...defaultProps} userName="Kia" />);
-    expect(screen.getByText("Hi, Kia")).toBeInTheDocument();
+    expect(screen.getByText(/, Kia$/)).toBeInTheDocument();
   });
 
-  it("renders the NotificationBell", () => {
+  it("renders the Messages button", () => {
     render(<Header {...defaultProps} />);
-    expect(screen.getByLabelText(/Notifications/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Messages")).toBeInTheDocument();
   });
 
   it("renders the HeaderMenu trigger", () => {

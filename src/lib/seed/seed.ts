@@ -7,6 +7,7 @@ import type {
   InstallmentPlan,
   KiasCheckEntry,
   MonthlyIncome,
+  MonthSnapshot,
   PaycheckWeek,
   SavingsEntry,
   SavingsGoal,
@@ -370,12 +371,51 @@ const GOALS: SavingsGoal[] = [
   },
 ];
 
+// ─── Monthly Snapshots — Dec 2025 – Mar 2026 ─────────────────────────────────
+// Seeded so the Snapshots tab renders real data instead of the empty state.
+// Amounts are realistic given the bill/income mix in seed data.
+
+const SNAPSHOTS: MonthSnapshot[] = [
+  {
+    month: "2025-12",
+    totalBilled: 362500, // $3,625.00
+    totalPaid: 362500,
+    shortfall: -18400,   // surplus $184 — tight but green
+    savingsMoved: 50000, // $500.00
+    kiasPayActual: 251315, // $2,513.15 (2 checks)
+  },
+  {
+    month: "2026-01",
+    totalBilled: 371200, // $3,712.00
+    totalPaid: 358900,
+    shortfall: 12300,    // short $123 — one bill missed
+    savingsMoved: 75000, // $750.00
+    kiasPayActual: 321541, // $3,215.41 (3 checks — good month)
+  },
+  {
+    month: "2026-02",
+    totalBilled: 371200,
+    totalPaid: 371200,
+    shortfall: -24700,   // surplus $247 — all paid
+    savingsMoved: 100000, // $1,000.00 — double deposit in Feb
+    kiasPayActual: 378673, // $3,786.73 (high check in Feb)
+  },
+  {
+    month: "2026-03",
+    totalBilled: 371200,
+    totalPaid: 371200,
+    shortfall: -8200,    // surplus $82
+    savingsMoved: 75000, // $750.00
+    kiasPayActual: 373791, // $3,737.91
+  },
+];
+
 // ─── Seed State ───────────────────────────────────────────────────────────────
 
 export const SEED_STATE: AppState = {
   bills: BILLS,
   income: INCOME,
-  snapshots: [],
+  snapshots: SNAPSHOTS,
   plans: PLANS,
   paycheck: PAYCHECK_WEEKS,
   checkLog: CHECK_LOG,
@@ -386,4 +426,7 @@ export const SEED_STATE: AppState = {
   checkEditWarningAcked: false,
   goals: GOALS,
   milestones: [],
+  checkingBalance: 0,
+  checkingBalanceDate: "",
+  bankAccounts: [],
 };

@@ -1,51 +1,79 @@
 .card {
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: 14px 16px;
-    border-left-width: 3px;
-    border-left-color: var(--color-border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Color variants — solid fills ────────────────────────────────────────── */
+
 .card_navy {
-    border-left-color: var(--color-navy);
+    background: var(--color-navy);
 }
 
 .card_olive {
-    border-left-color: var(--color-olive);
+    background: var(--color-olive-dark, #4a6a1a);
 }
 
 .card_rust {
-    border-left-color: var(--color-rust);
+    background: var(--color-rust);
 }
+
+.card_gold {
+    background: var(--color-gold, #d4a017);
+}
+
+/* ── Gold: navy text for contrast and brand consistency ──────────────────── */
+
+.card_gold .label       { color: var(--color-navy); opacity: 0.75; }
+.card_gold .value       { color: var(--color-navy); }
+.card_gold .subLabel    { color: var(--color-navy); opacity: 0.65; }
+.card_gold .progressFill { background: var(--color-navy); opacity: 0.3; }
+
+/* ── Label ───────────────────────────────────────────────────────────────── */
 
 .label {
     display: block;
     font-size: var(--text-xs);
     font-weight: 700;
-    color: var(--color-text-mid);
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.07em;
     margin-bottom: 4px;
 }
+
+/* ── Value ───────────────────────────────────────────────────────────────── */
 
 .value {
     display: block;
     font-family: var(--font-mono);
     font-size: var(--text-lg);
     font-weight: 500;
+    color: #fff;
 }
 
-.card_navy .value {
-    color: var(--color-navy);
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
+.progressTrack {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
 }
 
-.card_olive .value {
-    color: var(--color-olive);
-}
-
-.card_rust .value {
-    color: var(--color-rust);
+.progressFill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    background: rgba(255, 255, 255, 0.65);
 }
 
 /* ── Split sub-row layout ────────────────────────────────────────────────── */
@@ -60,7 +88,7 @@
 
 .subLabel {
     font-size: var(--text-xs);
-    color: var(--color-text-mid);
+    color: rgba(255, 255, 255, 0.65);
 }
 
 .subRow .value {

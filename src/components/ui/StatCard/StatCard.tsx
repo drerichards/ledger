@@ -7,9 +7,11 @@ type Props = {
   label: string;
   /** Primary value — omit when using subRows instead. */
   value?: string;
-  color?: "navy" | "olive" | "rust";
+  color?: "navy" | "olive" | "rust" | "gold";
   /** Renders a two-column breakdown instead of a single value. */
   subRows?: SubRow[];
+  /** Progress bar fill 0–100. Renders a thin bar below the value. */
+  progress?: number;
 };
 
 /**
@@ -21,6 +23,7 @@ export const StatCard = React.memo(function StatCard({
   value,
   color,
   subRows,
+  progress,
 }: Props) {
   const colorClass = color ? styles[`card_${color}`] : "";
 
@@ -37,6 +40,14 @@ export const StatCard = React.memo(function StatCard({
         ))
       ) : (
         <span className={styles.value}>{value}</span>
+      )}
+      {progress !== undefined && (
+        <div className={styles.progressTrack}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+          />
+        </div>
       )}
     </div>
   );

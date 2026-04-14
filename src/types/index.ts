@@ -122,6 +122,14 @@ export type KiasCheckEntry = {
   editHistory?: CheckEditHistoryEntry[];
 };
 
+/** One manually tracked bank or checking account. */
+export type BankAccount = {
+  id: string;
+  name: string;          // e.g. "Chase Checking", "BoA Savings"
+  balanceCents: number;  // current balance in cents
+  updatedDate: string;   // YYYY-MM-DD — last manual update
+};
+
 /** One intentional savings deposit. Powers the savings balance tracker. */
 export type SavingsEntry = {
   id: string; // unique identifier for edit/delete
@@ -214,4 +222,10 @@ export type AppState = {
   goals: SavingsGoal[];
   /** Achieved milestones. Derived from state changes and persisted as a feed. */
   milestones: Milestone[];
+  /** Checking account balance in cents. Entered manually by user. */
+  checkingBalance: number;
+  /** Date the checking balance was last updated. YYYY-MM-DD or "" if never set. */
+  checkingBalanceDate: string;
+  /** Individually named bank accounts tracked manually. When present, replaces the single checkingBalance on the Home tab. */
+  bankAccounts: BankAccount[];
 };

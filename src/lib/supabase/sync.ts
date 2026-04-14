@@ -284,6 +284,9 @@ export async function loadFromSupabase(): Promise<AppState | null> {
       checkEditWarningAcked: false,
       goals: [],
       milestones: [],
+      checkingBalance: 0,
+      checkingBalanceDate: "",
+      bankAccounts: [],
     };
   } catch (err) {
     if (process.env.NODE_ENV === "development")

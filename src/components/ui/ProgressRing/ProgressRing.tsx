@@ -69,6 +69,12 @@ export function ProgressRing({
           strokeDashoffset={offset}
           strokeLinecap="round"
           transform={`rotate(-90 ${cx} ${cx})`}
+          style={
+            {
+              "--arc-full": circumference,
+              "--arc-offset": offset,
+            } as React.CSSProperties
+          }
         />
       </svg>
       {(label || sublabel) && (

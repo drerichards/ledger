@@ -104,43 +104,50 @@ describe("AppShell — rendering", () => {
 
   it("renders the tab navigation", () => {
     render(<AppShell />);
-    expect(screen.getByRole("tab", { name: "Accounts" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Paycheck" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Affirm" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Savings" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Home" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Bills" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Income" })).toBeInTheDocument();
+    // SavingsTab (Goals content) also mounts inner Radix tabs named "Debt" and "Goals"
+    // AppShell outer nav tabs appear first in DOM order — use [0]
+    expect(screen.getAllByRole("tab", { name: "Debt" })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("tab", { name: "Goals" })[0]).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Snapshots" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Activity" })).toBeInTheDocument();
   });
 
-  it("renders the Accounts tab by default", () => {
+  it("renders the Home tab by default", () => {
     render(<AppShell />);
-    expect(screen.getByText("Bill Chart")).toBeInTheDocument();
+    // HomeTab renders the Checking balance card
+    expect(screen.getByText("Checking")).toBeInTheDocument();
   });
 });
 
 describe("AppShell — tab navigation", () => {
-  it("switches to Affirm tab on click", () => {
+  it("switches to Debt tab on click", () => {
     render(<AppShell />);
-    fireEvent.click(screen.getByRole("tab", { name: "Affirm" }));
-    expect(screen.getByText("Affirm Plans")).toBeInTheDocument();
+    // SavingsTab inner Radix tabs also have a "Debt" trigger — outer nav tab is [0]
+    fireEvent.click(screen.getAllByRole("tab", { name: "Debt" })[0]);
+    // AffirmTab empty state when no plans
+    expect(screen.getByText(/No installment plans yet/)).toBeInTheDocument();
   });
 
-  it("switches to Savings tab on click", () => {
+  it("switches to Goals tab on click", () => {
     render(<AppShell />);
-    fireEvent.click(screen.getByRole("tab", { name: "Savings" }));
-    expect(screen.getByText("Savings & Projections")).toBeInTheDocument();
+    // SavingsTab inner Radix tabs also have a "Goals" trigger — outer nav tab is [0]
+    fireEvent.click(screen.getAllByRole("tab", { name: "Goals" })[0]);
+    // GoalSetter renders "Savings Goals" heading
+    expect(screen.getByText("Savings Goals")).toBeInTheDocument();
   });
 
   it("switches to Activity tab on click", () => {
     render(<AppShell />);
     fireEvent.click(screen.getByRole("tab", { name: "Activity" }));
-    // "Activity" appears in both the tab button and the h2 heading — use heading role
-    expect(screen.getByRole("heading", { name: "Activity" })).toBeInTheDocument();
+    expect(screen.getByText(/Bill changes and financial milestones/)).toBeInTheDocument();
   });
 
-  it("switches to Paycheck tab on click", () => {
+  it("switches to Income tab on click", () => {
     render(<AppShell />);
-    fireEvent.click(screen.getByRole("tab", { name: "Paycheck" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Income" }));
     // PaycheckTab renders a heading with the current month
     expect(screen.getByRole("heading", { name: "April 2026" })).toBeInTheDocument();
   });
@@ -238,20 +245,20 @@ describe("AppShell — sign out", () => {
 });
 
 describe("AppShell — PaycheckTab cross-tab navigation", () => {
-  it("switches to Affirm tab via onGoToAffirm callback from PaycheckTab (line 108)", () => {
+  it("switches to Debt tab via onGoToAffirm callback from PaycheckTab (line 108)", () => {
     render(<AppShell />);
-    fireEvent.click(screen.getByRole("tab", { name: "Paycheck" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Income" }));
     // WeekAccordion renders Affirm/Savings buttons in ALL week rows (even collapsed);
     // 4 weeks × 1 button = 4 matches — take [0] (the first expanded week)
     fireEvent.click(screen.getAllByRole("button", { name: "Affirm" })[0]);
-    expect(screen.getByText("Affirm Plans")).toBeInTheDocument();
+    expect(screen.getByText(/No installment plans yet/)).toBeInTheDocument();
   });
 
-  it("switches to Savings tab via onGoToSavings callback from PaycheckTab (line 109)", () => {
+  it("switches to Goals tab via onGoToSavings callback from PaycheckTab (line 109)", () => {
     render(<AppShell />);
-    fireEvent.click(screen.getByRole("tab", { name: "Paycheck" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Income" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Savings" })[0]);
-    expect(screen.getByText("Savings & Projections")).toBeInTheDocument();
+    expect(screen.getByText("Savings Goals")).toBeInTheDocument();
   });
 });
 
@@ -278,8 +285,8 @@ describe("AppShell — notification callbacks", () => {
     render(<AppShell />);
     fireEvent.click(screen.getByRole("button", { name: /Notifications/ }));
     fireEvent.click(screen.getByRole("option", { name: /Amazon Card/ }));
-    // Affirm tab becomes active — heading confirms
-    expect(screen.getByText("Affirm Plans")).toBeInTheDocument();
+    // Debt (Affirm) tab becomes active — empty state confirms
+    expect(screen.getByText(/No installment plans yet/)).toBeInTheDocument();
 
     // Restore default so other tests aren't affected
     (useAffirmNotifications as jest.Mock).mockImplementation(() => []);

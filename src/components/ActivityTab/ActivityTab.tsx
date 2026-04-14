@@ -3,7 +3,7 @@
 import { useAppState } from "@/hooks/useAppState";
 import type { Bill, Milestone } from "@/types";
 import { fmtMoney } from "@/lib/money";
-import { getMilestoneLabel } from "@/lib/milestones";
+import { getMilestoneLabel, getUnseenMilestones } from "@/lib/milestones";
 import styles from "./ActivityTab.module.css";
 
 type AmountChangeEvent = {
@@ -87,15 +87,67 @@ const MILESTONE_EMOJI: Record<string, string> = {
 };
 
 export function ActivityTab() {
-  const { state } = useAppState();
+  const { state, markMilestoneSeen } = useAppState();
   const log = buildActivityLog(state.bills, state.milestones ?? []);
+  const unseenMilestones = getUnseenMilestones(state);
+
+  const handleClearAll = () => {
+    unseenMilestones.forEach((m) => markMilestoneSeen(m.id));
+  };
 
   return (
     <div className={styles.container}>
+      {/* ── Inbox ─────────────────────────────────────────────── */}
+      <section className={styles.inboxSection}>
+        <div className={styles.inboxHeader}>
+          <h2 className={styles.inboxTitle}>
+            Inbox
+            {unseenMilestones.length > 0 && (
+              <span className={styles.inboxCount}>{unseenMilestones.length}</span>
+            )}
+          </h2>
+          {unseenMilestones.length > 0 && (
+            <button
+              type="button"
+              className={styles.clearAllBtn}
+              onClick={handleClearAll}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
+        {unseenMilestones.length === 0 ? (
+          <p className={styles.inboxEmpty}>Your inbox is clear.</p>
+        ) : (
+          <ul className={styles.inboxList}>
+            {unseenMilestones.map((m) => (
+              <li key={m.id} className={styles.inboxRow}>
+                <span className={styles.inboxEmoji}>
+                  {MILESTONE_EMOJI[m.type] ?? "🏆"}
+                </span>
+                <div className={styles.inboxBody}>
+                  <span className={styles.inboxLabel}>{getMilestoneLabel(m)}</span>
+                  <span className={styles.inboxDate}>{fmtDate(m.achievedAt.slice(0, 10))}</span>
+                </div>
+                <button
+                  type="button"
+                  className={styles.clearBtn}
+                  aria-label="Clear message"
+                  onClick={() => markMilestoneSeen(m.id)}
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* ── Activity log ──────────────────────────────────────── */}
       <div className={styles.header}>
-        <h2 className={styles.heading}>Activity</h2>
         <p className={styles.subheading}>
-          A record of every bill amount change and financial milestone.
+          Bill changes and financial milestones, most recent first.
         </p>
       </div>
 
@@ -105,6 +157,7 @@ export function ActivityTab() {
         </p>
       ) : (
         <div className={styles.tableWrapper}>
+          <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -158,6 +211,7 @@ export function ActivityTab() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

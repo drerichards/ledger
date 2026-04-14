@@ -1,0 +1,21 @@
+.track {
+  position: relative;
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.fill {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 999px;
+}
+
+.olive  { background: var(--color-olive); }
+.rust   { background: var(--color-rust); }
+.gold   { background: var(--color-gold); }
+.navy   { background: var(--color-navy); }

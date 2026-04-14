@@ -1,0 +1,51 @@
+/* App-native tab pill nav — mirrors the mock's act-section-nav look */
+
+.list {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.trigger {
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-mid);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.trigger:hover {
+  background: var(--color-navy-tint);
+  color: var(--color-navy);
+  border-color: var(--color-navy);
+}
+
+.trigger[data-state="active"] {
+  background: var(--color-navy);
+  color: #fff;
+  border-color: var(--color-navy);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+.content {
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

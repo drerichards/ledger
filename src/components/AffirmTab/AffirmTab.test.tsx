@@ -21,19 +21,14 @@ function makePlan(overrides: Partial<InstallmentPlan> = {}): InstallmentPlan {
 const noop = () => {};
 
 describe("AffirmTab — empty state", () => {
-  it("renders the heading", () => {
-    render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
-    expect(screen.getByText("Affirm Plans")).toBeInTheDocument();
-  });
-
   it("shows empty state message when no plans exist", () => {
     render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
     expect(screen.getByText(/No installment plans yet/)).toBeInTheDocument();
   });
 
-  it("renders the + Add Plan button", () => {
+  it("renders the FAB add button", () => {
     render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
-    expect(screen.getByText("+ Add Plan")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add Plan/i })).toBeInTheDocument();
   });
 });
 
@@ -64,17 +59,16 @@ describe("AffirmTab — with plans", () => {
 });
 
 describe("AffirmTab — Add Plan modal", () => {
-  it("opens the dialog when + Add Plan is clicked", () => {
+  it("opens the dialog when FAB is clicked", () => {
     render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
-    fireEvent.click(screen.getByText("+ Add Plan"));
-    // AffirmForm renders inside Dialog — look for a form element
+    fireEvent.click(screen.getByRole("button", { name: /Add Plan/i }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
-  it("calls onAdd and closes dialog when form is saved (lines 118-119)", () => {
+  it("calls onAdd and closes dialog when form is saved", () => {
     const onAdd = jest.fn();
     render(<AffirmTab plans={[]} onAdd={onAdd} onDelete={noop} />);
-    fireEvent.click(screen.getByText("+ Add Plan"));
+    fireEvent.click(screen.getByRole("button", { name: /Add Plan/i }));
 
     fireEvent.change(screen.getByLabelText("Plan Label"), { target: { value: "Amazon" } });
     fireEvent.change(screen.getByLabelText("Monthly Payment ($)"), { target: { value: "50.00" } });
@@ -86,9 +80,9 @@ describe("AffirmTab — Add Plan modal", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("closes dialog when Cancel is clicked inside AffirmForm (line 121)", () => {
+  it("closes dialog when Cancel is clicked inside AffirmForm", () => {
     render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
-    fireEvent.click(screen.getByText("+ Add Plan"));
+    fireEvent.click(screen.getByRole("button", { name: /Add Plan/i }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));

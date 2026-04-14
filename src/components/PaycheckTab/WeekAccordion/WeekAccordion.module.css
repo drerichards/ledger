@@ -9,7 +9,10 @@
 }
 
 .weekExpanded {
-    /* expanded weeks keep white body to contrast the striped rows */
+    background: rgba(255, 255, 255, 0.65);
+    border-left: 4px solid var(--color-olive);
+    margin-left: -1px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
 }
 
 /* ── Header — always visible ──────────────────────────────────────────────── */
@@ -23,16 +26,16 @@
     user-select: none;
     gap: var(--space-4);
     transition: background 0.1s;
-    background: var(--color-white);
+    background: rgba(255, 255, 255, 0.35);
 }
 
 .header:hover {
-    background: var(--color-navy-tint);
+    background: rgba(255, 255, 255, 0.65);
 }
 
 .weekExpanded .header {
-    background: var(--color-navy-tint);
-    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-olive) 10%, rgba(255, 255, 255, 0.9));
+    border-bottom: 2px solid var(--color-olive);
 }
 
 /* ── Header left: chevron + date + RENT badge ─────────────────────────────── */
@@ -113,7 +116,7 @@
 
 .body {
     padding: 0;
-    background: var(--color-white);
+    background: transparent;
     overflow: hidden;
 }
 
@@ -133,11 +136,11 @@
 
 /* Alternating row stripes — aids eye-tracking across the list */
 .field:nth-child(even) {
-    background: var(--color-surface);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .field:nth-child(odd) {
-    background: var(--color-white);
+    background: transparent;
 }
 
 /* ── Derived group: Affirm + Savings grouped together ───────────────────────── */
@@ -150,7 +153,7 @@
 
 .derivedGroup {
     border-top: 2px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-cream) 50%, var(--color-white) 50%);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .derivedGroup .field {
@@ -361,7 +364,7 @@
 }
 
 .btnGhost {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.6);
     border: 1px solid var(--color-border);
     color: var(--color-text);
 }

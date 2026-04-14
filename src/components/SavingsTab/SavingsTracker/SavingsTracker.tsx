@@ -86,10 +86,12 @@ export function SavingsTracker({ log, onAdd, onUpdate, onDelete }: Props) {
 
   return (
     <div className={styles.panel}>
-      <h3 className={styles.panelTitle}>Savings Balance</h3>
+      <div className={styles.balanceHero}>
+        <h3 className={styles.panelTitle}>Savings Balance</h3>
+        <div className={styles.savingsTotal}>{fmtMoney(runningTotal)}</div>
+      </div>
 
-      <div className={styles.savingsTotal}>{fmtMoney(runningTotal)}</div>
-
+      <div className={styles.panelBody}>
       {/* Add new entry form */}
       <div className={styles.addForm}>
         <div className={styles.addRow}>
@@ -185,6 +187,7 @@ export function SavingsTracker({ log, onAdd, onUpdate, onDelete }: Props) {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

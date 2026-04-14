@@ -46,19 +46,6 @@ describe("GoalSetter", () => {
     expect(screen.getByText("Savings Goals")).toBeInTheDocument();
   });
 
-  it("shows current savings balance", () => {
-    render(
-      <GoalSetter
-        goals={[]}
-        savingsLog={SAVINGS_LOG}
-        onAdd={jest.fn()}
-        onDelete={jest.fn()}
-      />,
-    );
-    expect(screen.getByText(/Current balance/)).toBeInTheDocument();
-    expect(screen.getByText("$500.00")).toBeInTheDocument();
-  });
-
   it("shows empty state when no goals", () => {
     render(
       <GoalSetter
@@ -69,7 +56,7 @@ describe("GoalSetter", () => {
       />,
     );
     expect(
-      screen.getByText(/No goals set yet/),
+      screen.getByText(/No goals yet/),
     ).toBeInTheDocument();
   });
 
@@ -179,7 +166,7 @@ describe("GoalSetter", () => {
     expect(screen.getByText("Emergency Fund")).toBeInTheDocument();
   });
 
-  it("renders achieved badge when goal is met", () => {
+  it("renders achieved ETA label when goal is met", () => {
     render(
       <GoalSetter
         goals={[GOAL_ACHIEVED]}
@@ -188,7 +175,7 @@ describe("GoalSetter", () => {
         onDelete={jest.fn()}
       />,
     );
-    expect(screen.getByText("Achieved")).toBeInTheDocument();
+    expect(screen.getByText(/Goal reached/)).toBeInTheDocument();
   });
 
   it("renders delete button for each goal", () => {
@@ -221,7 +208,7 @@ describe("GoalSetter", () => {
     expect(onDelete).toHaveBeenCalledWith("g1");
   });
 
-  it("renders target info in goal card", () => {
+  it("renders saved/target amounts in goal card", () => {
     render(
       <GoalSetter
         goals={[GOAL_ON_TRACK]}
@@ -230,11 +217,13 @@ describe("GoalSetter", () => {
         onDelete={jest.fn()}
       />,
     );
-    expect(screen.getByText(/\$1,000\.00 by December 2026/)).toBeInTheDocument();
+    // GoalCard renders: "<saved> saved · <target> target"
+    expect(screen.getByText(/\$500\.00 saved/)).toBeInTheDocument();
+    expect(screen.getByText(/\$1,000\.00 target/)).toBeInTheDocument();
   });
 
-  it("renders progress ring inside goal card", () => {
-    const { container } = render(
+  it("renders progress bar inside goal card", () => {
+    render(
       <GoalSetter
         goals={[GOAL_ON_TRACK]}
         savingsLog={SAVINGS_LOG}
@@ -242,7 +231,7 @@ describe("GoalSetter", () => {
         onDelete={jest.fn()}
       />,
     );
-    expect(container.querySelector("svg")).toBeInTheDocument();
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
   });
 
   it("hides Add Goal button while form is open", () => {

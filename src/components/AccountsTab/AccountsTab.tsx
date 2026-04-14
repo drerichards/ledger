@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type {
   Bill,
   KiasCheckEntry,
@@ -15,6 +15,7 @@ import { currentMonth, advanceMonth, fmtMonthFull } from "@/lib/dates";
 import { useBillChartState } from "@/hooks/useBillChartState";
 import { StatCard } from "@/components/ui/StatCard";
 import { Modal } from "@/components/ui/Modal";
+import { DateToggle } from "@/components/ui/DateToggle";
 import { BillGroup } from "./BillGroup";
 import { BillForm } from "./BillForm";
 import { IncomePanel } from "./IncomePanel";
@@ -66,8 +67,22 @@ export function AccountsTab({
     from: string;
     to: string;
   } | null>(null);
-  type FocusedGroup = "split" | "kias_pay" | "other_income";
-  const [focusedGroup, setFocusedGroup] = useState<FocusedGroup>("split");
+  const [kiasCollapsed, setKiasCollapsed] = useState(false);
+  const [otherCollapsed, setOtherCollapsed] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [showIncome, setShowIncome] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMore) return;
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setShowMore(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMore]);
 
   // All derived values live in the domain hook — no inline computation here.
   const {
@@ -142,51 +157,55 @@ export function AccountsTab({
     <div className={styles.container}>
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <h2 className={styles.heading}>Bill Chart</h2>
-          <div className={styles.monthNav}>
-            <button
-              className={styles.navBtn}
-              onClick={() => navigateMonth(-1)}
-              aria-label="Previous month"
-            >
-              ‹
-            </button>
-            <button
-              className={styles.navBtn}
-              onClick={() => setViewMonth(currentMonth())}
-            >
-              Today
-            </button>
-            <button
-              className={styles.navBtn}
-              onClick={() => navigateMonth(1)}
-              aria-label="Next month"
-            >
-              ›
-            </button>
-            <span className={styles.monthLabel}>{fmtMonthFull(viewMonth)}</span>
-          </div>
-        </div>
+        <DateToggle
+          label={fmtMonthFull(viewMonth)}
+          onPrev={() => navigateMonth(-1)}
+          onNext={() => navigateMonth(1)}
+          onToday={() => setViewMonth(currentMonth())}
+          prevAriaLabel="Previous month"
+          nextAriaLabel="Next month"
+        />
+
         <div className={styles.toolbarActions}>
           <button
-            className={styles.btnGhost}
-            onClick={() => exportBillsCSV(visibleBills)}
-          >
-            Export CSV
-          </button>
-          <button
-            className={styles.btnGhost}
-            onClick={() => setShowSnapshot(true)}
-          >
-            Month Summary
-          </button>
-          <button
-            className={styles.btnPrimary}
+            className={styles.toolBtn}
             onClick={() => setShowForm(true)}
           >
             + Add Bill
           </button>
+
+        {/* More menu */}
+        <div className={styles.moreWrapper} ref={moreRef}>
+          <button
+            className={`${styles.toolBtn} ${showMore ? styles.toolBtnActive : ""}`}
+            onClick={() => setShowMore((v) => !v)}
+            aria-expanded={showMore}
+            aria-haspopup="menu"
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
+              <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+            </svg>
+            More
+          </button>
+          {showMore && (
+            <div className={styles.moreDropdown} role="menu">
+              <button
+                className={styles.moreItem}
+                role="menuitem"
+                onClick={() => { exportBillsCSV(visibleBills); setShowMore(false); }}
+              >
+                Export CSV
+              </button>
+              <button
+                className={styles.moreItem}
+                role="menuitem"
+                onClick={() => { setShowSnapshot(true); setShowMore(false); }}
+              >
+                Month Summary
+              </button>
+            </div>
+          )}
+        </div>
         </div>
       </div>
 
@@ -214,77 +233,104 @@ export function AccountsTab({
         </div>
       )}
 
-      {/* ── Rail + Main layout ────────────────────────────────────── */}
-      <div className={styles.tabLayout}>
+      {/* ── Stat row ─────────────────────────────────────────────── */}
+      {(() => {
+        const totalCents = kiasBillsCents + otherBillsCents;
+        const paidPct   = totalCents > 0 ? (paidCents   / totalCents) * 100 : 0;
+        const unpaidPct = totalCents > 0 ? (unpaidCents / totalCents) * 100 : 0;
+        return (
+          <div className={styles.statsRow}>
+            <StatCard
+              label="Monthly Total"
+              color="navy"
+              subRows={[
+                { label: "From Kia's Pay",     value: fmtMoney(kiasBillsCents) },
+                { label: "From Other Income",  value: fmtMoney(otherBillsCents) },
+              ]}
+              progress={100}
+            />
+            <StatCard
+              label="Paid"
+              value={fmtMoney(paidCents)}
+              color="olive"
+              progress={paidPct}
+            />
+            <StatCard
+              label="Unpaid"
+              value={fmtMoney(unpaidCents)}
+              color="rust"
+              progress={unpaidPct}
+            />
+            <StatCard
+              label={shortfall > 0 ? "Short" : "Est. Surplus"}
+              value={fmtMoney(Math.abs(shortfall))}
+              color="gold"
+            />
+          </div>
+        );
+      })()}
 
-        {/* Left rail — KPI cards + income summary */}
-        <div className={styles.leftRail}>
-          <StatCard
-            label="Monthly Total"
-            color="navy"
-            subRows={[
-              { label: "From Kia's Pay", value: fmtMoney(kiasBillsCents) },
-              { label: "From Other Income", value: fmtMoney(otherBillsCents) },
-            ]}
-          />
-          <StatCard label="Paid"   value={fmtMoney(paidCents)}   color="olive" />
-          <StatCard label="Unpaid" value={fmtMoney(unpaidCents)} color="rust" />
-          <StatCard
-            label={shortfall > 0 ? "Short" : "Surplus"}
-            value={fmtMoney(Math.abs(shortfall))}
-            color={shortfall > 0 ? "rust" : "olive"}
-          />
-          <div className={styles.railDivider} />
-          <IncomePanel
-            month={viewMonth}
-            income={thisMonthIncome}
-            kiasPayCents={kiasPayCents}
-            totalBillsCents={otherBillsCents}
-            onUpdate={onUpdateIncome}
-            compact
-          />
-        </div>
+      {/* ── Income & Reconciliation (collapsible) ────────────────── */}
+      <div className={styles.incomeAccordion}>
+        <button
+          className={styles.incomeToggle}
+          onClick={() => setShowIncome((v) => !v)}
+          aria-expanded={showIncome}
+        >
+          <span>Income &amp; Reconciliation</span>
+          <span className={styles.incomeToggleIcon}>{showIncome ? "▲" : "▼"}</span>
+        </button>
+        {showIncome && (
+          <div className={styles.incomePanelWrap}>
+            <IncomePanel
+              month={viewMonth}
+              income={thisMonthIncome}
+              kiasPayCents={kiasPayCents}
+              totalBillsCents={otherBillsCents}
+              onUpdate={onUpdateIncome}
+            />
+          </div>
+        )}
+      </div>
 
-        {/* Right main — bill groups stacked */}
-        <div className={styles.rightMain}>
-          <BillGroup
-            label="From Kia's Pay"
-            bills={kiasBills}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            isCollapsed={focusedGroup === "other_income"}
-            isFocused={focusedGroup === "kias_pay"}
-            onToggle={() => setFocusedGroup((f) => {
-              if (f === "split") return "other_income";   // collapse kias → open other
-              if (f === "kias_pay") return "split";       // un-focus → restore split
-              return f;                                    // already collapsed — no-op
-            })}
-            onExpand={() => setFocusedGroup((f) => f === "kias_pay" ? "split" : "kias_pay")}
-            onSort={handleSort}
-            onEdit={handleEdit}
-            onDelete={onDelete}
-            onTogglePaid={onTogglePaid}
-          />
-          <BillGroup
-            label="From Other Income"
-            bills={otherBills}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            isCollapsed={focusedGroup === "kias_pay"}
-            isFocused={focusedGroup === "other_income"}
-            onToggle={() => setFocusedGroup((f) => {
-              if (f === "split") return "kias_pay";       // collapse other → open kias
-              if (f === "other_income") return "split";   // un-focus → restore split
-              return f;                                    // already collapsed — no-op
-            })}
-            onExpand={() => setFocusedGroup((f) => f === "other_income" ? "split" : "other_income")}
-            onSort={handleSort}
-            onEdit={handleEdit}
-            onDelete={onDelete}
-            onTogglePaid={onTogglePaid}
-          />
-        </div>
-
+      {/* ── Bill groups — full width ──────────────────────────────── */}
+      <div className={styles.billGroups}>
+        <BillGroup
+          label="From Kia's Pay"
+          variant="navy"
+          footerLabel="Subtotal"
+          bills={kiasBills}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          isCollapsed={kiasCollapsed}
+          onToggle={() => {
+            // Never allow both groups collapsed simultaneously
+            if (!kiasCollapsed && otherCollapsed) return;
+            setKiasCollapsed((c) => !c);
+          }}
+          onSort={handleSort}
+          onEdit={handleEdit}
+          onDelete={onDelete}
+          onTogglePaid={onTogglePaid}
+        />
+        <BillGroup
+          label="From Other Income"
+          variant="olive"
+          footerLabel="Affirm Total"
+          bills={otherBills}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          isCollapsed={otherCollapsed}
+          onToggle={() => {
+            // Never allow both groups collapsed simultaneously
+            if (!otherCollapsed && kiasCollapsed) return;
+            setOtherCollapsed((c) => !c);
+          }}
+          onSort={handleSort}
+          onEdit={handleEdit}
+          onDelete={onDelete}
+          onTogglePaid={onTogglePaid}
+        />
       </div>
 
       {/* ── Month Snapshot Modal ──────────────────────────────────── */}
@@ -314,6 +360,7 @@ export function AccountsTab({
           onClose={handleFormClose}
         />
       )}
+
     </div>
   );
 }
