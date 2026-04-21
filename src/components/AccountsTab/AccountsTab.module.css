@@ -3,21 +3,26 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
+    gap: var(--space-4);
     position: relative;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: var(--space-4);
+    box-sizing: border-box;
 }
 
 /* ── Stat row ────────────────────────────────────────────────────────────── */
 
 .statsRow {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--space-3);
-    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 
 .statsRow > * {
-    flex: 1;
-    min-width: 140px;
+    min-width: 0;
 }
 
 /* ── Income accordion ────────────────────────────────────────────────────── */
@@ -60,8 +65,9 @@
 }
 
 .incomePanelWrap {
-    padding: 0 var(--space-4) var(--space-4);
-    border-top: 1px solid var(--glass-border);
+    height: 100%;
+    min-height: 0;
+    width: 100%;
 }
 
 /* ── Bill groups ─────────────────────────────────────────────────────────── */
@@ -69,9 +75,13 @@
 .billGroups {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    overflow: hidden;
+    gap: var(--space-2);
+    overflow-x: hidden;
+    overflow-y: hidden;
     min-height: 0;
+    padding-left: 0;
+    padding-bottom: var(--space-2);
+    width: 100%;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
@@ -80,76 +90,43 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-/* ── More menu ───────────────────────────────────────────────────────────── */
-
-.moreWrapper {
-    position: relative;
-    z-index: 50;
+    flex-shrink: 0;
 }
 
 .toolBtn {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: var(--text-xs);
     font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--color-navy);
+    border: 1px solid var(--action-secondary-border);
+    border-radius: 12px;
+    background: var(--action-secondary-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--action-secondary-fg);
     cursor: pointer;
     font-family: var(--font-body);
-    transition: background 0.12s;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    transition: background 0.12s, border-color 0.12s;
     white-space: nowrap;
 }
 
 .toolBtn:hover {
-    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(255, 255, 255, 0.72);
 }
 
-.toolBtnActive {
-    background: rgba(255, 255, 255, 0.82);
+.toolBtnPrimary {
+    background: var(--action-primary-bg);
+    border-color: color-mix(in srgb, var(--action-primary-bg) 78%, white);
+    color: var(--color-white);
+    box-shadow: 0 10px 24px rgba(152, 73, 43, 0.18);
 }
 
-.moreDropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 4px;
-    min-width: 160px;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: var(--radius-md);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    overflow: hidden;
-}
-
-.moreItem {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 10px 14px;
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--color-navy);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    text-align: left;
-    transition: background 0.1s;
-}
-
-.moreItem:hover {
-    background: rgba(255, 255, 255, 0.6);
+.toolBtnPrimary:hover {
+    background: var(--action-primary-bg-hover);
+    border-color: color-mix(in srgb, var(--action-primary-bg-hover) 84%, white);
 }
 
 /* ── FAB ─────────────────────────────────────────────────────────────────── */
@@ -193,6 +170,7 @@
     background: var(--color-rust-light);
     border: 1px solid var(--color-rust);
     border-radius: var(--radius-md);
+    flex-shrink: 0;
 }
 
 .rolloverMsg {
@@ -217,6 +195,33 @@
 .toolbarActions {
     display: flex;
     gap: var(--space-2);
+    align-items: center;
+    position: relative;
+    z-index: 120;
+}
+
+.bento {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: var(--space-3);
+    min-height: 0;
+    flex: 1;
+    align-items: stretch;
+    overflow: hidden;
+    padding-bottom: var(--space-3);
+}
+
+.leftRail {
+    min-height: 0;
+    display: flex;
+    padding-right: 0;
+    margin-right: 0;
+}
+
+.leftRail,
+.billGroups {
+    height: auto;
+    min-height: 0;
 }
 
 /* ── Groups ──────────────────────────────────────────────────────────────── */
@@ -454,9 +459,10 @@
     border-radius: var(--radius-sm);
     border: none;
     cursor: pointer;
-    background: var(--color-rust);
+    background: var(--action-primary-bg);
     color: var(--color-white);
     font-family: var(--font-body);
+    box-shadow: 0 10px 24px rgba(152, 73, 43, 0.18);
 }
 
 .btnGhost {
@@ -466,18 +472,18 @@
     font-size: var(--text-sm);
     font-weight: 600;
     border-radius: var(--radius-sm);
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    border: 1px solid var(--action-secondary-border);
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.6);
+    background: var(--action-secondary-bg);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    color: var(--color-navy);
+    color: var(--action-secondary-fg);
     font-family: var(--font-body);
     transition: background 0.12s;
 }
 
 .btnGhost:hover {
-    background: rgba(255, 255, 255, 0.82);
+    background: var(--action-secondary-bg-hover);
 }
 
 .btnDanger {
@@ -492,4 +498,22 @@
     background: color-mix(in srgb, var(--color-rust) 8%, rgba(255, 255, 255, 0.6));
     color: var(--color-rust);
     font-family: var(--font-body);
+}
+
+.snapshotDialog {
+    max-width: 640px;
+}
+
+@media (max-width: 1180px) {
+    .statsRow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bento {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .leftRail {
+        max-height: 320px;
+    }
 }

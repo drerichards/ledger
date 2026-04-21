@@ -41,16 +41,16 @@ export function usePaycheckTabState(
         .sort((a, b) => a.weekOf.localeCompare(b.weekOf));
 
       const savingsByWeek = new Map<string, number>();
-      savingsLog
-        .filter((e) => {
-          const dateStr = e.date ?? e.weekOf ?? "";
-          return dateStr.startsWith(month);
-        })
-        .forEach((e) => {
-          const dateStr = e.date ?? e.weekOf ?? "";
-          const monday = mondayOf(dateStr);
-          savingsByWeek.set(monday, (savingsByWeek.get(monday) ?? 0) + e.amount);
-        });
+      // Single-pass: compute dateStr once per entry, early-return if out of month.
+      // (Previous filter+forEach split computed dateStr twice and left an
+      // unreachable `?? ""` branch in the forEach — the filter already
+      // guaranteed dateStr was non-empty by that point.)
+      savingsLog.forEach((e) => {
+        const dateStr = e.date ?? e.weekOf ?? "";
+        if (!dateStr.startsWith(month)) return;
+        const monday = mondayOf(dateStr);
+        savingsByWeek.set(monday, (savingsByWeek.get(monday) ?? 0) + e.amount);
+      });
 
       return {
         month,
@@ -77,29 +77,38 @@ export function usePaycheckTabState(
 export function getVisibleMonths(
   from: string,
   scope: PaycheckViewScope,
+  earliestMonth?: string,
 ): string[] {
   const year = from.slice(0, 4);
   const month = parseInt(from.slice(5, 7), 10); // 1-12
 
-  switch (scope) {
-    case "weekly":
-    case "monthly":
-      return [from];
-    case "quarterly": {
-      // Q1: 1-3, Q2: 4-6, Q3: 7-9, Q4: 10-12
-      const quarterStart = Math.floor((month - 1) / 3) * 3 + 1;
-      return [
-        `${year}-${String(quarterStart).padStart(2, "0")}`,
-        `${year}-${String(quarterStart + 1).padStart(2, "0")}`,
-        `${year}-${String(quarterStart + 2).padStart(2, "0")}`,
-      ];
+  const months = (() => {
+    switch (scope) {
+      case "weekly":
+      case "monthly":
+        return [from];
+      case "quarterly": {
+        // Q1: 1-3, Q2: 4-6, Q3: 7-9, Q4: 10-12
+        const quarterStart = Math.floor((month - 1) / 3) * 3 + 1;
+        return [
+          `${year}-${String(quarterStart).padStart(2, "0")}`,
+          `${year}-${String(quarterStart + 1).padStart(2, "0")}`,
+          `${year}-${String(quarterStart + 2).padStart(2, "0")}`,
+        ];
+      }
+      case "yearly":
+        return Array.from(
+          { length: 12 },
+          (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`,
+        );
     }
-    case "yearly":
-      return Array.from(
-        { length: 12 },
-        (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`,
-      );
+  })();
+
+  if (!earliestMonth) {
+    return months;
   }
+
+  return months.filter((monthKey) => monthKey >= earliestMonth);
 }
 
 export function emptyWeek(

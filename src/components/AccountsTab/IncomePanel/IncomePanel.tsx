@@ -10,7 +10,8 @@ type Props = {
   month: string;
   income: MonthlyIncome | undefined;
   kiasPayCents: number;
-  totalBillsCents: number;
+  totalExpenseCents: number;
+  weeksEntered?: number;
   onUpdate: (income: MonthlyIncome) => void;
   /** Stacks edit form fields vertically — use when rendered in a narrow rail. */
   compact?: boolean;
@@ -32,7 +33,8 @@ export function IncomePanel({
   month,
   income,
   kiasPayCents,
-  totalBillsCents,
+  totalExpenseCents,
+  weeksEntered,
   onUpdate,
   compact = false,
 }: Props) {
@@ -52,13 +54,18 @@ export function IncomePanel({
     fieldCents(income, "social_security"),
   ]);
 
-  const shortfall = calcShortfall(totalBillsCents, otherIncomeCents);
+  const totalIncomeCents = kiasPayCents + otherIncomeCents;
+  const shortfall = calcShortfall(totalExpenseCents, totalIncomeCents);
   const isShort = shortfall > 0;
+  const statusTitle = isShort ? "Needs coverage" : "Covered this month";
+  const statusLine = isShort
+    ? `${fmtMoney(shortfall)} still needs to be covered`
+    : `${fmtMoney(Math.abs(shortfall))} left after bills`;
 
   const handleSave = () => {
     const updated: MonthlyIncome = {
       month,
-      kias_pay: 0,
+      kias_pay: kiasPayCents,
       military_pay: toCents(draft.military_pay),
       retirement: toCents(draft.retirement),
       social_security: toCents(draft.social_security),
@@ -109,8 +116,8 @@ export function IncomePanel({
         <div className={styles.reconciliation}>
           <div className={styles.reconciliationRows}>
             <div className={styles.reconRow}>
-              <span className={styles.reconLabel}>Total Bills</span>
-              <span className={styles.reconValue}>{fmtMoney(totalBillsCents)}</span>
+              <span className={styles.reconLabel}>Total Obligations</span>
+              <span className={styles.reconValue}>{fmtMoney(totalExpenseCents)}</span>
             </div>
             {kiasPayCents > 0 && (
               <div className={styles.reconRow}>
@@ -131,8 +138,20 @@ export function IncomePanel({
                 </div>
               ) : null;
             })}
+            {typeof weeksEntered === "number" && (
+              <div className={styles.reconRow}>
+                <span className={styles.reconLabel}>Weeks Entered</span>
+                <span className={styles.reconValue}>{weeksEntered}</span>
+              </div>
+            )}
           </div>
           <div className={styles.reconDivider} />
+          <div className={styles.reconRow}>
+            <span className={styles.reconTotalLabel}>Total Income</span>
+            <span className={`${styles.reconTotalValue} ${styles.reconSurplus}`}>
+              {fmtMoney(totalIncomeCents)}
+            </span>
+          </div>
           <div className={styles.reconRow}>
             <span className={styles.reconTotalLabel}>
               {isShort ? "Short" : "Surplus"}
@@ -144,6 +163,18 @@ export function IncomePanel({
             >
               {fmtMoney(Math.abs(shortfall))}
             </span>
+          </div>
+          <div className={`${styles.statusCard} ${isShort ? styles.statusCardWarn : styles.statusCardOk}`}>
+            <p className={styles.statusEyebrow}>{statusTitle}</p>
+            <p className={styles.statusHeadline}>{statusLine}</p>
+            <div className={styles.statusStats}>
+              <span className={styles.statusStat}>
+                <strong>{weeksEntered ?? 0}</strong> weeks entered
+              </span>
+              <span className={styles.statusStat}>
+                <strong>{fmtMoney(kiasPayCents)}</strong> from Kia&apos;s pay
+              </span>
+            </div>
           </div>
         </div>
       )}

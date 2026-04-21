@@ -9,6 +9,7 @@ function makePlan(overrides: Partial<InstallmentPlan> = {}): InstallmentPlan {
     mc: 5000,
     start: "2026-01",
     end: "2026-06",
+    dueDay: 15,
     ...overrides,
   };
 }
@@ -17,11 +18,18 @@ function renderRow(
   plan = makePlan(),
   months = ["2026-04", "2026-05", "2026-06"],
   totalOwed = 15000,
+  onEdit = jest.fn(),
   onDelete = jest.fn(),
 ) {
   return render(
     <table><tbody>
-      <PlanRow plan={plan} months={months} totalOwed={totalOwed} onDelete={onDelete} />
+      <PlanRow
+        plan={plan}
+        months={months}
+        totalOwed={totalOwed}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </tbody></table>,
   );
 }
@@ -34,7 +42,7 @@ describe("PlanRow — rendering", () => {
 
   it("renders the monthly payment rate", () => {
     renderRow();
-    expect(screen.getByText("$50.00/mo")).toBeInTheDocument();
+    expect(screen.getByText("$50.00/mo · due 15")).toBeInTheDocument();
   });
 
   it("renders the total owed", () => {

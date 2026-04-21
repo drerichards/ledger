@@ -234,6 +234,41 @@ describe("GoalSetter", () => {
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
   });
 
+  it("renders the 'behind' status variant when the goal is under-progressed", () => {
+    // GOAL_ON_TRACK with an empty savings log → 0% progress vs ~27% elapsed → status: "behind"
+    const { container } = render(
+      <GoalSetter
+        goals={[GOAL_ON_TRACK]}
+        savingsLog={[]}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+    // Behind status paints the pct badge with statusBehind + the progress bar with the rust variant.
+    expect(container.querySelector('[class*="statusBehind"]')).not.toBeNull();
+    expect(container.querySelector('[class*="rust"]')).not.toBeNull();
+  });
+
+  it("updates local contribution slider value on arrow-key drag (line 96 onValueChange callback)", () => {
+    render(
+      <GoalSetter
+        goals={[GOAL_ON_TRACK]}
+        savingsLog={SAVINGS_LOG}
+        onAdd={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+    // Initial ETA text reflects the default contrib of $50/mo ($50 is the slider floor).
+    const beforeEta = screen.getByText(/At .* → funded in/);
+    const initialText = beforeEta.textContent ?? "";
+    // Radix Slider thumb carries [role="slider"]; ArrowRight invokes onValueChange.
+    const thumb = screen.getByRole("slider");
+    fireEvent.keyDown(thumb, { key: "ArrowRight" });
+    // The ETA line re-renders — contrib stepped up by `step`, so the dollar label changes.
+    const afterEta = screen.getByText(/At .* → funded in/);
+    expect(afterEta.textContent).not.toBe(initialText);
+  });
+
   it("hides Add Goal button while form is open", () => {
     render(
       <GoalSetter

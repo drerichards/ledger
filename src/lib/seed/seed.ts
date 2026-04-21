@@ -213,31 +213,33 @@ const plan = (
   dollars: number,
   start: string,
   end: string,
+  dueDay: number,
 ): InstallmentPlan => ({
   id: generateId(),
   label,
   mc: Math.round(dollars * 100),
   start,
   end,
+  dueDay,
 });
 
 const PLANS: InstallmentPlan[] = [
-  plan("Affirm — Due 4th", 32.27, "2026-04", "2026-08"),
-  plan("Affirm — Due 6th", 25.96, "2026-04", "2026-07"),
-  plan("Affirm — Due 6th", 36.98, "2026-04", "2026-04"), // single month
-  plan("Affirm — Due 9th", 21.08, "2026-04", "2027-01"),
-  plan("Affirm — Due 9th", 15.48, "2026-04", "2027-01"),
-  plan("Affirm — Due 11th", 76.0, "2026-04", "2026-07"),
-  plan("Affirm — Due 14th", 15.35, "2026-04", "2026-06"),
-  plan("Affirm — Due 15th", 9.7, "2026-04", "2026-09"),
-  plan("Affirm — Due 17th", 11.21, "2026-04", "2026-08"),
-  plan("Affirm — Due 20th", 28.96, "2026-04", "2027-01"),
-  plan("Affirm — Due 21st", 10.7, "2026-04", "2026-06"),
-  plan("Affirm — Due 24th", 15.52, "2026-04", "2026-07"),
-  plan("Affirm — Due 25th", 13.08, "2026-04", "2026-07"),
-  plan("Affirm — Due 26th", 13.96, "2026-04", "2026-07"),
-  plan("Affirm — Due 27th", 15.81, "2026-04", "2026-08"),
-  plan("Affirm — Due 28th", 34.46, "2026-04", "2026-06"),
+  plan("Affirm — Due 4th", 32.27, "2026-04", "2026-08", 4),
+  plan("Affirm — Due 6th", 25.96, "2026-04", "2026-07", 6),
+  plan("Affirm — Due 6th", 36.98, "2026-04", "2026-04", 6), // single month
+  plan("Affirm — Due 9th", 21.08, "2026-04", "2027-01", 9),
+  plan("Affirm — Due 9th", 15.48, "2026-04", "2027-01", 9),
+  plan("Affirm — Due 11th", 76.0, "2026-04", "2026-07", 11),
+  plan("Affirm — Due 14th", 15.35, "2026-04", "2026-06", 14),
+  plan("Affirm — Due 15th", 9.7, "2026-04", "2026-09", 15),
+  plan("Affirm — Due 17th", 11.21, "2026-04", "2026-08", 17),
+  plan("Affirm — Due 20th", 28.96, "2026-04", "2027-01", 20),
+  plan("Affirm — Due 21st", 10.7, "2026-04", "2026-06", 21),
+  plan("Affirm — Due 24th", 15.52, "2026-04", "2026-07", 24),
+  plan("Affirm — Due 25th", 13.08, "2026-04", "2026-07", 25),
+  plan("Affirm — Due 26th", 13.96, "2026-04", "2026-07", 26),
+  plan("Affirm — Due 27th", 15.81, "2026-04", "2026-08", 27),
+  plan("Affirm — Due 28th", 34.46, "2026-04", "2026-06", 28),
 ];
 
 // ─── Monthly Income — April 2026 ─────────────────────────────────────────────

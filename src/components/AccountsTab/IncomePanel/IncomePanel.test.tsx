@@ -13,7 +13,8 @@ const DEFAULT_INCOME: MonthlyIncome = {
 function setup(overrides: {
   income?: MonthlyIncome;
   kiasPayCents?: number;
-  totalBillsCents?: number;
+  totalExpenseCents?: number;
+  weeksEntered?: number;
   onUpdate?: jest.Mock;
 } = {}) {
   const onUpdate = overrides.onUpdate ?? jest.fn();
@@ -22,7 +23,8 @@ function setup(overrides: {
       month="2026-04"
       income={overrides.income ?? DEFAULT_INCOME}
       kiasPayCents={overrides.kiasPayCents ?? 0}
-      totalBillsCents={overrides.totalBillsCents ?? 0}
+      totalExpenseCents={overrides.totalExpenseCents ?? 0}
+      weeksEntered={overrides.weeksEntered ?? 0}
       onUpdate={onUpdate}
     />
   );
@@ -33,25 +35,25 @@ describe("IncomePanel", () => {
   describe("reconciliation display", () => {
     it("shows 'Short' when total bills exceed total income", () => {
       // bills: $3000 · income: $2351.27 (defaults) → short
-      setup({ totalBillsCents: 300000 });
+      setup({ totalExpenseCents: 300000 });
       expect(screen.getByText("Short")).toBeInTheDocument();
     });
 
     it("shows 'Surplus' when total income exceeds total bills", () => {
       // bills: $1 · income: $2351.27 (defaults) → surplus
-      setup({ totalBillsCents: 100 });
+      setup({ totalExpenseCents: 100 });
       expect(screen.getByText("Surplus")).toBeInTheDocument();
     });
 
     it("shows 'Surplus' when bills equal income (no shortfall)", () => {
       // Total default income = 124190 + 33447 + 77500 = 235137 cents
-      setup({ totalBillsCents: 235137 });
+      setup({ totalExpenseCents: 235137 });
       // calcShortfall returns 0 → isShort is false → "Surplus"
       expect(screen.getByText("Surplus")).toBeInTheDocument();
     });
 
     it("renders the total bills amount", () => {
-      setup({ totalBillsCents: 259863 }); // $2,598.63
+      setup({ totalExpenseCents: 259863 }); // $2,598.63
       expect(screen.getByText("$2,598.63")).toBeInTheDocument();
     });
 
@@ -124,7 +126,8 @@ describe("IncomePanel", () => {
           kiasPayCents={0}
           // Default income total = 124190 + 33447 + 77500 = 235137 cents ($2,351.37)
           // Bills at $3000 → short
-          totalBillsCents={300000}
+          totalExpenseCents={300000}
+          weeksEntered={0}
           onUpdate={jest.fn()}
         />
       );

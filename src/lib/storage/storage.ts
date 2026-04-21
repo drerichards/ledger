@@ -2,6 +2,7 @@ import type { AppState } from "@/types";
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 import { SEED_STATE } from "@/lib/seed";
 import { currentMonth } from "@/lib/dates";
+import { getPlanDueDay } from "@/lib/household/household";
 
 const STORAGE_KEY = "ledger-v1";
 
@@ -61,7 +62,14 @@ export function loadState(): AppState {
       // If stored state has no snapshots, backfill from seed so the Snapshots tab is testable
       snapshots: (parsed.snapshots ?? []).length > 0 ? parsed.snapshots : SEED_STATE.snapshots,
       // If stored state has no plans, backfill from seed
-      plans: (parsed.plans ?? []).length > 0 ? parsed.plans : SEED_STATE.plans,
+      plans:
+        (parsed.plans ?? []).length > 0
+          ? (parsed.plans ?? []).map((plan) =>
+              typeof plan.dueDay === "number"
+                ? plan
+                : { ...plan, dueDay: getPlanDueDay(plan) },
+            )
+          : SEED_STATE.plans,
       // Stamp missing extra field on older paycheck weeks
       paycheck: (parsed.paycheck ?? []).map((w) =>
         w.extra ? w : { ...w, extra: {} },

@@ -22,9 +22,15 @@ type Props = {
   columns: LedgerColumn[];
   sections: LedgerSection[];
   emptyMessage?: string;
+  showSectionLabels?: boolean;
 };
 
-export function LedgerTable({ columns, sections, emptyMessage = "No data." }: Props) {
+export function LedgerTable({
+  columns,
+  sections,
+  emptyMessage = "No data.",
+  showSectionLabels = true,
+}: Props) {
   const allEmpty = sections.every((s) => s.rows.length === 0);
 
   return (
@@ -48,9 +54,11 @@ export function LedgerTable({ columns, sections, emptyMessage = "No data." }: Pr
               if (section.rows.length === 0) return null;
               return (
                 <React.Fragment key={section.label}>
-                  <tr className={styles.sectionRow}>
-                    <td colSpan={columns.length}>{section.label}</td>
-                  </tr>
+                  {showSectionLabels && (
+                    <tr className={styles.sectionRow}>
+                      <td colSpan={columns.length}>{section.label}</td>
+                    </tr>
+                  )}
                   {section.rows.map((row) => {
                     const rowClass =
                       row.variant === "income" ? styles.rowIncome

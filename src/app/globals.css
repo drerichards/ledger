@@ -1,6 +1,25 @@
 @import '../styles/tokens.css';
 /* Fonts loaded via next/font in layout.tsx — variables injected on <html> */
 
+:root {
+    --app-header-height: 64px;
+    --app-tabbar-height: 42px;
+    --app-chrome-height: calc(var(--app-header-height) + var(--app-tabbar-height));
+    --action-primary-bg: color-mix(in srgb, var(--color-rust) 92%, white);
+    --action-primary-bg-hover: var(--color-rust-border);
+    --action-secondary-bg: color-mix(in srgb, var(--color-olive) 14%, var(--color-fawn-light) 86%);
+    --action-secondary-bg-hover: color-mix(in srgb, var(--color-olive) 24%, var(--color-fawn-light) 76%);
+    --action-secondary-border: color-mix(in srgb, var(--color-olive-darker) 18%, var(--color-fawn-border) 82%);
+    --action-secondary-fg: var(--color-navy-dark);
+    --action-secondary-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 10px 20px rgba(28, 47, 64, 0.08);
+    --action-danger-bg: color-mix(in srgb, var(--color-rust) 8%, rgba(255, 255, 255, 0.72));
+    --action-danger-border: color-mix(in srgb, var(--color-rust) 25%, white);
+    --action-danger-fg: var(--color-rust);
+    --surface-glass-bg: rgba(255, 255, 255, 0.66);
+    --surface-glass-border: rgba(255, 255, 255, 0.54);
+    --surface-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 
 button {
@@ -17,12 +36,14 @@ button:active:not(:disabled) {
 /* Hover states — [class*] matches CSS Modules generated names app-wide */
 
 [class*="btnPrimary"]:hover {
-    background: var(--color-rust-border);
+    background: var(--action-primary-bg-hover);
 }
 
 [class*="btnGhost"]:hover,
-[class*="editBtn"]:hover {
-    background: var(--color-cream);
+[class*="editBtn"]:hover,
+[class*="toolBtn"]:hover,
+[class*="btnGlass"]:hover {
+    background: var(--action-secondary-bg-hover);
 }
 
 [class*="btnDanger"]:hover {
@@ -38,6 +59,14 @@ button:active:not(:disabled) {
 [class*="scenarioBtn"]:not([class*="scenarioBtnActive"]):hover {
     background: var(--color-cream);
     color: var(--color-navy);
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    filter: none;
 }
 
 /* ── Ripple ──────────────────────────────────────────────────────────────── */
@@ -100,6 +129,11 @@ h3 {
     font-family: var(--font-heading);
     font-weight: 700;
     color: var(--color-navy);
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
 }
 
 /* ── Form elements ───────────────────────────────────────────────────────── */

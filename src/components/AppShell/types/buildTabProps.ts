@@ -24,6 +24,7 @@ type AppActions = {
   addSnapshot: (snap: MonthSnapshot) => void;
   rolloverBills: (fromMonth: string, toMonth: string) => void;
   addPlan: (plan: InstallmentPlan) => void;
+  updatePlan: (plan: InstallmentPlan) => void;
   deletePlan: (id: string) => void;
   upsertPaycheckWeek: (week: PaycheckWeek) => void;
   addCheckEntry: (entry: KiasCheckEntry) => void;
@@ -79,6 +80,7 @@ export const buildAccountsTabProps = ({
 }: TabPropsDeps) => ({
   bills: state.bills,
   income: state.income,
+  plans: state.plans,
   savingsLog: state.savingsLog,
   checkLog: state.checkLog,
   paycheck: state.paycheck,
@@ -96,6 +98,7 @@ export const buildAccountsTabProps = ({
 export const buildAffirmTabProps = ({ state, actions }: TabPropsDeps) => ({
   plans: state.plans,
   onAdd: actions.addPlan,
+  onUpdate: actions.updatePlan,
   onDelete: actions.deletePlan,
 });
 
@@ -107,6 +110,8 @@ export const buildPaycheckTabProps = (
   paycheck: state.paycheck,
   checkLog: state.checkLog,
   savingsLog: state.savingsLog,
+  bills: state.bills,
+  income: state.income,
   plans: state.plans,
   columns: state.paycheckColumns ?? DEFAULT_PAYCHECK_COLUMNS,
   viewScope: state.paycheckViewScope,
@@ -147,7 +152,9 @@ export const buildHomeTabProps = ({ state, actions }: TabPropsDeps) => ({
   checkingBalanceDate: state.checkingBalanceDate,
   bankAccounts: state.bankAccounts ?? [],
   bills: state.bills,
+  income: state.income,
   plans: state.plans,
+  paycheck: state.paycheck,
   checkLog: state.checkLog,
   savingsLog: state.savingsLog,
   onSetBalance: actions.setCheckingBalance,

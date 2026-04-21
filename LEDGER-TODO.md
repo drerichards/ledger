@@ -8,18 +8,28 @@ Check off each item after visually verifying against mock.html.
 ## Outstanding Issues
 
 ### Snapshots tab
+
 - [x] Fix sister divs having the same color (olive/rust semantic, navy/gold alternating neutral)
 - [x] Add hover popup/popover to trend stat with more detail (CSS-only tooltip with arrow)
 - [ ] **Tooltip clipped by nav** — tooltip opens downward now; verify `overflow: visible` on `.trendBar` and `.container` propagate correctly so tooltip isn't cut off
 
 ### Home tab
+
 - [x] Accounts container scroll
 - [ ] **Cash flow: balance column** — add running "balance after" column to each transaction row
 - [ ] **Cash flow: collapsible weeks** — weeks collapse/expand using same acc table component pattern as Bills + Income tabs
 - [ ] **Stat cards swap positions with Next Due cards** — solid-fill StatCards move to top row; Next Due pill cards stack below. Universal pattern: solid stat cards always at top of each tab
 
 ### Bills tab
+
 - [x] Est. Surplus font color → `var(--color-navy)`
+- [x] **Accounts panel interaction fixes (2026-04-20)**:
+  - [x] Comment out table background fills for both groups so page background shows through.
+  - [x] Fix no-op click when Kia is collapsed and Other is clicked.
+  - [x] Fix janky both-collapse animation when clicking from both-expanded.
+  - [x] Fix no-op click when Other is collapsed and Kia is clicked.
+  - [x] From one-open state, clicking either header reopens both at half-height.
+  - [x] Remove white-gap behavior tied to the old fill-mode class (`groupFill` removed).
 - [ ] **Bento layout** — two-column bento:
   - Left col (static): Income & Reconciliation section — cannot collapse
   - Right col (accordion): "Kia's Pay" and "Other Income" sections stack vertically
@@ -30,29 +40,36 @@ Check off each item after visually verifying against mock.html.
   - Only the acc tables inside each section scroll individually
 
 ### Income tab
+
 - [ ] Match mockups (to be specified)
 
 ### Debt tab
+
 - [ ] Match mockups (to be specified)
 
 ### Goals tab — Goals subtab
+
 - [x] Remove `<details>` accordion from Savings log; render always-visible below colored stat cards
 - [ ] **Savings Goals + Savings Log side by side** — two-column layout within Goals subtab; Goals on left, Log on right
 
 ### Goals tab — Strategy subtab
+
 - [x] Enforce min font size 13px
 - [x] Decrease opacity on "Where to Put It" divs
 - [x] Add beginner stocks tip
 - [ ] Clarify who maintains / edits tips (static vs. dynamic)
 
 ### Goals tab — Debt subtab
+
 - [ ] Affirm payoff timeline graph — "Debt timeline" view (per-plan) + "Total view" (aggregate)
 - [ ] No new npm packages — SVG/CSS only
 
 ### Goals tab — Projection subtab
+
 - [x] Add explicit CTA + annotation
 
 ### Nav bar
+
 - [x] Fix dropdown z-index
 - [x] Fix seed data button
 - [x] Add time-based greeting
@@ -67,7 +84,9 @@ Check off each item after visually verifying against mock.html.
   - Messages stay in the Activity inbox until the user explicitly clears them
 
 ### Global
+
 - [ ] "Add X" buttons across the app need a color (design decision needed)
+- [ ] **Table color-system handoff** — current pass only adds row depth/shadow; a separate LLM should do the full table-shell color/contrast pass for Accounts, Home, and Income
 
 ---
 

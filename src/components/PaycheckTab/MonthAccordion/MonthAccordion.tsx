@@ -106,8 +106,8 @@ export const MonthAccordion = React.memo(function MonthAccordion({
   const monthColAllocated = sumCents(
     rows.flatMap((r) => columns.map((col) => getWeekColumnValue(r.week, col.key))),
   );
-  const monthRemaining =
-    monthKiaTotal - affirmMonthTotal - monthColAllocated - monthSavingsTotal;
+  const monthAllocated = affirmMonthTotal + monthColAllocated + monthSavingsTotal;
+  const monthRemaining = monthKiaTotal - monthAllocated;
 
   return (
     <div className={styles.monthBlock}>
@@ -137,9 +137,9 @@ export const MonthAccordion = React.memo(function MonthAccordion({
 
         <div className={styles.monthHeaderRight}>
           <span className={styles.monthStat}>
-            <span className={styles.monthStatLabel}>Kia&apos;s Pay</span>
+            <span className={styles.monthStatLabel}>Allocated</span>
             <span className={`${styles.monthStatValue} ${styles.mono}`}>
-              {monthKiaTotal > 0 ? fmtMoney(monthKiaTotal) : "—"}
+              {monthAllocated > 0 ? fmtMoney(monthAllocated) : "—"}
             </span>
           </span>
           <span className={styles.monthStatSep} aria-hidden="true" />
@@ -200,23 +200,16 @@ export const MonthAccordion = React.memo(function MonthAccordion({
             </span>
             <div className={styles.monthTotalsRight}>
               <span className={styles.monthTotalsStat}>
-                <span className={styles.monthTotalsStatLabel}>
-                  Kia&apos;s Pay
-                </span>
+                <span className={styles.monthTotalsStatLabel}>Income</span>
                 <span className={`${styles.monthTotalsStatValue} ${styles.mono}`}>
                   {fmtMoney(monthKiaTotal)}
                 </span>
               </span>
               <span className={styles.monthTotalsStatSep} aria-hidden="true" />
               <span className={styles.monthTotalsStat}>
-                <span className={styles.monthTotalsStatLabel}>Affirm</span>
-                <span className={`${styles.monthTotalsStatValue} ${styles.mono}`}>
-                  {fmtMoney(affirmMonthTotal)}
+                <span className={styles.monthTotalsStatLabel}>
+                  {monthRemaining < 0 ? "Short" : "Surplus"}
                 </span>
-              </span>
-              <span className={styles.monthTotalsStatSep} aria-hidden="true" />
-              <span className={styles.monthTotalsStat}>
-                <span className={styles.monthTotalsStatLabel}>Remaining</span>
                 <span
                   className={[
                     styles.monthTotalsStatValue,

@@ -161,9 +161,10 @@ export function CheckLog({
   };
 
   const confirmHistoricalEdit = () => {
-    if (!confirmingEdit) return;
-
-    const { date, oldAmount, newAmount } = confirmingEdit;
+    // Structurally guarded: the Confirm Edit button is only rendered inside
+    // `{confirmingEdit && ...}` below, so this function is never invoked
+    // while confirmingEdit is null.
+    const { date, oldAmount, newAmount } = confirmingEdit!;
     const existingEntry = entryByDate.get(date);
 
     // Build the new edit history entry

@@ -25,6 +25,7 @@ import {
   loadFromSupabase,
   syncStateToSupabase,
   deleteBillRemote,
+  deleteBankAccountRemote,
   deletePlanRemote,
   deleteCheckEntryRemote,
   resetRemoteToSeed,
@@ -39,6 +40,7 @@ type Action =
   | { type: "DELETE_BILL"; payload: { id: string } }
   | { type: "TOGGLE_BILL_PAID"; payload: { id: string } }
   | { type: "ADD_PLAN"; payload: InstallmentPlan }
+  | { type: "UPDATE_PLAN"; payload: InstallmentPlan }
   | { type: "DELETE_PLAN"; payload: { id: string } }
   | { type: "ADD_CHECK_ENTRY"; payload: KiasCheckEntry }
   | { type: "UPDATE_CHECK_ENTRY"; payload: KiasCheckEntry }
@@ -110,6 +112,14 @@ function reducer(state: AppState, action: Action): AppState {
 
     case "ADD_PLAN":
       return { ...state, plans: [...state.plans, action.payload] };
+
+    case "UPDATE_PLAN":
+      return {
+        ...state,
+        plans: state.plans.map((plan) =>
+          plan.id === action.payload.id ? action.payload : plan,
+        ),
+      };
 
     case "DELETE_PLAN":
       return {
@@ -430,6 +440,11 @@ export function useAppState() {
     [],
   );
 
+  const updatePlan = useCallback(
+    (plan: InstallmentPlan) => dispatch({ type: "UPDATE_PLAN", payload: plan }),
+    [],
+  );
+
   const deletePlan = useCallback((id: string) => {
     dispatch({ type: "DELETE_PLAN", payload: { id } });
     deletePlanRemote(id);
@@ -576,7 +591,10 @@ export function useAppState() {
   );
 
   const deleteBankAccount = useCallback(
-    (id: string) => dispatch({ type: "DELETE_BANK_ACCOUNT", payload: { id } }),
+    (id: string) => {
+      dispatch({ type: "DELETE_BANK_ACCOUNT", payload: { id } });
+      deleteBankAccountRemote(id);
+    },
     [],
   );
 
@@ -593,6 +611,7 @@ export function useAppState() {
     deleteBill,
     toggleBillPaid,
     addPlan,
+    updatePlan,
     deletePlan,
     addCheckEntry,
     deleteCheckEntry,

@@ -48,6 +48,7 @@ function renderGroup(overrides: {
       sortKey={overrides.sortKey ?? "due"}
       sortDir={overrides.sortDir ?? "asc"}
       isCollapsed={overrides.isCollapsed ?? false}
+      split
       onToggle={overrides.onToggle ?? noop}
       onSort={overrides.onSort ?? noop}
       onEdit={overrides.onEdit ?? noop}

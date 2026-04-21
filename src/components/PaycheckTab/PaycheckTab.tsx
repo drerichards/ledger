@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type {
+  Bill,
   InstallmentPlan,
   KiasCheckEntry,
+  MonthlyIncome,
   PaycheckColumn,
   PaycheckViewScope,
   PaycheckWeek,
@@ -18,13 +20,19 @@ import {
   getMondaysInMonth,
 } from "@/lib/dates";
 import { getVisibleMonths, usePaycheckTabState } from "@/hooks/usePaycheckTabState";
+import { getHouseholdMonthSummary, getPaycheckAllocatedForMonth } from "@/lib/household/household";
+import { fmtMoney } from "@/lib/money";
 import { calcCheckBaseline } from "@/lib/projection";
 import { CheckLog } from "@/components/SavingsTab/CheckLog";
 import { DateToggle } from "@/components/ui/DateToggle";
+import { ActionToast } from "@/components/ui/ActionToast/ActionToast";
+import { StatCard } from "@/components/ui/StatCard";
 import { MonthAccordion } from "./MonthAccordion";
 import styles from "./PaycheckTab.module.css";
 
 type Props = {
+  bills?: Bill[];
+  income?: MonthlyIncome[];
   paycheck: PaycheckWeek[];
   checkLog: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
@@ -55,7 +63,11 @@ const SCOPES: { id: PaycheckViewScope; label: string }[] = [
   { id: "yearly", label: "Year" },
 ];
 
+const CHECK_TIP_STORAGE_KEY = "ledger-tip-log-this-week";
+
 export function PaycheckTab({
+  bills = [],
+  income = [],
   paycheck,
   checkLog,
   savingsLog,
@@ -118,9 +130,22 @@ export function PaycheckTab({
   const focusTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scopeTransitionRef = useRef<NodeJS.Timeout | null>(null);
   const [hiddenSectionCollapsed, setHiddenSectionCollapsed] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showCheckTip, setShowCheckTip] = useState(true);
 
   const checkBaseline = calcCheckBaseline(checkLog);
-  const visibleMonths = getVisibleMonths(currentMonthStr, viewScope);
+  const earliestMonth = useMemo(() => {
+    const monthKeys = [
+      ...paycheck.map((week) => week.weekOf.slice(0, 7)),
+      ...checkLog.map((entry) => entry.weekOf.slice(0, 7)),
+      ...savingsLog
+        .map((entry) => (entry.date ?? entry.weekOf ?? "").slice(0, 7))
+        .filter(Boolean),
+      ...income.map((row) => row.month),
+    ].sort();
+    return monthKeys[0] ?? "2025-12";
+  }, [paycheck, checkLog, savingsLog, income]);
+  const visibleMonths = getVisibleMonths(currentMonthStr, viewScope, earliestMonth);
 
   // Real columns for the accordion (always use actual state)
   const realVisibleColumns = columns.filter((c) => !c.hidden);
@@ -135,12 +160,41 @@ export function PaycheckTab({
     plans,
     visibleMonths,
   );
+  const monthSummary = getHouseholdMonthSummary({
+    month: currentMonthStr,
+    bills,
+    income,
+    paycheck,
+    checkLog,
+    savingsLog,
+    plans,
+  });
+  const monthAllocated = getPaycheckAllocatedForMonth({
+    month: currentMonthStr,
+    paycheck,
+    checkLog,
+    plans,
+    savingsLog,
+    columns,
+  });
+  const allocationBalance = monthSummary.totalIncomeCents - monthAllocated;
+  const currentWeekLogged = checkLog.some((entry) => mondayOf(entry.weekOf) === currentWeekOf);
+  const currentWeekVisible = viewScope === "weekly" && selectedWeekOf === currentWeekOf;
 
   const toggleMonth = (month: string) =>
     setCollapsed((prev) => ({ ...prev, [month]: !prev[month] }));
 
-  // Earliest allowed month (data starts Dec 2025)
-  const EARLIEST_MONTH = "2025-12";
+  useEffect(() => {
+    try {
+      const dismissedOn = window.sessionStorage.getItem(CHECK_TIP_STORAGE_KEY);
+      setShowCheckTip(dismissedOn !== today());
+    } catch {
+      setShowCheckTip(true);
+    }
+  }, []);
+
+  // Earliest allowed month comes from the real imported history (currently Dec 2025).
+  const EARLIEST_MONTH = earliestMonth;
 
   // Get navigation step size based on view scope
   const getNavStep = (): number => {
@@ -162,7 +216,7 @@ export function PaycheckTab({
   // Set collapsed state for quarterly/yearly views — first month expanded, rest collapsed
   const setCollapsedForMultiMonth = (baseMonth: string, scope: PaycheckViewScope) => {
     if (scope !== "quarterly" && scope !== "yearly") return;
-    const visibleMonths = getVisibleMonths(baseMonth, scope);
+    const visibleMonths = getVisibleMonths(baseMonth, scope, EARLIEST_MONTH);
     const newCollapsed: Record<string, boolean> = {};
     visibleMonths.forEach((m, i) => {
       // Expand only the first month
@@ -190,8 +244,12 @@ export function PaycheckTab({
     } else {
       const step = getNavStep();
       const next = advanceMonth(currentMonthStr, -step);
-      // istanbul ignore next — canNavPrev disables the button at this boundary; guard is unreachable via UI
-      if (next < EARLIEST_MONTH) return;
+      if (next < EARLIEST_MONTH) {
+        if (currentMonthStr === EARLIEST_MONTH) return;
+        setCurrentMonthStr(EARLIEST_MONTH);
+        setCollapsedForMultiMonth(EARLIEST_MONTH, viewScope);
+        return;
+      }
       setCurrentMonthStr(next);
       setCollapsedForMultiMonth(next, viewScope);
     }
@@ -235,13 +293,31 @@ export function PaycheckTab({
       setExpandedWeeks(new Set([weekToShow]));
     } else if (viewScope === "quarterly" || viewScope === "yearly") {
       // For multi-month views, expand today's month, collapse others
-      const visibleMonths = getVisibleMonths(todayMonth, viewScope);
+      const visibleMonths = getVisibleMonths(todayMonth, viewScope, EARLIEST_MONTH);
       const newCollapsed: Record<string, boolean> = {};
       visibleMonths.forEach((m) => {
         newCollapsed[m] = m !== todayMonth;
       });
       setCollapsed(newCollapsed);
       setExpandedWeeks(new Set());
+    }
+  };
+
+  const jumpToCurrentWeek = () => {
+    const todayMonth = currentMonth();
+    setCurrentMonthStr(todayMonth);
+    setSelectedWeekOf(currentWeekOf);
+    setExpandedWeeks(new Set([currentWeekOf]));
+    setCollapsed({});
+    onSetViewScope("weekly");
+  };
+
+  const dismissCheckTip = () => {
+    setShowCheckTip(false);
+    try {
+      window.sessionStorage.setItem(CHECK_TIP_STORAGE_KEY, today());
+    } catch {
+      // ignore storage failures; the tip will simply reappear next time
     }
   };
 
@@ -294,7 +370,7 @@ export function PaycheckTab({
       } else {
         // Quarterly/Yearly: expand the month user was viewing, collapse others
         setExpandedWeeks(new Set());
-        const newVisibleMonths = getVisibleMonths(currentMonthStr, scope);
+        const newVisibleMonths = getVisibleMonths(currentMonthStr, scope, EARLIEST_MONTH);
         // Keep the month the user was viewing expanded (it will always be in the new range)
         const monthToExpand = currentMonthStr;
         const newCollapsed: Record<string, boolean> = {};
@@ -376,6 +452,7 @@ export function PaycheckTab({
     setPendingColumns([]);
     setEditingKey(null);
     setAddingColumn(false);
+    setToastMessage("Payees updated");
   };
 
   const startEdit = (col: PaycheckColumn) => {
@@ -437,8 +514,7 @@ export function PaycheckTab({
       prevWeek.setDate(prevWeek.getDate() - 7);
       return prevWeek.toISOString().slice(0, 7) >= EARLIEST_MONTH;
     }
-    const step = getNavStep();
-    return advanceMonth(currentMonthStr, -step) >= EARLIEST_MONTH;
+    return currentMonthStr > EARLIEST_MONTH;
   })();
 
   const canNavNext = (() => {
@@ -449,6 +525,10 @@ export function PaycheckTab({
     // No upper limit for weekly, monthly, quarterly
     return true;
   })();
+  const canJumpToToday =
+    viewScope === "weekly"
+      ? !(currentMonthStr === currentMonth() && selectedWeekOf === currentWeekOf)
+      : currentMonthStr !== currentMonth();
 
   // ── Heading label ───────────────────────────────────────────────────────────
   // For quarterly/yearly, show the first month in the visible range (e.g., Jan for yearly)
@@ -473,6 +553,7 @@ export function PaycheckTab({
           onToday={handleNavToday}
           canPrev={canNavPrev}
           canNext={canNavNext}
+          canToday={canJumpToToday}
           prevAriaLabel={viewScope === "weekly" ? "Previous week" : "Previous month"}
           nextAriaLabel={viewScope === "weekly" ? "Next week" : "Next month"}
         />
@@ -485,6 +566,7 @@ export function PaycheckTab({
                 key={s.id}
                 className={`${styles.scopeBtn} ${viewScope === s.id ? styles.scopeBtnActive : ""}`}
                 onClick={() => handleSetViewScope(s.id)}
+                disabled={viewScope === s.id}
               >
                 {s.label}
               </button>
@@ -524,7 +606,7 @@ export function PaycheckTab({
                   <circle cx="4" cy="12" r="1.5"/>
                   <rect x="7" y="11" width="8" height="2" rx="1"/>
                 </svg>
-                Manage Columns
+                Manage Payees
               </button>
               <button
                 className={`${styles.menuItem} ${showPaycheckLog ? styles.menuItemActive : ""}`}
@@ -547,12 +629,43 @@ export function PaycheckTab({
         </div>{/* end controls */}
       </div>{/* end header */}
 
+      {showCheckTip && (
+        <div className={styles.tipBar} role="note" aria-label="Income tip">
+          <div className={styles.tipCopy}>
+            <span className={styles.tipBadge}>Tip</span>
+            <p className={styles.tipText}>
+              {currentWeekLogged
+                ? "This week's check is already visible. Review Kia's amount or allocations here."
+                : "Log this week's check. Enter Kia's amount and we'll auto-allocate bills, Affirm, and savings."}
+            </p>
+          </div>
+          <div className={styles.tipActions}>
+            <button
+              type="button"
+              className={styles.tipCta}
+              onClick={jumpToCurrentWeek}
+              disabled={currentWeekVisible}
+            >
+              {`${currentWeekLogged ? "Review" : "+ Add Week of"} ${new Date(`${currentWeekOf}T12:00:00`).toLocaleDateString("default", { month: "short", day: "numeric" })}`}
+            </button>
+            <button
+              type="button"
+              className={styles.tipDismiss}
+              onClick={dismissCheckTip}
+              aria-label="Dismiss tip"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Column manager modal ──────────────────────────────────── */}
       {showColumnModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Manage Columns</h3>
+              <h3 className={styles.modalTitle}>Manage Payees</h3>
               <button
                 type="button"
                 className={styles.modalClose}
@@ -707,6 +820,29 @@ export function PaycheckTab({
         </div>
       )}
 
+      <div className={styles.statsRow}>
+        <StatCard
+          label="Month Income"
+          color="navy"
+          value={fmtMoney(monthSummary.totalIncomeCents)}
+        />
+        <StatCard
+          label="Allocated"
+          color="gold"
+          value={fmtMoney(monthAllocated)}
+        />
+        <StatCard
+          label={allocationBalance < 0 ? "Short" : "Surplus"}
+          color={allocationBalance < 0 ? "rust" : "olive"}
+          value={fmtMoney(Math.abs(allocationBalance))}
+        />
+        <StatCard
+          label="Weeks Entered"
+          color="navy"
+          value={String(monthSummary.weeksEntered)}
+        />
+      </div>
+
       {/* ── Content area: accordion + slide-in check log ─────────── */}
       <div className={styles.contentArea}>
         {/* Accordion timeline */}
@@ -779,6 +915,10 @@ export function PaycheckTab({
           </div>
         </div>
       </div>
+      <ActionToast
+        message={toastMessage}
+        onDone={() => setToastMessage(null)}
+      />
     </div>
   );
 }

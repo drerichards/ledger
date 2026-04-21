@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useAppState } from "@/hooks/useAppState";
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 import type {
+  BankAccount,
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
@@ -24,6 +25,8 @@ jest.mock("@/lib/supabase/sync", () => ({
   deleteBillRemote: jest.fn(() => Promise.resolve()),
   deletePlanRemote: jest.fn(() => Promise.resolve()),
   deleteCheckEntryRemote: jest.fn(() => Promise.resolve()),
+  deleteBankAccountRemote: jest.fn(() => Promise.resolve()),
+  resetRemoteToSeed: jest.fn(() => Promise.resolve()),
 }));
 
 const mockInitialState = {
@@ -77,6 +80,7 @@ function makePlan(overrides: Partial<InstallmentPlan> = {}): InstallmentPlan {
     mc: 5000,
     start: "2026-01",
     end: "2026-06",
+    dueDay: 15,
     ...overrides,
   };
 }
@@ -253,11 +257,24 @@ describe("useAppState — TOGGLE_BILL_PAID", () => {
   });
 });
 
-describe("useAppState — ADD_PLAN / DELETE_PLAN", () => {
+describe("useAppState — ADD_PLAN / UPDATE_PLAN / DELETE_PLAN", () => {
   it("appends a plan", () => {
     const { result } = setup();
     act(() => { result.current.addPlan(makePlan()); });
     expect(result.current.state.plans).toHaveLength(1);
+  });
+
+  it("updates a plan by id", () => {
+    const { result } = setup();
+    act(() => { result.current.addPlan(makePlan({ id: "p1", mc: 5000, dueDay: 10 })); });
+
+    act(() => {
+      result.current.updatePlan(makePlan({ id: "p1", mc: 7200, dueDay: 12 }));
+    });
+
+    expect(result.current.state.plans).toHaveLength(1);
+    expect(result.current.state.plans[0].mc).toBe(7200);
+    expect(result.current.state.plans[0].dueDay).toBe(12);
   });
 
   it("removes a plan by id", () => {
@@ -825,5 +842,141 @@ describe("useAppState — UPDATE_CHECK_ENTRY", () => {
     });
     act(() => { result.current.updateCheckEntry({ weekOf: "2026-04-06", amount: 90000 }); });
     expect(result.current.state.checkLog[1].amount).toBe(80000);
+  });
+});
+
+// ─── Checking balance & bank accounts ─────────────────────────────────────────
+
+describe("useAppState — SET_CHECKING_BALANCE", () => {
+  it("stores the balance and the date on state", () => {
+    const { result } = setup();
+    act(() => { result.current.setCheckingBalance(125000, "2026-04-15"); });
+    expect(result.current.state.checkingBalance).toBe(125000);
+    expect(result.current.state.checkingBalanceDate).toBe("2026-04-15");
+  });
+
+  it("overwrites a previous balance on subsequent calls", () => {
+    const { result } = setup();
+    act(() => { result.current.setCheckingBalance(100000, "2026-04-01"); });
+    act(() => { result.current.setCheckingBalance(200000, "2026-04-15"); });
+    expect(result.current.state.checkingBalance).toBe(200000);
+    expect(result.current.state.checkingBalanceDate).toBe("2026-04-15");
+  });
+});
+
+describe("useAppState — ADD_BANK_ACCOUNT / UPDATE_BANK_ACCOUNT / DELETE_BANK_ACCOUNT", () => {
+  const makeBankAccount = (overrides: Partial<BankAccount> = {}): BankAccount => ({
+    id: "acct-1",
+    name: "Chase Checking",
+    balanceCents: 125000,
+    updatedDate: "2026-04-15",
+    ...overrides,
+  });
+
+  it("appends a bank account when state has no bankAccounts field yet (exercises `?? []` branch)", () => {
+    const { result } = setup();
+    // mockInitialState does not include a bankAccounts field, so the reducer
+    // takes the nullish-coalescing fallback path on first insert.
+    expect(result.current.state.bankAccounts).toBeUndefined();
+    act(() => { result.current.addBankAccount(makeBankAccount()); });
+    expect(result.current.state.bankAccounts).toHaveLength(1);
+    expect(result.current.state.bankAccounts?.[0].id).toBe("acct-1");
+  });
+
+  it("appends multiple bank accounts in order", () => {
+    const { result } = setup();
+    act(() => { result.current.addBankAccount(makeBankAccount({ id: "acct-1" })); });
+    act(() => { result.current.addBankAccount(makeBankAccount({ id: "acct-2", name: "BoA Savings" })); });
+    expect(result.current.state.bankAccounts).toHaveLength(2);
+    expect(result.current.state.bankAccounts?.[1].name).toBe("BoA Savings");
+  });
+
+  it("updates the matching bank account by id", () => {
+    const { result } = setup();
+    act(() => { result.current.addBankAccount(makeBankAccount({ id: "acct-1", balanceCents: 100000 })); });
+    act(() => {
+      result.current.updateBankAccount(
+        makeBankAccount({ id: "acct-1", balanceCents: 150000, updatedDate: "2026-04-20" }),
+      );
+    });
+    expect(result.current.state.bankAccounts?.[0].balanceCents).toBe(150000);
+    expect(result.current.state.bankAccounts?.[0].updatedDate).toBe("2026-04-20");
+  });
+
+  it("does not affect other bank accounts when updating", () => {
+    const { result } = setup();
+    act(() => {
+      result.current.addBankAccount(makeBankAccount({ id: "acct-1", name: "Chase" }));
+      result.current.addBankAccount(makeBankAccount({ id: "acct-2", name: "BoA" }));
+    });
+    act(() => {
+      result.current.updateBankAccount(makeBankAccount({ id: "acct-1", name: "Chase Updated" }));
+    });
+    expect(result.current.state.bankAccounts?.[1].name).toBe("BoA");
+  });
+
+  it("deletes the bank account with the given id", () => {
+    const { deleteBankAccountRemote } = jest.requireMock("@/lib/supabase/sync");
+    const { result } = setup();
+    act(() => {
+      result.current.addBankAccount(makeBankAccount({ id: "acct-1" }));
+      result.current.addBankAccount(makeBankAccount({ id: "acct-2", name: "BoA" }));
+    });
+    act(() => { result.current.deleteBankAccount("acct-1"); });
+    expect(result.current.state.bankAccounts).toHaveLength(1);
+    expect(result.current.state.bankAccounts?.[0].id).toBe("acct-2");
+    expect(deleteBankAccountRemote).toHaveBeenCalledWith("acct-1");
+  });
+
+  it("updateBankAccount no-ops safely when state.bankAccounts is undefined (exercises `?? []` fallback on UPDATE)", () => {
+    const { result } = setup();
+    // mockInitialState has no bankAccounts field — directly dispatching UPDATE
+    // exercises the `(state.bankAccounts ?? []).map(...)` fallback path.
+    expect(result.current.state.bankAccounts).toBeUndefined();
+    act(() => { result.current.updateBankAccount(makeBankAccount({ id: "phantom" })); });
+    // The fallback `[]` maps to `[]` — bankAccounts becomes an empty array.
+    expect(result.current.state.bankAccounts).toEqual([]);
+  });
+
+  it("deleteBankAccount no-ops safely when state.bankAccounts is undefined (exercises `?? []` fallback on DELETE)", () => {
+    const { result } = setup();
+    expect(result.current.state.bankAccounts).toBeUndefined();
+    act(() => { result.current.deleteBankAccount("phantom"); });
+    // The fallback `[]` filters to `[]` — bankAccounts becomes an empty array.
+    expect(result.current.state.bankAccounts).toEqual([]);
+  });
+});
+
+describe("useAppState — resetToSeed", () => {
+  it("hydrates state with SEED_STATE, persists it, and resets remote", async () => {
+    // Pull the mocks out of the module under test's mock registry.
+    const { saveState } = jest.requireMock("@/lib/storage");
+    const { resetRemoteToSeed } = jest.requireMock("@/lib/supabase/sync");
+    const saveSpy = saveState as jest.Mock;
+    const resetSpy = resetRemoteToSeed as jest.Mock;
+
+    const { result } = setup();
+    // Add something to state so we can observe that HYDRATE replaces it.
+    act(() => { result.current.addBill(makeBill({ id: "pre-seed" })); });
+    expect(result.current.state.bills).toHaveLength(1);
+
+    // Clear spies AFTER setup/mount/pre-seed so we only observe resetToSeed's
+    // direct side effects, not the persist-on-change useEffect from mount.
+    saveSpy.mockClear();
+    resetSpy.mockClear();
+
+    await act(async () => {
+      await result.current.resetToSeed();
+    });
+
+    // HYDRATE replaced state with SEED_STATE — pre-seed bill should no longer match.
+    expect(
+      result.current.state.bills.find((b) => b.id === "pre-seed"),
+    ).toBeUndefined();
+    // resetRemoteToSeed is only reachable via resetToSeed, so exactly one call.
+    expect(resetSpy).toHaveBeenCalledTimes(1);
+    // saveState is called directly inside resetToSeed AND again from the
+    // persist-on-change useEffect when HYDRATE lands — so at least one call.
+    expect(saveSpy).toHaveBeenCalled();
   });
 });

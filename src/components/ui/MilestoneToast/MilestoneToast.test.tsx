@@ -89,4 +89,19 @@ describe("MilestoneToast", () => {
     // Check that some emoji-like character is present in the toast
     expect(screen.getByRole("status").textContent).toMatch(/🎉/);
   });
+
+  it("falls back to trophy emoji when the milestone type is unrecognized (nullish branch on line 49)", () => {
+    // Cast forces an off-enum type so MILESTONE_EMOJI[type] is undefined → "🏆" fallback fires
+    const unknownMilestone = {
+      id: "mystery:1",
+      type: "mystery_type" as unknown as Milestone["type"],
+      payload: {},
+      achievedAt: "2026-04-01T00:00:00Z",
+      seen: false,
+    } as Milestone;
+    render(
+      <MilestoneToast milestones={[unknownMilestone]} onDismiss={jest.fn()} />,
+    );
+    expect(screen.getByRole("status").textContent).toMatch(/🏆/);
+  });
 });

@@ -64,12 +64,13 @@ export function projectWeekRows(params: {
     }
   }
 
-  // Sort: by date ASC, income before expenses on same day
+  // Sort: by date ASC, income before expenses on same day.
+  // Using a score-based comparator collapses the type check into one expression.
   events.sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
-    if (a.type === "income" && b.type !== "income") return -1;
-    if (a.type !== "income" && b.type === "income") return 1;
-    return 0;
+    const aRank = a.type === "income" ? 0 : 1;
+    const bRank = b.type === "income" ? 0 : 1;
+    return aRank - bRank;
   });
 
   let balance = startBalance;

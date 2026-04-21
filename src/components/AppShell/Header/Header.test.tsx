@@ -5,12 +5,9 @@ const noop = () => {};
 
 const defaultProps = {
   userName: null,
-  notifications: [],
-  seenNotificationIds: [],
-  onMarkNotificationsSeen: noop,
-  onNavigateToAffirm: noop,
-  onViewAllNotifications: noop,
   onSignOut: noop,
+  milestones: [],
+  unseenCount: 0,
 };
 
 describe("Header", () => {
@@ -19,14 +16,9 @@ describe("Header", () => {
     expect(screen.getByText("Ledger")).toBeInTheDocument();
   });
 
-  it("renders the subtitle", () => {
-    render(<Header {...defaultProps} />);
-    expect(screen.getByText("Household Finance Tracker")).toBeInTheDocument();
-  });
-
-  it("does not show userName when null", () => {
+  it("shows a greeting even when userName is null", () => {
     render(<Header {...defaultProps} userName={null} />);
-    expect(screen.queryByText(/Hi,/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Good /)).toBeInTheDocument();
   });
 
   it("shows greeting when userName is provided", () => {
@@ -39,8 +31,9 @@ describe("Header", () => {
     expect(screen.getByLabelText("Messages")).toBeInTheDocument();
   });
 
-  it("renders the HeaderMenu trigger", () => {
+  it("renders inline header actions", () => {
     render(<Header {...defaultProps} />);
-    expect(screen.getByLabelText("Open menu")).toBeInTheDocument();
+    expect(screen.getByLabelText(/mode/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Sign out")).toBeInTheDocument();
   });
 });

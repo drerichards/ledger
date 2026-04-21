@@ -323,3 +323,20 @@ describe("CheckLog — edit history popover", () => {
     expect(screen.queryByText("Last Edit")).not.toBeInTheDocument();
   });
 });
+
+// ─── Selected week highlight ──────────────────────────────────────────────────
+
+describe("CheckLog — selectedWeekOf highlight", () => {
+  it("applies rowSelected class when selectedWeekOf matches a row date (line 271 truthy branch)", () => {
+    const { container } = render(
+      <CheckLog
+        log={[]}
+        baseline={null}
+        onAdd={noop}
+        selectedWeekOf="2026-04-27"
+      />,
+    );
+    // CSS Modules hash the class name, so use substring match on className
+    expect(container.querySelector("[class*='rowSelected']")).not.toBeNull();
+  });
+});

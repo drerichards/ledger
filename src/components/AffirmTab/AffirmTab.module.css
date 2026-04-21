@@ -3,8 +3,10 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
+    gap: var(--space-4);
     position: relative;
+    height: 100%;
+    min-height: 0;
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────────────── */
@@ -56,45 +58,72 @@
     justify-content: flex-end;
 }
 
-/* ── Glass action button ─────────────────────────────────────────────────── */
-
-.btnGlass {
-    display: inline-flex;
+.topBar {
+    display: flex;
     align-items: center;
-    padding: 5px 14px;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--color-navy);
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-family: var(--font-body);
-    transition: background 0.12s;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-shrink: 0;
 }
 
-.btnGlass:hover {
-    background: rgba(255, 255, 255, 0.82);
+.headingBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sectionEyebrow {
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-mid);
+}
+
+/* ── Glass action button ─────────────────────────────────────────────────── */
+
+.btnPrimary {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--color-white);
+    background: var(--action-primary-bg);
+    border: 1px solid color-mix(in srgb, var(--action-primary-bg) 78%, white);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: background 0.12s, border-color 0.12s;
+    box-shadow: 0 10px 24px rgba(152, 73, 43, 0.18);
+}
+
+.btnPrimary:hover {
+    background: var(--action-primary-bg-hover);
+    border-color: color-mix(in srgb, var(--action-primary-bg-hover) 82%, white);
 }
 
 /* ── Card + table wrapper ─────────────────────────────────────────────────── */
 
 .cardWrapper {
-    background: rgba(255, 255, 255, 0.65);
+    background: var(--surface-glass-bg);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--surface-glass-border);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
     border-radius: var(--radius-xl);
     overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .tableWrapper {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 260px);
+    min-height: 0;
+    flex: 1;
 }
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
@@ -117,7 +146,7 @@
     position: sticky;
     top: 0;
     z-index: 3;
-    padding: 12px 14px;
+    padding: 10px 12px;
     font-family: var(--font-primary);
     font-size: var(--text-xs);
     font-weight: 500;
@@ -201,7 +230,7 @@
 }
 
 .td {
-    padding: 11px 10px;
+    padding: 9px 8px;
     font-size: var(--text-sm);
     vertical-align: middle;
     text-align: center;
@@ -260,10 +289,10 @@
 
 /* Active month — olive leaf tint, clearly distinct from inactive */
 .tdActive {
-    background: var(--color-olive-alpha-15);
-    border-right: 1px solid var(--color-olive-border);
-    border-bottom: 1px solid var(--color-olive-border);
-    border-top: 1px solid var(--color-olive-border);
+    background: color-mix(in srgb, var(--color-olive) 14%, rgba(255, 255, 255, 0.94));
+    border-right: 1px solid color-mix(in srgb, var(--color-olive) 16%, rgba(28, 47, 64, 0.08));
+    border-bottom: 1px solid color-mix(in srgb, var(--color-olive) 16%, rgba(28, 47, 64, 0.08));
+    border-top: 1px solid color-mix(in srgb, var(--color-olive) 16%, rgba(28, 47, 64, 0.08));
     text-align: center;
     padding: 11px 8px;
     vertical-align: middle;
@@ -272,9 +301,9 @@
 
 /* Final payment month */
 .tdFinal {
-    background: var(--color-rust);
-    border-right: 1px solid var(--color-rust-border);
-    border-bottom: 1px solid var(--color-rust-border);
+    background: color-mix(in srgb, var(--color-rust) 82%, rgba(255, 255, 255, 0.18));
+    border-right: 1px solid color-mix(in srgb, var(--color-rust) 32%, rgba(28, 47, 64, 0.12));
+    border-bottom: 1px solid color-mix(in srgb, var(--color-rust) 32%, rgba(28, 47, 64, 0.12));
 }
 
 .cellAmount {
@@ -352,6 +381,41 @@
         transform var(--anim-speed) ease,
         color var(--anim-speed) ease,
         background var(--anim-speed) ease;
+}
+
+.btnEdit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: var(--space-2);
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    color: var(--color-navy);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    vertical-align: middle;
+    opacity: 0.55;
+    pointer-events: none;
+    transform: translateX(4px);
+    transition:
+        opacity var(--anim-speed) ease,
+        transform var(--anim-speed) ease,
+        color var(--anim-speed) ease,
+        background var(--anim-speed) ease;
+}
+
+.tdTotalOwed:hover .btnEdit {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+.btnEdit:hover {
+    color: var(--color-navy-dark);
+    background: var(--color-navy-tint);
 }
 
 .tdTotalOwed:hover .btnDelete {
@@ -467,4 +531,17 @@
 .emptySubtext {
     font-size: var(--text-sm);
     opacity: 0.65;
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    flex-shrink: 0;
+}
+
+@media (max-width: 1180px) {
+    .summaryGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

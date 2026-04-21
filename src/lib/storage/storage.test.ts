@@ -187,6 +187,34 @@ describe("loadState", () => {
     const state = loadState();
     expect(state.plans[0].id).toBe("custom-plan");
   });
+
+  it("backfills missing dueDay on stored plans from the label hint", () => {
+    const plans = [
+      {
+        id: "custom-plan",
+        label: "Affirm Couch due 18",
+        mc: 5000,
+        start: "2026-01",
+        end: "2026-06",
+      },
+    ];
+    setRaw({ ...INITIAL_STATE, plans });
+    const state = loadState();
+    expect(state.plans[0].dueDay).toBe(18);
+  });
+
+  it("defaults bankAccounts to an empty array when missing from stored state", () => {
+    setRaw({
+      ...INITIAL_STATE,
+      bankAccounts: undefined,
+      checkingBalance: 125000,
+      checkingBalanceDate: "2026-04-15",
+    });
+    const state = loadState();
+    expect(state.bankAccounts).toEqual([]);
+    expect(state.checkingBalance).toBe(125000);
+    expect(state.checkingBalanceDate).toBe("2026-04-15");
+  });
 });
 
 // ── saveState / clearState ────────────────────────────────────────────────────

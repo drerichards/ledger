@@ -92,6 +92,16 @@ describe("getVisibleMonths", () => {
     expect(result[0]).toBe("2026-01");
     expect(result[11]).toBe("2026-12");
   });
+
+  it("clamps quarterly scope to the earliest available month", () => {
+    const result = getVisibleMonths("2025-11", "quarterly", "2025-12");
+    expect(result).toEqual(["2025-12"]);
+  });
+
+  it("clamps yearly scope to the earliest available month", () => {
+    const result = getVisibleMonths("2025-04", "yearly", "2025-12");
+    expect(result).toEqual(["2025-12"]);
+  });
 });
 
 // ─── emptyWeek (pure function) ────────────────────────────────────────────────

@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { CHART_COLORS } from "@/lib/chartTokens";
 import { fmtMoney } from "@/lib/money/money";
-import { fmtMonthLabel } from "@/lib/dates/dates";
+import { fmtMonthFull } from "@/lib/dates/dates";
 import { FinanceTooltip } from "@/components/shared/FinanceTooltip";
 
 type DataPoint = {
@@ -30,8 +30,9 @@ export function AffirmBurdenChart({ data }: Props) {
   const stepDownMonths = data.filter((d) => d.isStep).map((d) => d.month);
 
   const formatXTick = (month: string) => {
-    // Show abbreviated label — "Jan '26" style
-    const label = fmtMonthLabel(month); // e.g. "January 2026"
+    // Show abbreviated label — "Jan '26" style.
+    // fmtMonthFull returns "January 2026" → slice 3-char month and 2-digit year.
+    const label = fmtMonthFull(month);
     const parts = label.split(" ");
     return `${parts[0].slice(0, 3)} '${parts[1].slice(2)}`;
   };

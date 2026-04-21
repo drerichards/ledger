@@ -14,6 +14,7 @@ function makePlan(overrides: Partial<InstallmentPlan> = {}): InstallmentPlan {
     mc: 5000,
     start: "2026-01",
     end: "2026-06",
+    dueDay: 26,
     ...overrides,
   };
 }
@@ -24,6 +25,8 @@ describe("AffirmTab — empty state", () => {
   it("shows empty state message when no plans exist", () => {
     render(<AffirmTab plans={[]} onAdd={noop} onDelete={noop} />);
     expect(screen.getByText(/No installment plans yet/)).toBeInTheDocument();
+    expect(screen.getByText("Payoff")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Plans" })).toBeInTheDocument();
   });
 
   it("renders the FAB add button", () => {
@@ -42,8 +45,7 @@ describe("AffirmTab — with plans", () => {
   it("renders a column header for each month in the grid", () => {
     const plans = [makePlan({ start: "2026-04", end: "2026-04" })];
     render(<AffirmTab plans={plans} onAdd={noop} onDelete={noop} />);
-    // Should have at least one column for Apr '26
-    expect(screen.getByText(/Apr.+26/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Apr.+26/).length).toBeGreaterThan(0);
   });
 
   it("renders the Monthly Total row in tfoot", () => {
@@ -86,6 +88,36 @@ describe("AffirmTab — Add Plan modal", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("calls onUpdate when editing an existing plan", () => {
+    const onUpdate = jest.fn();
+    render(
+      <AffirmTab
+        plans={[makePlan()]}
+        onAdd={noop}
+        onUpdate={onUpdate}
+        onDelete={noop}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /edit amazon card/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Monthly Payment ($)"), {
+      target: { value: "75.00" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "plan-1",
+        label: "Amazon Card",
+        mc: 7500,
+        dueDay: 26,
+      }),
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

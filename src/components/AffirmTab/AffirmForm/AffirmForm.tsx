@@ -10,6 +10,7 @@ import { FormField } from "@/components/ui/FormField";
 import styles from "./AffirmForm.module.css";
 
 type Props = {
+  initial?: InstallmentPlan | null;
   onSave: (plan: InstallmentPlan) => void;
   onClose: () => void;
 };
@@ -19,6 +20,7 @@ type FormState = {
   amountStr: string;
   start: string;
   end: string;
+  dueDayStr: string;
 };
 
 const DEFAULT_FORM: FormState = {
@@ -26,10 +28,21 @@ const DEFAULT_FORM: FormState = {
   amountStr: "",
   start: currentMonth(),
   end: "",
+  dueDayStr: "1",
 };
 
-export function AffirmForm({ onSave, onClose }: Props) {
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+export function AffirmForm({ initial = null, onSave, onClose }: Props) {
+  const [form, setForm] = useState<FormState>(
+    initial
+      ? {
+          label: initial.label,
+          amountStr: (initial.mc / 100).toFixed(2),
+          start: initial.start,
+          end: initial.end,
+          dueDayStr: String(initial.dueDay ?? 1),
+        }
+      : DEFAULT_FORM,
+  );
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -49,8 +62,11 @@ export function AffirmForm({ onSave, onClose }: Props) {
     if (!form.amountStr.trim()) next.amountStr = "Amount is required";
     if (!form.start) next.start = "Start month is required";
     if (!form.end) next.end = "Final month is required";
+    if (!form.dueDayStr.trim()) next.dueDayStr = "Due day is required";
     if (form.end && form.start && form.end < form.start)
       next.end = "Final month must be after start month";
+    if (form.dueDayStr && (Number(form.dueDayStr) < 1 || Number(form.dueDayStr) > 31))
+      next.dueDayStr = "Due day must be 1 to 31";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -58,17 +74,18 @@ export function AffirmForm({ onSave, onClose }: Props) {
   const handleSave = () => {
     if (!validate()) return;
     onSave({
-      id: generateId(),
+      id: initial?.id ?? generateId(),
       label: form.label.trim(),
       mc: toCents(form.amountStr),
       start: form.start,
       end: form.end,
+      dueDay: Number(form.dueDayStr),
     });
   };
 
   return (
     <Modal
-      title="Add Installment Plan"
+      title={initial ? "Edit Installment Plan" : "Add Installment Plan"}
       onClose={onClose}
       footer={
         <>
@@ -76,7 +93,7 @@ export function AffirmForm({ onSave, onClose }: Props) {
             Cancel
           </button>
           <button type="button" className={styles.btnPrimary} onClick={handleSave}>
-            Save Plan
+            {initial ? "Save Changes" : "Save Plan"}
           </button>
         </>
       }
@@ -102,6 +119,17 @@ export function AffirmForm({ onSave, onClose }: Props) {
       </FormField>
 
       <div className={styles.row2}>
+        <FormField id="affirm-due-day" label="Due Day" error={errors.dueDayStr}>
+          <input
+            id="affirm-due-day"
+            className={styles.input}
+            type="number"
+            min="1"
+            max="31"
+            value={form.dueDayStr}
+            onChange={(e) => set("dueDayStr", e.target.value)}
+          />
+        </FormField>
         <FormField id="affirm-start" label="Start Month" error={errors.start}>
           <input
             id="affirm-start"

@@ -1,8 +1,20 @@
 "use client";
 
-import type { Bill, KiasCheckEntry, MonthlyIncome, MonthSnapshot, SavingsEntry } from "@/types";
-import { fmtMoney, sumCents, calcShortfall } from "@/lib/money";
+import type {
+  Bill,
+  InstallmentPlan,
+  KiasCheckEntry,
+  MonthlyIncome,
+  MonthSnapshot,
+  PaycheckWeek,
+  SavingsEntry,
+} from "@/types";
+import { fmtMoney } from "@/lib/money";
 import { fmtMonthFull } from "@/lib/dates";
+import {
+  getHouseholdMonthSummary,
+  getMonthSnapshotFromSummary,
+} from "@/lib/household/household";
 import { Stat } from "@/components/ui/Stat/Stat";
 import styles from "./MonthSnapshot.module.css";
 
@@ -10,8 +22,10 @@ type Props = {
   month: string;
   bills: Bill[];
   income: MonthlyIncome[];
+  plans: InstallmentPlan[];
   savingsLog: SavingsEntry[];
   checkLog: KiasCheckEntry[];
+  paycheck: PaycheckWeek[];
   /** Called when the user confirms saving the snapshot. */
   onSave: (snap: MonthSnapshot) => void;
   /** Called after save — closes the modal. */
@@ -29,38 +43,27 @@ export function MonthSnapshot({
   month,
   bills,
   income,
+  plans,
   savingsLog,
   checkLog = [],
+  paycheck,
   onSave,
   onClose,
 }: Props) {
-  const monthBills = bills.filter((b) => b.month === month);
-  const thisMonthIncome = income.find((i) => i.month === month);
-
-  const totalBilled = sumCents(monthBills.map((b) => b.cents));
-  const totalPaid = sumCents(monthBills.filter((b) => b.paid).map((b) => b.cents));
-  const totalIncome = thisMonthIncome
-    ? sumCents([
-        thisMonthIncome.kias_pay,
-        thisMonthIncome.military_pay,
-        thisMonthIncome.retirement,
-        thisMonthIncome.social_security,
-      ])
-    : 0;
-  const shortfall = calcShortfall(totalBilled, totalIncome);
-  const savingsMoved = sumCents(
-    savingsLog
-      .filter((e) => (e.date ?? e.weekOf ?? "").startsWith(month))
-      .map((e) => e.amount),
-  );
-  const kiasPayActual = sumCents(
-    checkLog.filter((e) => e.weekOf.startsWith(month)).map((e) => e.amount),
-  );
-
-  const canSave = totalBilled > 0;
+  const summary = getHouseholdMonthSummary({
+    month,
+    bills,
+    income,
+    paycheck,
+    checkLog,
+    savingsLog,
+    plans,
+  });
+  const snapshot = getMonthSnapshotFromSummary(summary);
+  const canSave = summary.totalExpenseCents > 0;
 
   const handleSave = () => {
-    onSave({ month, totalBilled, totalPaid, shortfall, savingsMoved, kiasPayActual });
+    onSave(snapshot);
     onClose();
   };
 
@@ -78,15 +81,15 @@ export function MonthSnapshot({
       )}
 
       <div className={styles.statsGrid}>
-        <Stat label="Total Billed" value={fmtMoney(totalBilled)} />
-        <Stat label="Total Paid" value={fmtMoney(totalPaid)} />
+        <Stat label="Total Billed" value={fmtMoney(snapshot.totalBilled)} />
+        <Stat label="Total Paid" value={fmtMoney(snapshot.totalPaid)} />
         <Stat
-          label={shortfall > 0 ? "Short" : "Surplus"}
-          value={fmtMoney(Math.abs(shortfall))}
-          color={shortfall > 0 ? "rust" : "olive"}
+          label={snapshot.shortfall > 0 ? "Short" : "Surplus"}
+          value={fmtMoney(Math.abs(snapshot.shortfall))}
+          color={snapshot.shortfall > 0 ? "rust" : "olive"}
         />
-        <Stat label="Moved to Savings" value={fmtMoney(savingsMoved)} color="olive" />
-        <Stat label="Kia's Pay (actual)" value={fmtMoney(kiasPayActual)} />
+        <Stat label="Moved to Savings" value={fmtMoney(snapshot.savingsMoved)} color="olive" />
+        <Stat label="Kia's Pay (actual)" value={fmtMoney(snapshot.kiasPayActual)} />
       </div>
 
       <div className={styles.actions}>

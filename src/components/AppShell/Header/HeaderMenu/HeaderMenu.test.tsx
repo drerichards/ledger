@@ -34,29 +34,16 @@ describe("HeaderMenu — menu items", () => {
     fireEvent.click(screen.getByLabelText("Open menu"));
   });
 
+  it("shows Messages item", () => {
+    expect(screen.getByRole("menuitem", { name: /Messages/i })).toBeInTheDocument();
+  });
+
+  it("shows theme toggle item", () => {
+    expect(screen.getByRole("menuitem", { name: /mode/i })).toBeInTheDocument();
+  });
+
   it("shows 'Sign out' item", () => {
-    expect(screen.getByRole("menuitem", { name: "Sign out" })).toBeInTheDocument();
-  });
-
-  it("does not show Reset item when onResetToSeed is not provided", () => {
-    expect(screen.queryByRole("menuitem", { name: /Reset/ })).not.toBeInTheDocument();
-  });
-});
-
-describe("HeaderMenu — onResetToSeed", () => {
-  it("shows Reset item when onResetToSeed is provided", () => {
-    render(<HeaderMenu onSignOut={noop} onResetToSeed={noop} />);
-    fireEvent.click(screen.getByLabelText("Open menu"));
-    expect(screen.getByRole("menuitem", { name: /Reset to Seed Data/ })).toBeInTheDocument();
-  });
-
-  it("calls onResetToSeed and closes menu", () => {
-    const onResetToSeed = jest.fn();
-    render(<HeaderMenu onSignOut={noop} onResetToSeed={onResetToSeed} />);
-    fireEvent.click(screen.getByLabelText("Open menu"));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Reset to Seed Data/ }));
-    expect(onResetToSeed).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Sign out/i })).toBeInTheDocument();
   });
 });
 
@@ -65,7 +52,7 @@ describe("HeaderMenu — callbacks", () => {
     const onSignOut = jest.fn();
     render(<HeaderMenu onSignOut={onSignOut} />);
     fireEvent.click(screen.getByLabelText("Open menu"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Sign out/i }));
     expect(onSignOut).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });

@@ -1,31 +1,10 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { AccountsTab } from "@/components/AccountsTab/AccountsTab";
-import type { Bill } from "@/types";
-
-// ─── Mock hooks ───────────────────────────────────────────────────────────────
-
-jest.mock("@/hooks/useBillChartState", () => ({
-  useBillChartState: jest.fn((bills: import("@/types").Bill[]) => ({
-    visibleBills: bills ?? [],
-    kiasBills: (bills ?? []).filter((b) => b.group === "kias_pay"),
-    otherBills: (bills ?? []).filter((b) => b.group === "other_income"),
-    kiasBillsCents: 0,
-    otherBillsCents: 0,
-    paidCents: 0,
-    unpaidCents: 0,
-    kiasPayCents: 0,
-    thisMonthIncome: null,
-    shortfall: 0,
-  })),
-}));
+import type { Bill, InstallmentPlan } from "@/types";
 
 jest.mock("@/lib/dates", () => ({
   ...jest.requireActual("@/lib/dates"),
   currentMonth: jest.fn(() => "2026-04"),
-}));
-
-jest.mock("@/lib/export", () => ({
-  exportBillsCSV: jest.fn(),
 }));
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
@@ -49,10 +28,23 @@ function makeBill(overrides: Partial<Bill> = {}): Bill {
   };
 }
 
+function makePlan(overrides: Partial<InstallmentPlan> = {}): InstallmentPlan {
+  return {
+    id: "plan-1",
+    label: "Affirm Couch",
+    mc: 7500,
+    start: "2026-04",
+    end: "2026-06",
+    dueDay: 12,
+    ...overrides,
+  };
+}
+
 const noop = () => {};
 
 function renderTab(overrides: {
   bills?: Bill[];
+  plans?: InstallmentPlan[];
   viewMonth?: string;
   onViewMonthChange?: (m: string) => void;
   onRollover?: (from: string, to: string) => void;
@@ -61,6 +53,7 @@ function renderTab(overrides: {
     <AccountsTab
       bills={overrides.bills ?? []}
       income={[]}
+      plans={overrides.plans ?? []}
       savingsLog={[]}
       checkLog={[]}
       paycheck={[]}
@@ -96,9 +89,15 @@ describe("AccountsTab — rendering", () => {
     expect(screen.getByLabelText("Next month")).toBeInTheDocument();
   });
 
-  it("renders the Add Bill FAB", () => {
+  it("renders the Add Bill toolbar button", () => {
     renderTab();
-    expect(screen.getByRole("button", { name: "Add bill" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "+ Add Bill" })).toBeInTheDocument();
+  });
+
+  it("renders the plan-derived debt total in the stat card breakdown", () => {
+    renderTab({ plans: [makePlan()] });
+    expect(screen.getByText("Affirm Plans")).toBeInTheDocument();
+    expect(screen.getAllByText("$75.00").length).toBeGreaterThan(0);
   });
 });
 
@@ -172,19 +171,17 @@ describe("AccountsTab — rollover prompt", () => {
 });
 
 describe("AccountsTab — Add Bill modal", () => {
-  it("opens the BillForm when FAB is clicked", () => {
+  it("opens the BillForm when toolbar button is clicked", () => {
     renderTab();
-    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add Bill" }));
     // Custom Modal has no role="dialog" — assert the modal title heading instead
     // Modal renders <h3>{title}</h3>; BillForm passes title="Add Bill"
     expect(screen.getByRole("heading", { name: "Add Bill" })).toBeInTheDocument();
   });
 
-  it("opens Month Summary modal when 'Month Summary' is clicked", () => {
+  it("opens snapshot modal when 'Close Month' is clicked", () => {
     renderTab();
-    // Month Summary is inside the More dropdown — open it first
-    fireEvent.click(screen.getByRole("button", { name: /More/ }));
-    fireEvent.click(screen.getByText("Month Summary"));
+    fireEvent.click(screen.getByRole("button", { name: "Close Month" }));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
   });
 });
@@ -232,7 +229,7 @@ describe("AccountsTab — edit bill", () => {
 
   it("closes BillForm when Cancel is clicked (handleFormClose)", () => {
     renderTab();
-    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add Bill" }));
     fireEvent.click(screen.getByText("Cancel"));
     expect(screen.queryByRole("heading", { name: "Add Bill" })).not.toBeInTheDocument();
   });
@@ -257,7 +254,7 @@ describe("AccountsTab — edit bill", () => {
         onRollover={noop}
       />,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Add bill" }));
+    fireEvent.click(screen.getByRole("button", { name: "+ Add Bill" }));
     expect(screen.getByRole("heading", { name: "Add Bill" })).toBeInTheDocument();
     // Fill required fields — Zod rejects an empty form and never calls onSave
     fireEvent.change(screen.getByLabelText("Payee Name"), {
@@ -310,15 +307,6 @@ describe("AccountsTab — edit bill", () => {
 });
 
 describe("AccountsTab — toolbar actions", () => {
-  it("calls exportBillsCSV when Export CSV is clicked", () => {
-    const { exportBillsCSV } = jest.requireMock("@/lib/export");
-    renderTab();
-    // Export CSV is inside the More dropdown — open it first
-    fireEvent.click(screen.getByRole("button", { name: /More/ }));
-    fireEvent.click(screen.getByText("Export CSV"));
-    expect(exportBillsCSV).toHaveBeenCalledTimes(1);
-  });
-
   it("Today button sets viewMonth to currentMonth() = '2026-04'", () => {
     const onViewMonthChange = jest.fn();
     renderTab({ viewMonth: "2026-03", onViewMonthChange });
@@ -330,9 +318,7 @@ describe("AccountsTab — toolbar actions", () => {
 describe("AccountsTab — MonthSnapshot modal close", () => {
   it("closes MonthSnapshot modal via the Modal × button (onClose on Modal — line 276)", () => {
     renderTab();
-    // Month Summary is inside the More dropdown — open it first
-    fireEvent.click(screen.getByRole("button", { name: /More/ }));
-    fireEvent.click(screen.getByText("Month Summary"));
+    fireEvent.click(screen.getByRole("button", { name: "Close Month" }));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
     // Modal renders a × close button with aria-label "Close"
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -341,9 +327,7 @@ describe("AccountsTab — MonthSnapshot modal close", () => {
 
   it("closes MonthSnapshot modal via Cancel button inside panel (onClose on panel — line 286)", () => {
     renderTab();
-    // Month Summary is inside the More dropdown — open it first
-    fireEvent.click(screen.getByRole("button", { name: /More/ }));
-    fireEvent.click(screen.getByText("Month Summary"));
+    fireEvent.click(screen.getByRole("button", { name: "Close Month" }));
     expect(screen.getByText("Month-End Snapshot")).toBeInTheDocument();
     // MonthSnapshot renders its own Cancel button
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -352,41 +336,62 @@ describe("AccountsTab — MonthSnapshot modal close", () => {
 });
 
 describe("AccountsTab — shortfall stat card", () => {
-  it("renders 'Short' label and rust color when shortfall > 0 (lines 153-156 truthy branch)", () => {
-    const { useBillChartState } = jest.requireMock("@/hooks/useBillChartState");
-    (useBillChartState as jest.Mock).mockReturnValueOnce({
-      visibleBills: [],
-      kiasBills: [],
-      otherBills: [],
-      kiasBillsCents: 0,
-      otherBillsCents: 0,
-      paidCents: 0,
-      unpaidCents: 0,
-      kiasPayCents: 0,
-      thisMonthIncome: null,
-      shortfall: 24726,
+  it("renders 'Short' when bills and plans exceed same-month income", () => {
+    renderTab({
+      bills: [makeBill({ group: "other_income", cents: 300000 })],
+      plans: [makePlan({ mc: 125000 })],
     });
-    renderTab();
-    expect(screen.getByText("Short")).toBeInTheDocument();
+    expect(screen.getAllByText("Short").length).toBeGreaterThan(0);
   });
 });
 
 describe("AccountsTab — BillGroup collapse toggle", () => {
-  it("toggles the kias_pay group collapse state", () => {
-    const bills = [makeBill({ group: "kias_pay" })];
+  const getKiaHeader = () => screen.getByRole("button", { name: /From Kia's Pay/i });
+  const getOtherHeader = () => screen.getByRole("button", { name: /From Other Income/i });
+
+  it("from both-expanded, clicking Other collapses Kia only", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
     renderTab({ bills });
-    // BillGroup header is a plain div (no role) — click by label text
-    // "From Kia's Pay" appears in StatCard subLabel [0] AND BillGroup header [1]
-    fireEvent.click(screen.getAllByText("From Kia's Pay")[1]);
-    // Group is now collapsed — component doesn't crash
-    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
+    fireEvent.click(getOtherHeader());
+    expect(getKiaHeader()).toHaveTextContent("►");
+    expect(getOtherHeader()).toHaveTextContent("▼");
   });
 
-  it("toggles the other_income group collapse state", () => {
-    const bills = [makeBill({ group: "other_income" })];
+  it("from both-expanded, clicking Kia collapses Other only", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
     renderTab({ bills });
-    // "From Other Income" appears in StatCard subLabel [0] AND BillGroup header [1]
-    fireEvent.click(screen.getAllByText("From Other Income")[1]);
-    expect(screen.getByText("Monthly Total")).toBeInTheDocument();
+    fireEvent.click(getKiaHeader());
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("►");
+  });
+
+  it("from Kia-only, clicking Other re-expands both groups", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
+    renderTab({ bills });
+    fireEvent.click(getOtherHeader()); // other-only
+    fireEvent.click(getOtherHeader()); // both
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("▼");
+  });
+
+  it("from Other-only, clicking Kia re-expands both groups", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
+    renderTab({ bills });
+    fireEvent.click(getKiaHeader()); // kia-only
+    fireEvent.click(getKiaHeader()); // both
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("▼");
   });
 });

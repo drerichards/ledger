@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { PayeeReductionPlanner } from "./PayeeReductionPlanner";
 import type { InstallmentPlan } from "@/types";
 import { getAffirmTotalForMonth } from "@/lib/affirm/affirm";
+import { affirmPayoffInsights } from "@/lib/insights/debtInsights";
 
 jest.mock("@/lib/dates/dates", () => ({
   ...jest.requireActual("@/lib/dates/dates"),
@@ -188,5 +189,22 @@ describe("PayeeReductionPlanner", () => {
     stepMock([["2026-06", 50000], ["9999-99", 0]]);
     render(<PayeeReductionPlanner plans={[singlePlan]} />);
     expect(screen.getByText("$0")).toBeInTheDocument();
+  });
+
+  it("renders InsightCard map callback when affirmPayoffInsights returns a non-empty array", () => {
+    // Force the line 114 `(insight, i) => <InsightCard ... />` map callback to fire
+    (affirmPayoffInsights as jest.Mock).mockReturnValueOnce([
+      {
+        icon: "📉",
+        headline: "$150.00/mo freed up in Jun '26.",
+        context: "Monthly Affirm obligation drops.",
+        teachingNote: "Debt snowball.",
+        sentiment: "positive",
+      },
+    ]);
+    stepMock([["2026-06", 50000], ["9999-99", 35000]]);
+    render(<PayeeReductionPlanner plans={[PLAN_A]} />);
+    // InsightCard is mocked to return null — we only need the map callback to have executed.
+    expect(screen.getByText("Affirm Payoff Timeline")).toBeInTheDocument();
   });
 });

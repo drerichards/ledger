@@ -157,21 +157,34 @@ describe("PaycheckTab — navigation", () => {
     fireEvent.click(screen.getByLabelText("Next month"));
     expect(screen.getByRole("heading", { name: /Year/ })).toBeInTheDocument();
   });
+
+  it("allows quarterly view to land on the Dec 2025 data boundary", () => {
+    renderPaycheck({ viewScope: "quarterly" });
+    fireEvent.click(screen.getByLabelText("Previous month"));
+    fireEvent.click(screen.getByLabelText("Previous month"));
+    expect(screen.getByRole("heading", { name: "December 2025 — Quarter" })).toBeInTheDocument();
+  });
+
+  it("allows yearly view to land on the Dec 2025 data boundary", () => {
+    renderPaycheck({ viewScope: "yearly" });
+    fireEvent.click(screen.getByLabelText("Previous month"));
+    expect(screen.getByRole("heading", { name: "December 2025 — Year" })).toBeInTheDocument();
+  });
 });
 
 describe("PaycheckTab — menu", () => {
   it("opens the More menu when the More button is clicked", () => {
     renderPaycheck();
     fireEvent.click(screen.getByTitle("More"));
-    expect(screen.getByRole("menuitem", { name: "Manage Columns" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Manage Payees" })).toBeInTheDocument();
   });
 
-  it("opens the column modal when Manage Columns is clicked", () => {
+  it("opens the payee modal when Manage Payees is clicked", () => {
     renderPaycheck();
     fireEvent.click(screen.getByTitle("More"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Manage Columns" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Manage Payees" }));
     // Column modal should appear
-    expect(screen.getByText(/Manage Columns/)).toBeInTheDocument();
+    expect(screen.getByText(/Manage Payees/)).toBeInTheDocument();
   });
 
   it("toggles the paycheck log panel when Paycheck Log is clicked", () => {
@@ -196,10 +209,10 @@ describe("PaycheckTab — menu", () => {
   it("closes menu when clicking outside (handleClickOutside — lines 316-317)", () => {
     renderPaycheck();
     fireEvent.click(screen.getByTitle("More"));
-    expect(screen.getByRole("menuitem", { name: "Manage Columns" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Manage Payees" })).toBeInTheDocument();
     // Simulate click outside the menu wrapper
     fireEvent.mouseDown(document.body);
-    expect(screen.queryByRole("menuitem", { name: "Manage Columns" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Manage Payees" })).not.toBeInTheDocument();
   });
 });
 
@@ -303,21 +316,21 @@ describe("PaycheckTab — toggleMonth", () => {
 describe("PaycheckTab — column modal", () => {
   function openModal() {
     fireEvent.click(screen.getByTitle("More"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Manage Columns" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Manage Payees" }));
   }
 
   it("closes modal via × button (cancelColumnModal)", () => {
     renderPaycheck();
     openModal();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    expect(screen.queryByRole("heading", { name: "Manage Columns" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Manage Payees" })).not.toBeInTheDocument();
   });
 
   it("closes modal via Back footer button (cancelColumnModal)", () => {
     renderPaycheck();
     openModal();
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    expect(screen.queryByRole("heading", { name: "Manage Columns" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Manage Payees" })).not.toBeInTheDocument();
   });
 
   it("renames a column with Enter key (startEdit + commitEdit)", () => {
@@ -453,18 +466,20 @@ describe("PaycheckTab — toggleWeek", () => {
     renderPaycheck();
     // Initial expandedWeeks = Set(["2026-04-06"]) (currentWeekOf).
     // "Apr 13" is not expanded — clicking it hits the else (next.add) path.
-    const weekBtns = screen.getAllByRole("button", { name: /Week of/ });
-    // weekBtns[0] = Apr 6 (expanded), weekBtns[1] = Apr 13 (collapsed)
-    fireEvent.click(weekBtns[1]);
-    expect(weekBtns[1]).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("button", { name: /Week of Apr 13/i }));
+    expect(screen.getByRole("button", { name: /Week of Apr 13/i })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("collapses an expanded week when its header is clicked again (lines 247-248 delete branch)", () => {
     renderPaycheck();
     // Apr 6 starts expanded — clicking it hits the if (next.delete) path.
-    const weekBtns = screen.getAllByRole("button", { name: /Week of/ });
-    fireEvent.click(weekBtns[0]);
-    expect(weekBtns[0]).toHaveAttribute("aria-expanded", "false");
+    const weekHeader = screen.getAllByRole("button", { name: /Week of Apr 6/i })
+      .find((el) => el.hasAttribute("aria-expanded"));
+    expect(weekHeader).toBeTruthy();
+    fireEvent.click(weekHeader!);
+    const collapsedHeader = screen.getAllByRole("button", { name: /Week of Apr 6/i })
+      .find((el) => el.hasAttribute("aria-expanded"));
+    expect(collapsedHeader).toHaveAttribute("aria-expanded", "false");
   });
 });
 

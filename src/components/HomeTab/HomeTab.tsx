@@ -1,11 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import type { BankAccount, Bill, InstallmentPlan, KiasCheckEntry, SavingsEntry } from "@/types";
+import type {
+  BankAccount,
+  Bill,
+  InstallmentPlan,
+  KiasCheckEntry,
+  MonthlyIncome,
+  PaycheckWeek,
+  SavingsEntry,
+} from "@/types";
 import { fmtMoney, sumCents, toCents } from "@/lib/money";
 import { today, mondayOf } from "@/lib/dates";
-import { projectWeekRows, calcWeekSurplus, isCovered } from "@/lib/cashflow";
-import type { CashFlowRow } from "@/lib/cashflow";
+import {
+  calcWeekSurplus,
+  getHouseholdMonthSummary,
+  getUpcomingDueItems,
+  isCovered,
+  projectCashFlowRows,
+} from "@/lib/household/household";
+import type { CashFlowRow } from "@/lib/household/household";
 import { generateId } from "@/lib/id";
 import { LedgerTable } from "@/components/ui/LedgerTable/LedgerTable";
 import type { LedgerRow, LedgerSection } from "@/components/ui/LedgerTable/LedgerTable";
@@ -17,7 +31,9 @@ type Props = {
   checkingBalanceDate: string; // YYYY-MM-DD or "" — legacy fallback
   bankAccounts: BankAccount[];
   bills: Bill[];
+  income: MonthlyIncome[];
   plans: InstallmentPlan[];
+  paycheck: PaycheckWeek[];
   checkLog: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
   onSetBalance: (balance: number, date: string) => void;
@@ -165,17 +181,6 @@ function toCfSection(label: string, rows: CashFlowRow[]): LedgerSection {
   };
 }
 
-// ── Next due pills ─────────────────────────────────────────────────────────────
-
-function nextDueBills(bills: Bill[], month: string, fromDate: string, limit: number): Bill[] {
-  return bills
-    .filter((b) => b.month === month && !b.paid)
-    .map((b) => ({ ...b, _date: `${month}-${String(b.due).padStart(2, "0")}` }))
-    .filter((b) => b._date >= fromDate)
-    .sort((a, b) => a._date.localeCompare(b._date))
-    .slice(0, limit);
-}
-
 // ── Main HomeTab ───────────────────────────────────────────────────────────────
 
 export function HomeTab({
@@ -183,7 +188,9 @@ export function HomeTab({
   checkingBalanceDate,
   bankAccounts,
   bills,
+  income,
   plans,
+  paycheck,
   checkLog,
   savingsLog,
   onSetBalance,
@@ -194,6 +201,8 @@ export function HomeTab({
   const [editingBalance, setEditingBalance] = useState(false);
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
   const [addingAccount, setAddingAccount] = useState(false);
+  const [thisWeekOpen, setThisWeekOpen] = useState(true);
+  const [nextWeekOpen, setNextWeekOpen] = useState(false);
 
   const todayStr = today();
   const currentMonday = mondayOf(todayStr);
@@ -203,6 +212,15 @@ export function HomeTab({
   const month = todayStr.slice(0, 7);
 
   const savingsTotal = sumCents(savingsLog.map((e) => e.amount));
+  const monthSummary = getHouseholdMonthSummary({
+    month,
+    bills,
+    income,
+    paycheck,
+    checkLog,
+    savingsLog,
+    plans,
+  });
 
   // Effective checking balance: sum of bank accounts when present, else legacy single balance
   const bankAccountsTotal = bankAccounts.length > 0
@@ -211,29 +229,40 @@ export function HomeTab({
 
   const totalLiquid = bankAccountsTotal + savingsTotal;
 
-  const thisWeekRows = projectWeekRows({
+  const thisWeekRows = projectCashFlowRows({
     startBalance: bankAccountsTotal,
     bills,
     plans,
+    paycheck,
     checkLog,
     month,
     fromDate: currentMonday,
     toDate: currentSunday,
+    aggregateAffirm: true,
   });
 
-  const nextWeekRows = projectWeekRows({
+  const nextWeekRows = projectCashFlowRows({
     startBalance: thisWeekRows.at(-1)?.runningBalance ?? bankAccountsTotal,
     bills,
     plans,
+    paycheck,
     checkLog,
     month,
     fromDate: nextMonday,
     toDate: nextSunday,
+    aggregateAffirm: true,
   });
 
   const surplus = calcWeekSurplus(thisWeekRows);
   const covered = isCovered(thisWeekRows);
-  const upcomingBills = nextDueBills(bills, month, todayStr, 3);
+  const upcomingBills = getUpcomingDueItems({
+    month,
+    bills,
+    plans,
+    fromDate: todayStr,
+    limit: 3,
+    aggregateAffirm: true,
+  });
 
   const surplusLabel = surplus >= 0
     ? `+${fmtMoney(surplus)} this week`
@@ -327,24 +356,24 @@ export function HomeTab({
             ) : (
               <>
                 <p className={styles.statValue}>{fmtMoney(checkingBalance)}</p>
-                <div className={styles.statSub}>
-                  {fmtBalanceDate(checkingBalanceDate)}
-                  {" · "}
-                  <button
-                    type="button"
-                    className={styles.updateLink}
-                    onClick={() => setEditingBalance(true)}
-                  >
-                    Update
-                  </button>
-                  {" · "}
-                  <button
-                    type="button"
-                    className={styles.updateLink}
-                    onClick={() => setAddingAccount(true)}
-                  >
-                    + Add Accounts
-                  </button>
+                <div className={styles.statMeta}>
+                  <div className={styles.statSub}>
+                    <span className={styles.statSubItem}>{fmtBalanceDate(checkingBalanceDate)}</span>
+                    <button
+                      type="button"
+                      className={`${styles.updateLink} ${styles.statSubItem}`}
+                      onClick={() => setEditingBalance(true)}
+                    >
+                      Update
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.updateLink} ${styles.statSubItem}`}
+                      onClick={() => setAddingAccount(true)}
+                    >
+                      + Add Accounts
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -371,21 +400,11 @@ export function HomeTab({
           color="gold"
           value={fmtMoney(totalLiquid)}
         />
-      </div>
-
-      {/* ── Covered / surplus band ──────────────────────────────────── */}
-      <div className={`${styles.coveredBand} ${covered ? styles.coveredBand_ok : styles.coveredBand_warn}`}>
-        <div>
-          <p className={styles.surplusLabel}>Week {surplus >= 0 ? "Surplus" : "Shortfall"}</p>
-          <p className={`${styles.surplusAmount} ${surplus >= 0 ? styles.surplusPos : styles.surplusNeg}`}>
-            {surplusLabel}
-          </p>
-        </div>
-        <div className={styles.coveredRight}>
-          <span className={styles.coveredEmoji}>{covered ? "✅" : "⚠️"}</span>
-          <p className={styles.coveredStatus}>{covered ? "You're covered" : "Shortfall risk"}</p>
-          <p className={styles.coveredThrough}>through {coveredThrough}</p>
-        </div>
+        <StatCard
+          label={monthSummary.shortfallCents > 0 ? "This Month Short" : "This Month Left"}
+          color={monthSummary.shortfallCents > 0 ? "rust" : "olive"}
+          value={fmtMoney(Math.abs(monthSummary.shortfallCents))}
+        />
       </div>
 
       {/* ── Two-column body ─────────────────────────────────────────── */}
@@ -394,33 +413,73 @@ export function HomeTab({
         {/* Left: next due */}
         <div className={styles.nextDue}>
           <p className={styles.colLabel}>Next Due</p>
-          {upcomingBills.length === 0 ? (
-            <p className={styles.emptyDue}>No unpaid bills remaining this month.</p>
-          ) : (
-            upcomingBills.map((b, i) => {
-              const color = (["navy", "rust", "olive"] as const)[i % 3];
-              return (
-                <div key={b.id} className={`${styles.duePill} ${styles[`duePill_${color}`]}`}>
-                  <p className={styles.dueDate}>{fmtDateShort(`${month}-${String(b.due).padStart(2, "0")}`)}</p>
-                  <p className={styles.dueName}>{b.name}</p>
-                  <p className={styles.dueAmount}>{fmtMoney(b.cents)}</p>
-                </div>
-              );
-            })
-          )}
+          <div className={styles.nextDuePanel}>
+            {upcomingBills.length === 0 ? (
+              <p className={styles.emptyDue}>No due items remaining this month.</p>
+            ) : (
+              upcomingBills.map((b, i) => {
+                const color = (["navy", "rust", "olive"] as const)[i % 3];
+                return (
+                  <div key={b.id} className={`${styles.duePill} ${styles[`duePill_${color}`]}`}>
+                    <p className={styles.dueDate}>{fmtDateShort(b.date)}</p>
+                    <p className={styles.dueName}>{b.label}</p>
+                    <p className={styles.dueAmount}>{fmtMoney(b.cents)}</p>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Right: cash flow table */}
-        <div className={styles.cashFlow}>
-          <p className={styles.colLabel}>Cash flow — balance after each transaction</p>
-          <LedgerTable
-            columns={CF_COLUMNS}
-            sections={[
-              toCfSection(thisWeekLabel, thisWeekRows),
-              toCfSection(nextWeekLabel, nextWeekRows),
-            ]}
-            emptyMessage="No transactions found. Add bills or check entries to see your cash flow."
-          />
+        <div className={styles.mainColumn}>
+          <div className={`${styles.coveredBand} ${covered ? styles.coveredBand_ok : styles.coveredBand_warn}`}>
+            <div>
+              <p className={styles.surplusLabel}>Week {surplus >= 0 ? "Surplus" : "Shortfall"}</p>
+              <p className={`${styles.surplusAmount} ${surplus >= 0 ? styles.surplusPos : styles.surplusNeg}`}>
+                {surplusLabel}
+              </p>
+            </div>
+            <div className={styles.coveredRight}>
+              <span className={styles.coveredEmoji}>{covered ? "✅" : "⚠️"}</span>
+              <p className={styles.coveredStatus}>{covered ? "You're covered" : "Shortfall risk"}</p>
+              <p className={styles.coveredThrough}>through {coveredThrough}</p>
+            </div>
+          </div>
+
+          {/* Right: cash flow table */}
+          <div className={styles.cashFlow}>
+            <p className={styles.colLabel}>Cash flow — balance after each transaction</p>
+            <div className={styles.cashSections}>
+              {[
+                { id: "this", label: thisWeekLabel, rows: thisWeekRows, open: thisWeekOpen, setOpen: setThisWeekOpen },
+                { id: "next", label: nextWeekLabel, rows: nextWeekRows, open: nextWeekOpen, setOpen: setNextWeekOpen },
+              ].map((section) => (
+                <section key={section.id} className={styles.cashSection}>
+                  <button
+                    type="button"
+                    className={styles.cashSectionToggle}
+                    onClick={() => section.setOpen((v) => !v)}
+                    aria-expanded={section.open}
+                  >
+                    <span className={styles.cashSectionLabel}>{section.label}</span>
+                    <span className={styles.cashSectionChevron} aria-hidden="true">
+                      {section.open ? "▾" : "▸"}
+                    </span>
+                  </button>
+                  {section.open && (
+                    <div className={styles.cashSectionBody}>
+                      <LedgerTable
+                        columns={CF_COLUMNS}
+                        sections={[toCfSection(section.label, section.rows)]}
+                        showSectionLabels={false}
+                        emptyMessage="No transactions found. Add bills or check entries to see your cash flow."
+                      />
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>

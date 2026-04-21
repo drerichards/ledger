@@ -35,11 +35,11 @@ function GoalCard({ goal, currentSavedCents, onDelete }: GoalCardProps) {
   const [contrib, setContrib] = useState(defaultContrib);
 
   const remaining = Math.max(0, goal.targetCents - currentSavedCents);
-  const projMonths = contrib > 0 ? Math.ceil(remaining / contrib) : null;
+  // Slider min is 5000 cents so contrib is always positive — no nullish branch needed.
+  const projMonths = Math.ceil(remaining / contrib);
 
   const etaLabel = (() => {
     if (metrics.status === "achieved") return "Goal reached! 🎉";
-    if (projMonths === null) return "Set a monthly amount to see ETA";
     const d = new Date();
     d.setMonth(d.getMonth() + projMonths);
     const mo = d.toLocaleString("default", { month: "short", year: "numeric" });

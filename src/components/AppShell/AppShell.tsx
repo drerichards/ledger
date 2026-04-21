@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { fmtMoney } from "@/lib/money";
 import { currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
 import { useMilestones } from "@/hooks/useMilestones";
-import { MilestoneToast } from "@/components/ui/MilestoneToast";
-import { getUnseenMilestones } from "@/lib/milestones";
+import { getMilestoneLabel, getUnseenMilestones } from "@/lib/milestones";
+import { getHouseholdMonthSummary } from "@/lib/household/household";
 import { createClient } from "@/lib/supabase/client";
 import { withErrorBoundary } from "@/components/ui/withErrorBoundary/withErrorBoundary";
 import { Header } from "@/components/AppShell/Header/Header";
@@ -15,27 +16,24 @@ import {
   buildAffirmTabProps,
   buildHomeTabProps,
   buildPaycheckTabProps,
-  buildSavingsTabProps,
 } from "@/components/AppShell/types";
 import { HomeTab } from "@/components/HomeTab/HomeTab";
 import { AccountsTab } from "@/components/AccountsTab";
 import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
-import { SavingsTab } from "@/components/SavingsTab/SavingsTab";
 import { SnapshotsTab } from "@/components/SnapshotsTab";
-import { ActivityTab } from "@/components/ActivityTab";
 import styles from "./AppShell.module.css";
 
-type Tab = "home" | "accounts" | "paycheck" | "affirm" | "savings" | "snapshots" | "activity";
+type Tab = "home" | "accounts" | "paycheck" | "affirm" | "snapshots";
+
+const DEFAULT_LOCAL_USER_NAME = "Adriane";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "home",      label: "Home" },
-  { id: "accounts",  label: "Bills" },
+  { id: "accounts",  label: "Accounts" },
   { id: "paycheck",  label: "Income" },
-  { id: "affirm",    label: "Debt" },
-  { id: "savings",   label: "Goals" },
+  { id: "affirm",    label: "Payoff" },
   { id: "snapshots", label: "Snapshots" },
-  { id: "activity",  label: "Activity" },
 ];
 
 // Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
@@ -43,9 +41,7 @@ const SafeHomeTab = withErrorBoundary(HomeTab, "HomeTab");
 const SafeAccountsTab = withErrorBoundary(AccountsTab, "AccountsTab");
 const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
 const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
-const SafeSavingsTab = withErrorBoundary(SavingsTab, "SavingsTab");
 const SafeSnapshotsTab = withErrorBoundary(SnapshotsTab, "SnapshotsTab");
-const SafeActivityTab = withErrorBoundary(ActivityTab, "ActivityTab");
 
 function isWithin24Hrs(isoDatetime: string): boolean {
   return Date.now() - new Date(isoDatetime).getTime() < 86_400_000;
@@ -54,35 +50,37 @@ function isWithin24Hrs(isoDatetime: string): boolean {
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [viewMonth, setViewMonth] = useState(() => currentMonth());
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState(DEFAULT_LOCAL_USER_NAME);
+  const [navMessageIndex, setNavMessageIndex] = useState(0);
   const appState = useAppState();
   const router = useRouter();
 
   // Fetch logged-in user's first name
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!user) {
+          return;
+        }
         const fullName =
           user.user_metadata?.full_name ||
           user.user_metadata?.name ||
           user.email?.split("@")[0] ||
-          null;
-        const firstName = fullName?.split(" ")[0] ?? null;
-        setUserName(firstName);
-      }
-    });
+          DEFAULT_LOCAL_USER_NAME;
+        const firstName = fullName.split(" ")[0] ?? DEFAULT_LOCAL_USER_NAME;
+        if (firstName !== DEFAULT_LOCAL_USER_NAME) {
+          setUserName(firstName);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
-  };
-
-  const handleDevReset = async () => {
-    if (!confirm("Reset all data to seed state? This cannot be undone.")) return;
-    await actions.resetToSeed();
   };
 
   const { state: s, ...actions } = appState;
@@ -92,6 +90,75 @@ export function AppShell() {
   useMilestones(s, actions.addMilestone);
   const unseenMilestones = getUnseenMilestones(s);
   const last24hrMilestones = unseenMilestones.filter((m) => isWithin24Hrs(m.achievedAt));
+  const milestoneMessages = (last24hrMilestones.length > 0 ? last24hrMilestones : unseenMilestones)
+    .slice(0, 4)
+    .map((m) => getMilestoneLabel(m));
+  const activeMonthSummary = getHouseholdMonthSummary({
+    month: viewMonth,
+    bills: s.bills,
+    income: s.income,
+    paycheck: s.paycheck,
+    checkLog: s.checkLog,
+    savingsLog: s.savingsLog,
+    plans: s.plans,
+  });
+  const latestSnapshot = s.snapshots.at(-1) ?? null;
+  const tabMessages = useMemo(() => {
+    switch (activeTab) {
+      case "home":
+        return [
+          activeMonthSummary.shortfallCents > 0
+            ? `${fmtMoney(activeMonthSummary.shortfallCents)} short this month`
+            : `${fmtMoney(Math.abs(activeMonthSummary.shortfallCents))} left this month`,
+          activeMonthSummary.weeksEntered > 0
+            ? `${activeMonthSummary.weeksEntered} weeks entered`
+            : "Log this week's check",
+        ];
+      case "accounts":
+        return [
+          activeMonthSummary.shortfallCents > 0
+            ? `${fmtMoney(activeMonthSummary.shortfallCents)} still needs coverage`
+            : `${fmtMoney(Math.abs(activeMonthSummary.shortfallCents))} available after bills`,
+          `${fmtMoney(activeMonthSummary.totalExpenseCents)} total obligations`,
+        ];
+      case "paycheck":
+        return [
+          activeMonthSummary.weeksEntered > 0
+            ? `${activeMonthSummary.weeksEntered} weeks entered`
+            : "Add this week's check",
+          `${fmtMoney(activeMonthSummary.kiasPayCents)} from Kia's pay`,
+        ];
+      case "affirm":
+        return [
+          `${s.plans.length} active plan${s.plans.length === 1 ? "" : "s"}`,
+          `${fmtMoney(activeMonthSummary.affirmBurdenCents)} current burden`,
+        ];
+      case "snapshots":
+        return latestSnapshot
+          ? [
+              `Latest snapshot: ${fmtMonthFull(latestSnapshot.month)}`,
+              latestSnapshot.shortfall > 0
+                ? `${fmtMoney(latestSnapshot.shortfall)} short at close`
+                : `${fmtMoney(Math.abs(latestSnapshot.shortfall))} left at close`,
+            ]
+          : ["No snapshots yet", "Close a month to save history"];
+    }
+  }, [activeMonthSummary, activeTab, latestSnapshot, s.plans.length]);
+
+  useEffect(() => {
+    setNavMessageIndex(0);
+    if (tabMessages.length <= 1) return;
+    let rotateTimer: number | undefined;
+    const startTimer = window.setTimeout(() => {
+      rotateTimer = window.setInterval(() => {
+        setNavMessageIndex((prev) => (prev + 1) % tabMessages.length);
+      }, 3000);
+    }, 500);
+    return () => {
+      window.clearTimeout(startTimer);
+      if (rotateTimer) window.clearInterval(rotateTimer);
+    };
+  }, [activeTab, tabMessages]);
 
   const deps = {
     state: s,
@@ -106,9 +173,7 @@ export function AppShell() {
   const paycheckTabProps = buildPaycheckTabProps(
     deps,
     () => setActiveTab("affirm"),
-    () => setActiveTab("savings")
   );
-  const savingsTabProps = buildSavingsTabProps(deps, () => setActiveTab("paycheck"));
 
   const handleTabClick = (tabId: Tab, e: React.MouseEvent<HTMLButtonElement>) => {
     setActiveTab(tabId);
@@ -124,6 +189,21 @@ export function AppShell() {
     ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
   };
 
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case "home":
+        return <SafeHomeTab {...homeTabProps} />;
+      case "accounts":
+        return <SafeAccountsTab {...accountsTabProps} />;
+      case "paycheck":
+        return <SafePaycheckTab {...paycheckTabProps} />;
+      case "affirm":
+        return <SafeAffirmTab {...affirmTabProps} />;
+      case "snapshots":
+        return <SafeSnapshotsTab snapshots={s.snapshots} />;
+    }
+  };
+
   return (
     <div className={styles.shell}>
       <div className={styles.bgOrbs} aria-hidden="true" data-print-hide>
@@ -135,10 +215,8 @@ export function AppShell() {
         <Header
           userName={userName}
           onSignOut={handleSignOut}
-          onResetToSeed={handleDevReset}
           milestones={last24hrMilestones}
           unseenCount={unseenMilestones.length}
-          onGoToActivity={() => setActiveTab("activity")}
         />
         <nav className={styles.tabBar}>
           {TABS.map((tab) => (
@@ -146,45 +224,34 @@ export function AppShell() {
               key={tab.id}
               className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
               onClick={(e) => handleTabClick(tab.id, e)}
+              disabled={activeTab === tab.id}
               aria-selected={activeTab === tab.id}
+              aria-current={activeTab === tab.id ? "page" : undefined}
               role="tab"
             >
               {tab.label}
             </button>
           ))}
-          <time className={styles.viewMonth} dateTime={currentMonth()}>
-            {fmtMonthFull(currentMonth())}
+          <div className={styles.navStatus} aria-live="polite">
+            <div className={styles.navTicker}>
+              <div className={styles.navTickerTrack}>
+                <span key={`${activeTab}-${navMessageIndex}`} className={styles.navMessage}>
+                  {tabMessages[navMessageIndex] ?? milestoneMessages[0] ?? "All caught up"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <time className={styles.viewMonth} dateTime={viewMonth}>
+            {fmtMonthFull(viewMonth)}
           </time>
         </nav>
       </div>
 
       <main className={styles.content}>
-        <div className={`${styles.tabPanel} ${activeTab === "home" ? styles.tabPanelActive : ""}`}>
-          <SafeHomeTab {...homeTabProps} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "accounts" ? styles.tabPanelActive : ""}`}>
-          <SafeAccountsTab {...accountsTabProps} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "paycheck" ? styles.tabPanelActive : ""}`}>
-          <SafePaycheckTab {...paycheckTabProps} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "affirm" ? styles.tabPanelActive : ""}`}>
-          <SafeAffirmTab {...affirmTabProps} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "savings" ? styles.tabPanelActive : ""}`}>
-          <SafeSavingsTab {...savingsTabProps} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "snapshots" ? styles.tabPanelActive : ""}`}>
-          <SafeSnapshotsTab snapshots={s.snapshots} />
-        </div>
-        <div className={`${styles.tabPanel} ${activeTab === "activity" ? styles.tabPanelActive : ""}`}>
-          <SafeActivityTab />
+        <div key={activeTab} className={`${styles.tabPanel} ${styles.tabPanelActive}`}>
+          {renderActiveTab()}
         </div>
       </main>
-      <MilestoneToast
-        milestones={unseenMilestones}
-        onDismiss={actions.markMilestoneSeen}
-      />
     </div>
   );
 }

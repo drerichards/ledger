@@ -18,6 +18,7 @@
 
 import type {
   AppState,
+  BankAccount,
   Bill,
   InstallmentPlan,
   KiasCheckEntry,
@@ -28,6 +29,7 @@ import type {
 } from "@/types";
 import { createClient } from "./client";
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
+import { getPlanDueDay } from "@/lib/household/household";
 
 // ─── Row shape types (Supabase schema) ───────────────────────────────────────
 
@@ -55,6 +57,7 @@ type PlanRow = {
   mc: number;
   start: string;
   end: string;
+  due_day?: number | null;
 };
 
 type IncomeRow = {
@@ -101,6 +104,15 @@ type SavingsLogRow = {
   amount: number;
 };
 
+type BankAccountRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  balance_cents: number;
+  updated_date: string;
+  is_legacy?: boolean | null;
+};
+
 // ─── Mappers: TypeScript → Row ────────────────────────────────────────────────
 
 const billToRow = (b: Bill, userId: string): BillRow => ({
@@ -127,6 +139,7 @@ const planToRow = (p: InstallmentPlan, userId: string): PlanRow => ({
   mc: p.mc,
   start: p.start,
   end: p.end,
+  due_day: p.dueDay ?? getPlanDueDay(p),
 });
 
 const incomeToRow = (i: MonthlyIncome, userId: string): IncomeRow => ({
@@ -173,6 +186,19 @@ const savingsEntryToRow = (e: SavingsEntry, userId: string): SavingsLogRow => ({
   amount: e.amount,
 });
 
+const bankAccountToRow = (
+  account: BankAccount,
+  userId: string,
+  isLegacy = false,
+): BankAccountRow => ({
+  id: account.id,
+  user_id: userId,
+  name: account.name,
+  balance_cents: account.balanceCents,
+  updated_date: account.updatedDate,
+  is_legacy: isLegacy,
+});
+
 // ─── Mappers: Row → TypeScript ────────────────────────────────────────────────
 
 const rowToBill = (r: BillRow): Bill => ({
@@ -197,6 +223,7 @@ const rowToPlan = (r: PlanRow): InstallmentPlan => ({
   mc: r.mc,
   start: r.start,
   end: r.end,
+  dueDay: r.due_day ?? getPlanDueDay({ ...r, dueDay: undefined }),
 });
 
 const rowToIncome = (r: IncomeRow): MonthlyIncome => ({
@@ -240,6 +267,13 @@ const rowToSavingsEntry = (r: SavingsLogRow): SavingsEntry => ({
   amount: r.amount,
 });
 
+const rowToBankAccount = (r: BankAccountRow): BankAccount => ({
+  id: r.id,
+  name: r.name,
+  balanceCents: r.balance_cents,
+  updatedDate: r.updated_date,
+});
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -254,7 +288,7 @@ export async function loadFromSupabase(): Promise<AppState | null> {
     } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const [bills, plans, income, snapshots, paycheck, checkLog, savingsLog] =
+    const [bills, plans, income, snapshots, paycheck, checkLog, savingsLog, bankAccounts] =
       await Promise.all([
         supabase.from("bills").select("*").eq("user_id", user.id),
         supabase.from("installment_plans").select("*").eq("user_id", user.id),
@@ -263,12 +297,21 @@ export async function loadFromSupabase(): Promise<AppState | null> {
         supabase.from("paycheck_weeks").select("*").eq("user_id", user.id),
         supabase.from("check_log").select("*").eq("user_id", user.id),
         supabase.from("savings_log").select("*").eq("user_id", user.id),
+        supabase.from("bank_accounts").select("*").eq("user_id", user.id),
       ]);
 
     // If no data exists yet, return null to trigger seed migration
     const hasData =
-      (bills.data?.length ?? 0) > 0 || (plans.data?.length ?? 0) > 0;
+      (bills.data?.length ?? 0) > 0 ||
+      (plans.data?.length ?? 0) > 0 ||
+      (bankAccounts.data?.length ?? 0) > 0;
     if (!hasData) return null;
+
+    const bankRows = ((bankAccounts.data as BankAccountRow[] | null) ?? []);
+    const legacyBalance = bankRows.find((row) => row.is_legacy);
+    const visibleBankAccounts = bankRows
+      .filter((row) => !row.is_legacy)
+      .map(rowToBankAccount);
 
     return {
       bills: (bills.data as BillRow[]).map(rowToBill),
@@ -284,9 +327,9 @@ export async function loadFromSupabase(): Promise<AppState | null> {
       checkEditWarningAcked: false,
       goals: [],
       milestones: [],
-      checkingBalance: 0,
-      checkingBalanceDate: "",
-      bankAccounts: [],
+      checkingBalance: legacyBalance?.balance_cents ?? 0,
+      checkingBalanceDate: legacyBalance?.updated_date ?? "",
+      bankAccounts: visibleBankAccounts,
     };
   } catch (err) {
     if (process.env.NODE_ENV === "development")
@@ -309,6 +352,16 @@ export async function syncStateToSupabase(state: AppState): Promise<void> {
     if (!user) return;
 
     const uid = user.id;
+    const legacyBankAccount =
+      state.bankAccounts.length === 0 &&
+      (state.checkingBalance > 0 || state.checkingBalanceDate)
+        ? [{
+            id: "legacy-checking",
+            name: "Checking",
+            balanceCents: state.checkingBalance,
+            updatedDate: state.checkingBalanceDate,
+          }]
+        : [];
 
     await Promise.all([
       state.bills.length > 0
@@ -345,6 +398,12 @@ export async function syncStateToSupabase(state: AppState): Promise<void> {
         ? supabase
             .from("savings_log")
             .upsert(state.savingsLog.map((e) => savingsEntryToRow(e, uid)))
+        : Promise.resolve(),
+      state.bankAccounts.length > 0 || legacyBankAccount.length > 0
+        ? supabase.from("bank_accounts").upsert([
+            ...state.bankAccounts.map((account) => bankAccountToRow(account, uid)),
+            ...legacyBankAccount.map((account) => bankAccountToRow(account, uid, true)),
+          ])
         : Promise.resolve(),
     ]);
   } catch (err) {
@@ -396,6 +455,24 @@ export async function deletePlanRemote(id: string): Promise<void> {
   }
 }
 
+export async function deleteBankAccountRemote(id: string): Promise<void> {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase
+      .from("bank_accounts")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+  } catch (err) {
+    if (process.env.NODE_ENV === "development")
+      console.error("[sync] remote delete failed:", err);
+  }
+}
+
 /**
  * DEV ONLY — wipes all rows for the authenticated user across all 7 tables,
  * then re-seeds from SEED_STATE. Calling this in production is a no-op guarded
@@ -420,6 +497,7 @@ export async function resetRemoteToSeed(state: AppState): Promise<void> {
       supabase.from("paycheck_weeks").delete().eq("user_id", uid),
       supabase.from("check_log").delete().eq("user_id", uid),
       supabase.from("savings_log").delete().eq("user_id", uid),
+      supabase.from("bank_accounts").delete().eq("user_id", uid),
     ]);
 
     // Re-seed from the provided state (caller passes SEED_STATE)

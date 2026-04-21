@@ -66,6 +66,7 @@ export type InstallmentPlan = {
   mc: number; // monthly payment in cents
   start: string; // YYYY-MM — first payment month
   end: string; // YYYY-MM — final payment month (inclusive)
+  dueDay?: number; // day of month the payment typically hits (1–31)
 };
 
 export type PaycheckWeek = {

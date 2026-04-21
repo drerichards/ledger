@@ -1,54 +1,44 @@
 /* ── Row entrance animation ──────────────────────────────────────────────── */
 
 @keyframes rowFadeIn {
-  from { opacity: 0; transform: translateX(-6px); }
-  to   { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* ── Row states ──────────────────────────────────────────────────────────── */
 
 .row {
-    background: rgba(255, 255, 255, 0.35);
+    background: transparent;
     animation: rowFadeIn 0.22s ease both;
-    transition: background 0.1s;
-}
-
-.row:nth-child(even) {
-    background: rgba(255, 255, 255, 0.55);
-}
-
-.row:hover {
-    background: rgba(255, 255, 255, 0.88);
+    transition: transform 0.12s ease;
+    filter: none;
 }
 
 .rowPaid {
-    background: rgba(65, 82, 31, 0.06);
-}
-
-.rowPaid:nth-child(even) {
-    background: rgba(65, 82, 31, 0.10);
-}
-
-.rowPaid:hover {
-    background: rgba(65, 82, 31, 0.14);
+    background: transparent;
 }
 
 .rowFlagged {
-    border-left: 3px solid var(--color-rust);
-    background: rgba(196, 82, 42, 0.07);
-}
-
-.rowFlagged:hover {
-    background: rgba(196, 82, 42, 0.12);
+    background: transparent;
 }
 
 /* ── Cells ───────────────────────────────────────────────────────────────── */
 
 .td {
-    padding: 10px 12px;
+    padding: 11px 12px;
     font-size: var(--text-base);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     vertical-align: middle;
+    background: rgba(255, 255, 255, 0.76);
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    border-bottom: 1px solid rgba(15, 24, 36, 0.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
 .tdRight {
@@ -57,6 +47,40 @@
 
 .tdCenter {
     text-align: center;
+}
+
+.row .td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.6);
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
+    padding-left: 16px;
+}
+
+.row .td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+    padding-right: 10px;
+}
+
+.rowPaid .td {
+    background: color-mix(in srgb, var(--color-olive) 10%, rgba(255, 255, 255, 0.88));
+}
+
+.rowFlagged .td {
+    background: color-mix(in srgb, var(--color-rust) 10%, rgba(255, 255, 255, 0.88));
+}
+
+.row:hover .td {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.rowPaid:hover .td {
+    background: color-mix(in srgb, var(--color-olive) 14%, rgba(255, 255, 255, 0.92));
+}
+
+.rowFlagged:hover .td {
+    background: color-mix(in srgb, var(--color-rust) 14%, rgba(255, 255, 255, 0.92));
 }
 
 /* ── Content ─────────────────────────────────────────────────────────────── */
@@ -116,9 +140,21 @@
     display: inline-block;
     font-size: var(--text-mini);
     font-weight: 700;
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     color: var(--color-white);
     background: var(--color-olive);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+    letter-spacing: 0.03em;
+}
+
+.methodNavy {
+    display: inline-block;
+    font-size: var(--text-mini);
+    font-weight: 700;
+    font-family: var(--font-body);
+    color: var(--color-white);
+    background: var(--color-navy);
     border-radius: var(--radius-sm);
     padding: 2px 7px;
     letter-spacing: 0.03em;
@@ -128,7 +164,7 @@
     display: inline-block;
     font-size: var(--text-mini);
     font-weight: 700;
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     color: var(--color-white);
     background: var(--color-rust);
     border-radius: var(--radius-sm);
@@ -169,8 +205,13 @@
     white-space: nowrap;
 }
 
-.statusPaid:hover   { filter: brightness(1.1); }
-.statusUnpaid:hover { filter: brightness(0.97); }
+.statusPaid:hover {
+    filter: brightness(1.1);
+}
+
+.statusUnpaid:hover {
+    filter: brightness(0.97);
+}
 
 /* ── ⋯ actions dropdown ──────────────────────────────────────────────────── */
 
@@ -180,44 +221,48 @@
 }
 
 .menuBtn {
-    background: none;
+    background: transparent;
     border: none;
     cursor: pointer;
     font-size: 18px;
     line-height: 1;
     color: var(--color-text-mid);
     padding: 2px 6px;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     font-family: var(--font-body);
 }
 
 .menuBtn:hover {
-    background: rgba(0, 0, 0, 0.07);
+    background: rgba(28, 47, 64, 0.08);
     color: var(--color-navy);
+    border-radius: 8px;
 }
 
-.menuDropdown {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 4px);
-    z-index: 10;
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    min-width: 110px;
+.menuPortal {
+    position: fixed;
+    transform: translateX(-100%);
+    z-index: 1200;
+    min-width: 146px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 14px;
+    box-shadow: 0 20px 40px rgba(15, 24, 36, 0.18);
     overflow: hidden;
 }
 
 .menuItem {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    padding: 8px 14px;
+    padding: 10px 14px;
     font-size: var(--text-sm);
-    font-weight: 500;
+    font-weight: 600;
     font-family: var(--font-body);
     text-align: left;
-    background: none;
+    background: transparent;
     border: none;
     cursor: pointer;
     color: var(--color-navy);

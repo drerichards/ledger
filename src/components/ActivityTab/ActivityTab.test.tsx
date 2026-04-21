@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { ActivityTab } from "@/components/ActivityTab";
 import type { Bill, Milestone } from "@/types";
 
@@ -178,19 +178,23 @@ describe("ActivityTab — milestones", () => {
   it("renders a milestone row when a milestone exists", () => {
     mockState.milestones = [makeMilestone()];
     render(<ActivityTab />);
-    expect(screen.getByText("Samsung TV is paid off")).toBeInTheDocument();
+    // Milestone appears in both Inbox AND activity log — assert within the log table
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Samsung TV is paid off")).toBeInTheDocument();
   });
 
   it("renders the milestone date", () => {
     mockState.milestones = [makeMilestone()];
     render(<ActivityTab />);
-    expect(screen.getByText("Apr 1, 2026")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Apr 1, 2026")).toBeInTheDocument();
   });
 
   it("renders milestone emoji", () => {
     mockState.milestones = [makeMilestone({ type: "affirm_payoff" })];
     render(<ActivityTab />);
-    expect(screen.getByText(/🎉/)).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText(/🎉/)).toBeInTheDocument();
   });
 
   it("renders savings threshold milestone", () => {
@@ -202,7 +206,8 @@ describe("ActivityTab — milestones", () => {
       }),
     ];
     render(<ActivityTab />);
-    expect(screen.getByText("Saved $500!")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Saved $500!")).toBeInTheDocument();
   });
 
   it("shows no empty state when only milestones present", () => {

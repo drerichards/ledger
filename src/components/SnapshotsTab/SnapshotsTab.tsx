@@ -48,7 +48,7 @@ export function SnapshotsTab({ snapshots }: Props) {
     <div className={styles.container}>
       {snapshots.length === 0 ? (
         <p className={styles.empty}>
-          No monthly summaries yet. Use &apos;Month Summary&apos; in the Bills tab after closing out a month.
+          No snapshots yet. Use &apos;Close Month &amp; Save Snapshot&apos; in the Accounts tab after closing out a month.
         </p>
       ) : (
         <>
@@ -132,7 +132,9 @@ export function SnapshotsTab({ snapshots }: Props) {
                   <div className={styles.snapshotBody}>
                     <div className={styles.snapshotRow}>
                       <span>Income</span>
-                      <span className={styles.snapshotMono}>{fmtMoney(snap.kiasPayActual)}</span>
+                      <span className={styles.snapshotMono}>
+                        {fmtMoney(snap.totalBilled - snap.shortfall)}
+                      </span>
                     </div>
                     <div className={styles.snapshotRow}>
                       <span>Bills</span>

@@ -82,6 +82,9 @@ export const WeekAccordion = React.memo(function WeekAccordion({
     savingsForWeek,
   );
   const remaining = week.kiasPay - totalAllocated;
+  const allocatedPct = week.kiasPay > 0
+    ? Math.max(0, Math.min(100, Math.round((totalAllocated / week.kiasPay) * 100)))
+    : 0;
 
   // Calculate baseline impact when editing historical check
   const baselineImpact = useMemo(() => {
@@ -222,6 +225,9 @@ export const WeekAccordion = React.memo(function WeekAccordion({
             {isExpanded ? "▾" : "▸"}
           </span>
           <span className={styles.date}>Week of {weekLabel}</span>
+          <span className={styles.weekMeter} aria-hidden="true">
+            <span className={styles.weekMeterFill} style={{ width: `${allocatedPct}%` }} />
+          </span>
         </div>
 
         <div className={styles.headerRight}>
@@ -294,10 +300,10 @@ export const WeekAccordion = React.memo(function WeekAccordion({
                   onClick={onGoToAffirm}
                   title="Go to Affirm Plans tab"
                 >
-                  Affirm
+                  Affirm (week share)
                 </button>
               ) : (
-                <span className={styles.fieldLabel}>Affirm</span>
+                <span className={styles.fieldLabel}>Affirm (week share)</span>
               )}
               <span className={`${styles.fieldValue} ${styles.mono}`}>
                 {fmtMoney(affirmPerWeek)}
@@ -318,7 +324,7 @@ export const WeekAccordion = React.memo(function WeekAccordion({
                 <span className={styles.fieldLabel}>Savings</span>
               )}
               <span className={`${styles.fieldValue} ${styles.mono}`}>
-                {savingsForWeek > 0 ? fmtMoney(savingsForWeek) : "—"}
+                {savingsForWeek > 0 ? `${fmtMoney(savingsForWeek)} saved` : "—"}
               </span>
             </div>
           </div>

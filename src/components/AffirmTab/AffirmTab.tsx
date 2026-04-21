@@ -5,7 +5,15 @@ import type { InstallmentPlan } from "@/types";
 import { fmtMoney } from "@/lib/money";
 import { fmtMonthLabel } from "@/lib/dates";
 import { useAffirmTabState } from "@/hooks/useAffirmTabState";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { StatCard } from "@/components/ui/StatCard";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ActionToast } from "@/components/ui/ActionToast/ActionToast";
 import { AffirmForm } from "./AffirmForm";
 import { PlanRow } from "./PlanRow/PlanRow";
 import styles from "./AffirmTab.module.css";
@@ -13,25 +21,57 @@ import styles from "./AffirmTab.module.css";
 type Props = {
   plans: InstallmentPlan[];
   onAdd: (plan: InstallmentPlan) => void;
+  onUpdate?: (plan: InstallmentPlan) => void;
   onDelete: (id: string) => void;
 };
 
-export function AffirmTab({ plans, onAdd, onDelete }: Props) {
+export function AffirmTab({ plans, onAdd, onUpdate = () => {}, onDelete }: Props) {
   const [showForm, setShowForm] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<InstallmentPlan | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const { now, months, totalOwedByPlan, grandTotalOwed, monthlyTotals } =
     useAffirmTabState(plans);
+  const currentBurden = monthlyTotals.get(now) ?? 0;
+  const payoffMonth = months.at(-1) ?? null;
 
   return (
     <div className={styles.container}>
-      {/* ── Toolbar ──────────────────────────────────────────────── */}
-      <div className={styles.toolbarEnd}>
+      <div className={styles.topBar}>
+        <div className={styles.headingBlock}>
+          <span className={styles.sectionEyebrow}>Payoff</span>
+          <h2 className={styles.heading}>Plans</h2>
+        </div>
+
         <button
-          className={styles.btnGlass}
+          className={styles.btnPrimary}
           onClick={() => setShowForm(true)}
         >
           + Add Plan
         </button>
       </div>
+
+      {plans.length > 0 && (
+        <div className={styles.summaryGrid}>
+          <StatCard
+            label="Total Owed"
+            color="navy"
+            value={fmtMoney(grandTotalOwed)}
+            subRows={[{ label: "Active plans", value: String(plans.length) }]}
+          />
+          <StatCard
+            label="Monthly Burden"
+            color="rust"
+            value={fmtMoney(currentBurden)}
+            subRows={[{ label: "Current load", value: fmtMoney(currentBurden) }]}
+          />
+          <StatCard
+            label="All Plans Clear"
+            color="olive"
+            value={payoffMonth ? fmtMonthLabel(payoffMonth) : "—"}
+            subRows={[{ label: "At current pace", value: payoffMonth ? fmtMonthLabel(payoffMonth) : "—" }]}
+          />
+        </div>
+      )}
 
       {/* ── Empty state ───────────────────────────────────────────── */}
       {plans.length === 0 && !showForm && (
@@ -83,6 +123,10 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
                     plan={plan}
                     months={months}
                     totalOwed={totalOwedByPlan.get(plan.id)!}
+                    onEdit={(selectedPlan) => {
+                      setEditingPlan(selectedPlan);
+                      setShowForm(true);
+                    }}
                     onDelete={onDelete}
                   />
                 ))}
@@ -109,16 +153,35 @@ export function AffirmTab({ plans, onAdd, onDelete }: Props) {
       {/* ── Add Plan Modal ────────────────────────────────────────── */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent>
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {editingPlan ? "Edit installment plan" : "Add installment plan"}
+            </DialogTitle>
+            <DialogDescription>
+              Update the monthly payment, due day, and payoff timing for this plan.
+            </DialogDescription>
+          </DialogHeader>
           <AffirmForm
+            initial={editingPlan}
             onSave={(plan) => {
-              onAdd(plan);
+              if (editingPlan) {
+                onUpdate(plan);
+                setToastMessage("Plan updated");
+              } else {
+                onAdd(plan);
+                setToastMessage("Plan added");
+              }
+              setEditingPlan(null);
               setShowForm(false);
             }}
-            onClose={() => setShowForm(false)}
+            onClose={() => {
+              setEditingPlan(null);
+              setShowForm(false);
+            }}
           />
         </DialogContent>
       </Dialog>
-
+      <ActionToast message={toastMessage} onDone={() => setToastMessage(null)} />
     </div>
   );
 }

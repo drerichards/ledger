@@ -1,40 +1,40 @@
 :root {
     /* ── Brand Colors ────────────────────────────────────────────── */
-    --color-navy: #274058;           /* Yale Blue — authority, primary actions */
-    --color-navy-dark: #1C2F40;      /* darker navy for active states */
-    --color-navy-tint: #E9EDF1;      /* light yale blue wash — derived from #274058 */
+    --color-navy: #274058;
+    --color-navy-dark: #1C2F40;
+    --color-navy-tint: #E7ECEF;
 
-    --color-olive: #898B5E;          /* Pale Olive — positive progress, savings */
-    --color-olive-dark: #41521F;     /* Olive Leaf — deep olive for emphasis */
-    --color-olive-darker: #63652C;   /* Darker Olive — strong emphasis */
-    --color-olive-light: #F4F4ED;    /* light olive tint — derived from #898B5E */
-    --color-olive-border: #B4B591;   /* mid olive border — derived from #898B5E */
+    --color-olive: #898B5F;
+    --color-olive-dark: #41521F;
+    --color-olive-darker: #63552C;
+    --color-olive-light: #F1F2EA;
+    --color-olive-border: #AFB28A;
 
-    --color-rust: #C4522A;           /* Red Ochre — urgent, warnings, final payments */
-    --color-rust-light: #F9EDE6;     /* light red ochre wash — derived from #C4522A */
-    --color-rust-border: #A84422;    /* darker rust border — derived from #C4522A */
-    --color-rust-tint: #FDF6F3;      /* very light rust tint — derived from #C4522A */
+    --color-rust: #C4522A;
+    --color-rust-light: #FAE9E1;
+    --color-rust-border: #A84422;
+    --color-rust-tint: #FCF2EC;
 
-    --color-gold: #FDB833;           /* Sunflower Gold — celebrations, achievements */
-    --color-gold-muted: #CAA632;     /* Soft Fawn — muted gold accent */
-    --color-gold-light: #FFF5E0;     /* soft gold wash */
-    --color-gold-border: #F5A623;    /* darker gold border */
+    --color-gold: #FDB833;
+    --color-gold-muted: #C6AE82;
+    --color-gold-light: #FFF3DA;
+    --color-gold-border: #E29B16;
 
-    --color-brown: #835225;          /* Saddle Brown — earthy accent */
-    --color-brown-light: #A67B4A;    /* lighter brown for gradients */
-    --color-brown-wash: #7A96B4;     /* repointed — cool blue-grey neutral */
+    --color-brown: #835225;
+    --color-brown-light: #A67B4A;
+    --color-brown-wash: #E7DED0;
 
-    --color-fawn: #7A96B4;           /* repointed — cool blue-grey neutral */
-    --color-fawn-light: #EDF1F7;     /* repointed — cool blue-grey wash */
-    --color-fawn-border: #CDD4DF;    /* repointed — cool neutral border */
+    --color-fawn: #C6AE82;
+    --color-fawn-light: #F2E9DA;
+    --color-fawn-border: #D7C5A2;
 
-    --color-cream: #EDF1F7;          /* cool blue-grey — replaces all warm cream usage */
-    --color-cream-mid: #E6EBF3;      /* slightly deeper cool blue-grey */
-    --color-surface: #F5F7FB;        /* cool surface — near-white with blue tint */
-    --color-border: #D8DEE8;         /* cool neutral border */
-    --color-text: #1A1A1A;           /* primary text */
-    --color-text-mid: #666666;       /* secondary text */
-    --color-white: #FFFFFF;          /* primary canvas */
+    --color-cream: #F7F3EA;
+    --color-cream-mid: #EEE7DB;
+    --color-surface: #FBF8F2;
+    --color-border: #DCCFB9;
+    --color-text: #1F2830;
+    --color-text-mid: #5E6366;
+    --color-white: #FFFFFF;
 
     /* ── Alpha surfaces (color-mix keeps derivation tied to brand tokens) ── */
     --color-navy-alpha-6: color-mix(in srgb, var(--color-navy) 6%, transparent);
@@ -113,4 +113,26 @@
 
     /* ── Animation ──────────────────────────────────────────────────── */
     --anim-speed: 0.15s;
+}
+
+[data-theme="dark"] {
+    --color-cream: #1A2630;
+    --color-cream-mid: #22323C;
+    --color-surface: #14202A;
+    --color-border: rgba(198, 174, 130, 0.22);
+    --color-text: #F7F2EA;
+    --color-text-mid: rgba(247, 242, 234, 0.68);
+    --color-white: #F7F2EA;
+    --color-navy-tint: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(22, 34, 50, 0.74);
+    --glass-bg-strong: rgba(20, 32, 48, 0.92);
+    --glass-border: rgba(198, 174, 130, 0.18);
+    --surface-glass-bg: rgba(22, 34, 50, 0.74);
+    --surface-glass-border: rgba(198, 174, 130, 0.18);
+    --surface-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --action-secondary-bg: color-mix(in srgb, var(--color-olive-dark) 34%, rgba(20, 32, 48, 0.92));
+    --action-secondary-bg-hover: color-mix(in srgb, var(--color-olive) 40%, rgba(20, 32, 48, 0.96));
+    --action-secondary-border: color-mix(in srgb, var(--color-fawn) 26%, rgba(255, 255, 255, 0.08));
+    --action-secondary-fg: var(--color-white);
+    --action-secondary-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 24px rgba(0, 0, 0, 0.22);
 }

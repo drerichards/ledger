@@ -9,6 +9,7 @@ type Props = {
   onToday: () => void;
   canPrev?: boolean;
   canNext?: boolean;
+  canToday?: boolean;
   prevAriaLabel?: string;
   nextAriaLabel?: string;
 };
@@ -20,6 +21,7 @@ export function DateToggle({
   onToday,
   canPrev = true,
   canNext = true,
+  canToday = true,
   prevAriaLabel = "Previous period",
   nextAriaLabel = "Next period",
 }: Props) {
@@ -33,7 +35,7 @@ export function DateToggle({
       >
         ‹
       </button>
-      <button className={styles.btn} onClick={onToday}>
+      <button className={styles.btn} onClick={onToday} disabled={!canToday}>
         Today
       </button>
       <button
@@ -44,7 +46,7 @@ export function DateToggle({
       >
         ›
       </button>
-      <span className={styles.label}>{label}</span>
+      <h2 className={styles.label}>{label}</h2>
     </div>
   );
 }

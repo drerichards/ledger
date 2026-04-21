@@ -62,7 +62,7 @@ const actions = {
   setCheckingBalance: noop,
   addBill: noop, updateBill: noop, deleteBill: noop, toggleBillPaid: noop,
   upsertIncome: noop, addSnapshot: noop, rolloverBills: noop,
-  addPlan: noop, deletePlan: noop,
+  addPlan: noop, updatePlan: noop, deletePlan: noop,
   upsertPaycheckWeek: noop, addCheckEntry: noop, updateCheckEntry: noop,
   deleteCheckEntry: noop, ackCheckEditWarning: noop,
   setPaycheckViewScope: noop, addSavingsEntry: noop, updateSavingsEntry: noop,
