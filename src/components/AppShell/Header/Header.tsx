@@ -42,6 +42,7 @@ export function Header({
       ? window.localStorage.getItem(THEME_KEY)
       : null;
     const resolved = saved === "dark" ? "dark" : "light";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage sync
     setTheme(resolved);
     document.documentElement.dataset.theme = resolved;
   }, []);

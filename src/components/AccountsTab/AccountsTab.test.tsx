@@ -349,26 +349,26 @@ describe("AccountsTab — BillGroup collapse toggle", () => {
   const getKiaHeader = () => screen.getByRole("button", { name: /From Kia's Pay/i });
   const getOtherHeader = () => screen.getByRole("button", { name: /From Other Income/i });
 
-  it("from both-expanded, clicking Other collapses Kia only", () => {
+  it("from both-expanded, clicking Other collapses Other only", () => {
     const bills = [
       makeBill({ id: "kia-1", group: "kias_pay" }),
       makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
     ];
     renderTab({ bills });
     fireEvent.click(getOtherHeader());
-    expect(getKiaHeader()).toHaveTextContent("►");
-    expect(getOtherHeader()).toHaveTextContent("▼");
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("►");
   });
 
-  it("from both-expanded, clicking Kia collapses Other only", () => {
+  it("from both-expanded, clicking Kia collapses Kia only", () => {
     const bills = [
       makeBill({ id: "kia-1", group: "kias_pay" }),
       makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
     ];
     renderTab({ bills });
     fireEvent.click(getKiaHeader());
-    expect(getKiaHeader()).toHaveTextContent("▼");
-    expect(getOtherHeader()).toHaveTextContent("►");
+    expect(getKiaHeader()).toHaveTextContent("►");
+    expect(getOtherHeader()).toHaveTextContent("▼");
   });
 
   it("from Kia-only, clicking Other re-expands both groups", () => {

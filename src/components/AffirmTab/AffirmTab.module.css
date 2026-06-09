@@ -176,7 +176,7 @@
     left: 0;
     z-index: 5;
     background: var(--color-navy);
-    box-shadow: 4px 0 20px rgba(28, 47, 64, 0.18);
+    box-shadow: 2px 0 8px rgba(28, 47, 64, 0.08);
 }
 
 /* Total Owed column — sticky right + top, fully opaque */
@@ -186,7 +186,7 @@
     z-index: 5;
     background: var(--color-navy);
     min-width: 140px;
-    box-shadow: -4px 0 20px rgba(28, 47, 64, 0.18);
+    box-shadow: -2px 0 8px rgba(28, 47, 64, 0.08);
 }
 
 /* Current month — gold text pops on dark frosted header */

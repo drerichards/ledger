@@ -11,6 +11,7 @@ import { getHouseholdMonthSummary } from "@/lib/household/household";
 import { createClient } from "@/lib/supabase/client";
 import { withErrorBoundary } from "@/components/ui/withErrorBoundary/withErrorBoundary";
 import { Header } from "@/components/AppShell/Header/Header";
+import { ActiveTabProvider } from "@/components/AppShell/ActiveTabContext";
 import {
   buildAccountsTabProps,
   buildAffirmTabProps,
@@ -145,8 +146,13 @@ export function AppShell() {
     }
   }, [activeMonthSummary, activeTab, latestSnapshot, s.plans.length]);
 
-  useEffect(() => {
+  const [prevTab, setPrevTab] = useState(activeTab);
+  if (prevTab !== activeTab) {
+    setPrevTab(activeTab);
     setNavMessageIndex(0);
+  }
+
+  useEffect(() => {
     if (tabMessages.length <= 1) return;
     let rotateTimer: number | undefined;
     const startTimer = window.setTimeout(() => {
@@ -205,13 +211,14 @@ export function AppShell() {
   };
 
   return (
+    <ActiveTabProvider value={activeTab}>
     <div className={styles.shell}>
-      <div className={styles.bgOrbs} aria-hidden="true" data-print-hide>
+      <div className={styles.bgOrbs} aria-hidden="true">
         <div className={`${styles.orb} ${styles.orb1}`} />
         <div className={`${styles.orb} ${styles.orb2}`} />
         <div className={`${styles.orb} ${styles.orb3}`} />
       </div>
-      <div className={styles.stickyTop} data-print-hide>
+      <div className={styles.stickyTop}>
         <Header
           userName={userName}
           onSignOut={handleSignOut}
@@ -253,5 +260,6 @@ export function AppShell() {
         </div>
       </main>
     </div>
+    </ActiveTabProvider>
   );
 }

@@ -44,6 +44,7 @@ export function BillRow({ bill, onEdit, onDelete, onTogglePaid }: Props) {
 
   useEffect(() => {
     if (!menuOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear position when menu closes
       setMenuPosition(null);
       return;
     }

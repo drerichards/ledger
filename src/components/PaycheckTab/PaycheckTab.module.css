@@ -451,22 +451,23 @@
 
 .addColumnBtn {
     width: 100%;
-    padding: 10px 14px;
+    padding: 7px 12px;
     font-size: var(--text-sm);
     font-weight: 600;
     font-family: var(--font-body);
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--color-text-mid);
+    color: var(--color-navy);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px dashed rgba(39, 64, 88, 0.3);
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.1s;
+    transition: background 0.12s, border-color 0.12s;
 }
 
 .addColumnBtn:hover {
-    border-color: var(--color-olive);
-    color: var(--color-olive);
-    background: color-mix(in srgb, var(--color-olive) 5%, transparent);
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(39, 64, 88, 0.5);
 }
 
 /* ── Column manager panel (deprecated, kept for reference) ─────────────────── */

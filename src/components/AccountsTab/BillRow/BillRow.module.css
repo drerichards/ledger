@@ -235,7 +235,7 @@
 .menuBtn:hover {
     background: rgba(28, 47, 64, 0.08);
     color: var(--color-navy);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
 }
 
 .menuPortal {
@@ -247,7 +247,7 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.72);
-    border-radius: 14px;
+    border-radius: var(--radius-md);
     box-shadow: 0 20px 40px rgba(15, 24, 36, 0.18);
     overflow: hidden;
 }

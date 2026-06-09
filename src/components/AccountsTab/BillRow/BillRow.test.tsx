@@ -99,14 +99,14 @@ describe("BillRow", () => {
   });
 
   describe("method badge", () => {
-    it("renders 'Transfer' for kias_pay non-credit bills", () => {
-      renderRow(makeBill({ group: "kias_pay", category: "Utilities" }));
+    it("renders 'Transfer' for non-autopay, non-credit bills", () => {
+      renderRow(makeBill({ method: "transfer", category: "Utilities" }));
       expect(screen.getByText("Transfer")).toBeInTheDocument();
     });
 
-    it("renders 'Affirm' for other_income bills", () => {
-      renderRow(makeBill({ group: "other_income", category: "Loans" }));
-      expect(screen.getByText("Affirm")).toBeInTheDocument();
+    it("renders 'Autopay' for autopay non-credit bills", () => {
+      renderRow(makeBill({ method: "autopay", category: "Utilities" }));
+      expect(screen.getByText("Autopay")).toBeInTheDocument();
     });
 
     it("renders 'Credit' for Credit Cards category", () => {

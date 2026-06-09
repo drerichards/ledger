@@ -64,7 +64,7 @@ export function NotificationBell({
   };
 
   return (
-    <div className={styles.root} ref={ref} data-print-hide>
+    <div className={styles.root} ref={ref}>
       <button
         type="button"
         className={styles.bell}

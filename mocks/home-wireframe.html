@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ledger — Home Wireframe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:       #1E3A5F;
+      --yale:       #274058;
+      --navy-deep:  #1C2F40;
+      --olive:      #5C6B2E;
+      --olive-mid:  #7B8F3A;
+      --rust:       #C4522A;
+      --rust-dark:  #8B3A1E;
+      --rust-light: #E07050;
+      --cream:      #F5F0E8;
+      --cream-dk:   #EDE8DF;
+      --sunflower:  #FDB833;
+      --muted:      #9BA8B0;
+      --sans: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px 80px;
+      font-family: var(--sans);
+    }
+
+    /* ── PHONE FRAME ─────────────────────────────── */
+    .phone {
+      width: 390px;
+      background: var(--cream);
+      border-radius: 48px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.08),
+        0 40px 100px rgba(0,0,0,0.7);
+      position: relative;
+    }
+
+    .dynamic-island {
+      width: 126px;
+      height: 37px;
+      background: #000;
+      border-radius: 20px;
+      margin: 14px auto 10px;
+      display: block;
+    }
+
+    .phone-content {
+      max-height: 820px;
+      overflow-y: auto;
+      padding-bottom: 84px;
+      scrollbar-width: none;
+    }
+    .phone-content::-webkit-scrollbar { display: none; }
+
+    /* ── HEADER ──────────────────────────────────── */
+    .header {
+      padding: 4px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-wordmark {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+      letter-spacing: -0.6px;
+    }
+    .header-date {
+      font-size: 12px;
+      color: var(--olive);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: var(--cream);
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── VERDICT BANNER ──────────────────────────── */
+    .verdict {
+      margin: 0 16px 14px;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--olive);
+    }
+    .verdict-main {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: -0.2px;
+    }
+    .verdict-sub {
+      font-size: 11px;
+      color: rgba(245,240,232,0.65);
+      margin-top: 3px;
+      font-weight: 400;
+    }
+    .verdict-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(245,240,232,0.55);
+      background: rgba(0,0,0,0.15);
+      padding: 4px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* ── STAT ROW ────────────────────────────────── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+    .stat-card {
+      border-radius: 12px;
+      padding: 12px 10px;
+    }
+    .stat-card.c-navy  { background: var(--navy); }
+    .stat-card.c-olive { background: var(--olive); }
+    .stat-card.c-rust  { background: var(--rust); }
+    .stat-label {
+      font-size: 9px;
+      font-weight: 600;
+      color: rgba(245,240,232,0.55);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 5px;
+    }
+    .stat-amount {
+      font-family: var(--mono);
+      font-size: 19px;
+      font-weight: 500;
+      color: var(--cream);
+      letter-spacing: -0.5px;
+    }
+    .stat-sub {
+      font-size: 9px;
+      color: rgba(245,240,232,0.38);
+      margin-top: 3px;
+    }
+
+    /* ── WEEK MAGNIFIER ──────────────────────────── */
+    .week-zone {
+      background: var(--yale);
+      padding: 14px 0 18px;
+      margin-bottom: 16px;
+    }
+    .zone-header {
+      padding: 0 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .zone-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(245,240,232,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+    .zone-meta {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: rgba(245,240,232,0.3);
+    }
+    .week-strip {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      align-items: flex-end;
+    }
+    .week-strip::-webkit-scrollbar { display: none; }
+
+    /* Inactive day stub */
+    .day-stub {
+      flex: 0 0 42px;
+      background: var(--navy-deep);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .day-stub:hover { opacity: 0.8; }
+    .stub-name {
+      font-size: 9px;
+      font-weight: 600;
+      color: rgba(245,240,232,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stub-date {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(245,240,232,0.65);
+      margin: 3px 0;
+    }
+    .stub-indicator {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      margin: 4px auto 2px;
+    }
+    .stub-indicator.has-bill { background: var(--rust); }
+    .stub-indicator.empty    { background: transparent; }
+    .stub-amt {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: rgba(245,240,232,0.25);
+    }
+
+    /* Payday stub */
+    .day-stub.payday-stub {
+      border: 1.5px solid rgba(253,184,51,0.5);
+      background: rgba(253,184,51,0.07);
+    }
+    .day-stub.payday-stub .stub-date { color: var(--sunflower); }
+    .payday-label {
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--sunflower);
+      margin-top: 1px;
+    }
+
+    /* Active day */
+    .day-active {
+      flex: 0 0 152px;
+      background: var(--cream);
+      border-radius: 12px;
+      padding: 12px 11px;
+    }
+    .active-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .active-day-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .today-pill {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--olive);
+      background: rgba(92,107,46,0.12);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    .active-bill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .active-bill-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+    .active-bill-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge {
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .badge.auto { background: rgba(92,107,46,0.13); color: var(--olive-mid); }
+    .badge.pay  { background: rgba(196,82,42,0.13); color: var(--rust); }
+    .active-bill-amt {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--navy);
+    }
+    .active-rule {
+      height: 1px;
+      background: rgba(30,58,95,0.09);
+      margin: 8px 0;
+    }
+    .after-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .after-label {
+      font-size: 9px;
+      color: rgba(30,58,95,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .after-amt {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--olive);
+    }
+
+    /* ── BILL LIST ───────────────────────────────── */
+    .bills-zone {
+      padding: 0 16px 4px;
+    }
+
+    /* Section divider row */
+    .section-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0 8px;
+    }
+    .section-tag {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      white-space: nowrap;
+    }
+    .section-tag.act  { color: var(--rust); }
+    .section-tag.auto { color: var(--olive); }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      opacity: 0.15;
+    }
+    .section-line.act  { background: var(--rust); }
+    .section-line.auto { background: var(--olive); }
+    .section-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .section-pill.act  { background: rgba(196,82,42,0.1); color: var(--rust); }
+    .section-pill.auto { background: rgba(92,107,46,0.1); color: var(--olive); }
+
+    /* Category accordion */
+    .cat-group {
+      border-radius: 11px;
+      overflow: hidden;
+      margin-bottom: 7px;
+    }
+    .cat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cat-header.h-pay  {
+      background: rgba(196,82,42,0.07);
+      border: 1px solid rgba(196,82,42,0.14);
+      border-radius: 11px;
+    }
+    .cat-header.h-auto {
+      background: rgba(92,107,46,0.06);
+      border: 1px solid rgba(92,107,46,0.12);
+      border-radius: 11px;
+    }
+    .cat-group.open .cat-header {
+      border-radius: 11px 11px 0 0;
+    }
+    .cat-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .cat-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .cat-icon.i-pay  { background: rgba(196,82,42,0.1); }
+    .cat-icon.i-auto { background: rgba(92,107,46,0.08); }
+    .cat-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy);
+      letter-spacing: -0.1px;
+    }
+    .cat-hint {
+      font-size: 10px;
+      color: rgba(30,58,95,0.38);
+      margin-top: 1px;
+    }
+    .cat-right {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .cat-total {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+    .chevron {
+      font-size: 9px;
+      color: rgba(30,58,95,0.25);
+      transition: transform 0.18s ease;
+      display: inline-block;
+    }
+    .cat-group.open .chevron { transform: rotate(180deg); }
+
+    /* Bill rows inside open group */
+    .cat-bills {
+      display: none;
+      background: var(--cream-dk);
+      border: 1px solid rgba(30,58,95,0.07);
+      border-top: none;
+      border-radius: 0 0 11px 11px;
+    }
+    .cat-group.open .cat-bills { display: block; }
+
+    .bill-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-bottom: 1px solid rgba(30,58,95,0.05);
+    }
+    .bill-row:last-child { border-bottom: none; }
+    .bill-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy);
+    }
+    .bill-due {
+      font-size: 10px;
+      color: rgba(30,58,95,0.42);
+      margin-top: 2px;
+    }
+    .bill-due.urgent { color: var(--rust); font-weight: 600; }
+    .bill-right {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+    .bill-amt {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--navy);
+    }
+    .check-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .check-circle.unpaid-pay  { border: 1.5px solid var(--rust); }
+    .check-circle.unpaid-auto { border: 1.5px solid rgba(92,107,46,0.4); }
+    .check-circle.paid {
+      background: var(--olive);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cream);
+      font-size: 11px;
+    }
+
+    /* ── SPENDING CHART ──────────────────────────── */
+    .spending-zone {
+      margin: 8px 16px 14px;
+      background: var(--navy-deep);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .spending-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .spending-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(245,240,232,0.45);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .spending-total-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: rgba(245,240,232,0.3);
+    }
+    .chart-layout {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+    /* Donut */
+    .donut-wrap {
+      flex: 0 0 110px;
+      position: relative;
+    }
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      text-align: center;
+    }
+    .donut-num {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--cream);
+      display: block;
+      white-space: nowrap;
+    }
+    .donut-sub {
+      font-size: 8px;
+      color: rgba(245,240,232,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    /* Legend */
+    .chart-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .legend-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .legend-name {
+      font-size: 11px;
+      color: rgba(245,240,232,0.62);
+    }
+    .legend-amt {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--cream);
+    }
+
+    /* ── MOMENTUM CARD ───────────────────────────── */
+    .momentum-zone {
+      margin: 0 16px 16px;
+      background: var(--yale);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .momentum-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(245,240,232,0.4);
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-bottom: 12px;
+    }
+    .seg-ctrl {
+      display: flex;
+      background: rgba(0,0,0,0.22);
+      border-radius: 8px;
+      padding: 2px;
+      margin-bottom: 14px;
+      gap: 2px;
+    }
+    .seg-btn {
+      flex: 1;
+      padding: 6px 4px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--sans);
+      text-align: center;
+      cursor: pointer;
+      color: rgba(245,240,232,0.38);
+      border: none;
+      background: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .seg-btn.active {
+      background: var(--cream);
+      color: var(--navy-deep);
+    }
+    .momentum-body {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ring-wrap {
+      flex: 0 0 86px;
+      position: relative;
+    }
+    .ring-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      text-align: center;
+    }
+    .ring-num {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--cream);
+      display: block;
+      white-space: nowrap;
+    }
+    .ring-sub {
+      font-size: 8px;
+      color: rgba(245,240,232,0.38);
+      white-space: nowrap;
+    }
+    .momentum-copy { flex: 1; }
+    .momentum-headline {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--cream);
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+    .momentum-body-text {
+      font-size: 11px;
+      color: rgba(245,240,232,0.5);
+      line-height: 1.45;
+    }
+
+    /* ── TAB BAR ─────────────────────────────────── */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(245,240,232,0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(30,58,95,0.07);
+      display: flex;
+      padding: 10px 0 22px;
+      border-radius: 0 0 48px 48px;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+    }
+    .tab-icon { font-size: 20px; line-height: 1; }
+    .tab-name {
+      font-size: 9px;
+      font-weight: 500;
+      color: rgba(30,58,95,0.32);
+      letter-spacing: 0.2px;
+    }
+    .tab-item.active .tab-name {
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .tab-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--navy);
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <span class="dynamic-island"></span>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-wordmark">Ledger</div>
+      <div class="header-date">April 2026</div>
+    </div>
+    <div class="avatar">A</div>
+  </div>
+
+  <div class="phone-content">
+
+    <!-- ① VERDICT BANNER -->
+    <div class="verdict">
+      <div>
+        <div class="verdict-main">You're covered ✅</div>
+        <div class="verdict-sub">$247 left after everything clears this month</div>
+      </div>
+      <div class="verdict-badge">Apr 22</div>
+    </div>
+
+    <!-- ② STAT ROW -->
+    <div class="stat-row">
+      <div class="stat-card c-navy">
+        <div class="stat-label">Checking</div>
+        <div class="stat-amount">$1,847</div>
+        <div class="stat-sub">Chase ••4821</div>
+      </div>
+      <div class="stat-card c-olive">
+        <div class="stat-label">Savings</div>
+        <div class="stat-amount">$340</div>
+        <div class="stat-sub">Chase ••2204</div>
+      </div>
+      <div class="stat-card c-rust">
+        <div class="stat-label">Actually Yours</div>
+        <div class="stat-amount">$247</div>
+        <div class="stat-sub">after all bills</div>
+      </div>
+    </div>
+
+    <!-- ③ WEEK MAGNIFIER -->
+    <div class="week-zone">
+      <div class="zone-header">
+        <span class="zone-label">This Week</span>
+        <span class="zone-meta">$486 due</span>
+      </div>
+      <div class="week-strip">
+
+        <div class="day-stub">
+          <div class="stub-name">Mon</div>
+          <div class="stub-date">21</div>
+          <div class="stub-indicator empty"></div>
+          <div class="stub-amt">—</div>
+        </div>
+
+        <div class="day-stub">
+          <div class="stub-name">Tue</div>
+          <div class="stub-date">22</div>
+          <div class="stub-indicator empty"></div>
+          <div class="stub-amt">—</div>
+        </div>
+
+        <!-- ACTIVE DAY -->
+        <div class="day-active">
+          <div class="active-top">
+            <span class="active-day-label">Wed · 23</span>
+            <span class="today-pill">Today</span>
+          </div>
+          <div class="active-bill">
+            <span class="active-bill-name">Verizon</span>
+            <div class="active-bill-right">
+              <span class="badge auto">AUTO</span>
+              <span class="active-bill-amt">$174</span>
+            </div>
+          </div>
+          <div class="active-rule"></div>
+          <div class="after-row">
+            <span class="after-label">After</span>
+            <span class="after-amt">$1,673</span>
+          </div>
+        </div>
+
+        <div class="day-stub payday-stub">
+          <div class="stub-name">Thu</div>
+          <div class="stub-date">24</div>
+          <div class="payday-label">+$924</div>
+        </div>
+
+        <div class="day-stub">
+          <div class="stub-name">Fri</div>
+          <div class="stub-date">25</div>
+          <div class="stub-indicator has-bill"></div>
+          <div class="stub-amt">$312</div>
+        </div>
+
+        <div class="day-stub">
+          <div class="stub-name">Sat</div>
+          <div class="stub-date">26</div>
+          <div class="stub-indicator empty"></div>
+          <div class="stub-amt">—</div>
+        </div>
+
+        <div class="day-stub">
+          <div class="stub-name">Sun</div>
+          <div class="stub-date">27</div>
+          <div class="stub-indicator empty"></div>
+          <div class="stub-amt">—</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ④ BILL LIST: CATEGORY ACCORDION -->
+    <div class="bills-zone">
+
+      <!-- YOU NEED TO ACT -->
+      <div class="section-row">
+        <span class="section-tag act">You need to act</span>
+        <div class="section-line act"></div>
+        <span class="section-pill act">2 bills</span>
+      </div>
+
+      <div class="cat-group open" id="g-transfers">
+        <div class="cat-header h-pay" onclick="toggleCat('g-transfers')">
+          <div class="cat-left">
+            <div class="cat-icon i-pay">💸</div>
+            <div>
+              <div class="cat-name">Transfers</div>
+              <div class="cat-hint">You need to send these</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$312</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Jazmin</div>
+              <div class="bill-due urgent">Due in 2 days</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$200</span>
+              <div class="check-circle unpaid-pay"></div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Storage</div>
+              <div class="bill-due urgent">Due tomorrow</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$112</span>
+              <div class="check-circle unpaid-pay"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HITS AUTOMATICALLY -->
+      <div class="section-row">
+        <span class="section-tag auto">Hits automatically</span>
+        <div class="section-line auto"></div>
+        <span class="section-pill auto">9 bills</span>
+      </div>
+
+      <div class="cat-group" id="g-housing">
+        <div class="cat-header h-auto" onclick="toggleCat('g-housing')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">🏠</div>
+            <div>
+              <div class="cat-name">Housing</div>
+              <div class="cat-hint">1 bill · just have the money ready</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$950</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Rent</div>
+              <div class="bill-due">May 1</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$950</span>
+              <div class="check-circle paid">✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cat-group" id="g-utilities">
+        <div class="cat-header h-auto" onclick="toggleCat('g-utilities')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">⚡</div>
+            <div>
+              <div class="cat-name">Utilities</div>
+              <div class="cat-hint">2 bills</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$224</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Verizon</div>
+              <div class="bill-due">Apr 23 · hit today</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$174</span>
+              <div class="check-circle paid">✓</div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Electric</div>
+              <div class="bill-due">Apr 28</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$50</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cat-group" id="g-insurance">
+        <div class="cat-header h-auto" onclick="toggleCat('g-insurance')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">🛡️</div>
+            <div>
+              <div class="cat-name">Insurance</div>
+              <div class="cat-hint">1 bill</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$89</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Health Insurance</div>
+              <div class="bill-due">Apr 30</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$89</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cat-group" id="g-subs">
+        <div class="cat-header h-auto" onclick="toggleCat('g-subs')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">📱</div>
+            <div>
+              <div class="cat-name">Subscriptions</div>
+              <div class="cat-hint">4 bills</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$47</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Netflix</div>
+              <div class="bill-due">Apr 22 · paid ✓</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$18</span>
+              <div class="check-circle paid">✓</div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Spotify</div>
+              <div class="bill-due">Apr 27</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$11</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">iCloud</div>
+              <div class="bill-due">Apr 29</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$3</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Amazon Prime</div>
+              <div class="bill-due">Apr 30</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$15</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cat-group" id="g-groceries">
+        <div class="cat-header h-auto" onclick="toggleCat('g-groceries')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">🛒</div>
+            <div>
+              <div class="cat-name">Groceries</div>
+              <div class="cat-hint">Ongoing this month</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$280</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Weekly groceries</div>
+              <div class="bill-due">Running total</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$280</span>
+              <div class="check-circle unpaid-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cat-group" id="g-shopping">
+        <div class="cat-header h-auto" onclick="toggleCat('g-shopping')">
+          <div class="cat-left">
+            <div class="cat-icon i-auto">🛍️</div>
+            <div>
+              <div class="cat-name">Shopping</div>
+              <div class="cat-hint">2 items this month</div>
+            </div>
+          </div>
+          <div class="cat-right">
+            <span class="cat-total">$150</span>
+            <span class="chevron">▾</span>
+          </div>
+        </div>
+        <div class="cat-bills">
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Target run</div>
+              <div class="bill-due">Apr 18</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$90</span>
+              <div class="check-circle paid">✓</div>
+            </div>
+          </div>
+          <div class="bill-row">
+            <div>
+              <div class="bill-name">Clothing</div>
+              <div class="bill-due">Apr 20</div>
+            </div>
+            <div class="bill-right">
+              <span class="bill-amt">$60</span>
+              <div class="check-circle paid">✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /bills-zone -->
+
+    <!-- ⑤ SPENDING CHART — where it's going -->
+    <div class="spending-zone">
+      <div class="spending-header">
+        <span class="spending-title">Where it's going — April</span>
+        <span class="spending-total-label">$2,052 total</span>
+      </div>
+      <div class="chart-layout">
+
+        <!-- Donut chart: r=40, circumference=251.3 -->
+        <!-- Segments: Housing 46.3% | Groceries 13.6% | Transfers 15.2% | Utilities 10.9% | Shopping 7.3% | Subs 2.3% | Insurance 4.3% -->
+        <div class="donut-wrap">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <!-- Housing: 46.3% → 116.3 of 251.3 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#1E3A5F" stroke-width="14"
+              stroke-dasharray="116.3 135" stroke-dashoffset="0"
+              transform="rotate(-90 55 55)"/>
+            <!-- Transfers: 15.2% → 38.2 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#C4522A" stroke-width="14"
+              stroke-dasharray="38.2 213.1" stroke-dashoffset="-116.3"
+              transform="rotate(-90 55 55)"/>
+            <!-- Groceries: 13.6% → 34.2 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#5C6B2E" stroke-width="14"
+              stroke-dasharray="34.2 217.1" stroke-dashoffset="-154.5"
+              transform="rotate(-90 55 55)"/>
+            <!-- Utilities: 10.9% → 27.4 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#274058" stroke-width="14"
+              stroke-dasharray="27.4 223.9" stroke-dashoffset="-188.7"
+              transform="rotate(-90 55 55)"/>
+            <!-- Shopping: 7.3% → 18.3 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#E07050" stroke-width="14"
+              stroke-dasharray="18.3 233" stroke-dashoffset="-216.1"
+              transform="rotate(-90 55 55)"/>
+            <!-- Insurance: 4.3% → 10.8 -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#7B8F3A" stroke-width="14"
+              stroke-dasharray="10.8 240.5" stroke-dashoffset="-234.4"
+              transform="rotate(-90 55 55)"/>
+            <!-- Subs: 2.3% → 5.8 (remainder) -->
+            <circle cx="55" cy="55" r="40" fill="none" stroke="#8B3A1E" stroke-width="14"
+              stroke-dasharray="5.8 245.5" stroke-dashoffset="-245.2"
+              transform="rotate(-90 55 55)"/>
+          </svg>
+          <div class="donut-center">
+            <span class="donut-num">$2,052</span>
+            <span class="donut-sub">this month</span>
+          </div>
+        </div>
+
+        <div class="chart-legend">
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#1E3A5F"></div>
+              <span class="legend-name">Housing</span>
+            </div>
+            <span class="legend-amt">$950</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#C4522A"></div>
+              <span class="legend-name">Transfers</span>
+            </div>
+            <span class="legend-amt">$312</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#5C6B2E"></div>
+              <span class="legend-name">Groceries</span>
+            </div>
+            <span class="legend-amt">$280</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#274058"></div>
+              <span class="legend-name">Utilities</span>
+            </div>
+            <span class="legend-amt">$224</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#E07050"></div>
+              <span class="legend-name">Shopping</span>
+            </div>
+            <span class="legend-amt">$150</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#7B8F3A"></div>
+              <span class="legend-name">Insurance</span>
+            </div>
+            <span class="legend-amt">$89</span>
+          </div>
+          <div class="legend-row">
+            <div class="legend-left">
+              <div class="legend-swatch" style="background:#8B3A1E"></div>
+              <span class="legend-name">Subscriptions</span>
+            </div>
+            <span class="legend-amt">$47</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ⑥ MOMENTUM CARD -->
+    <div class="momentum-zone">
+      <div class="momentum-label">How you're doing</div>
+      <div class="seg-ctrl">
+        <button class="seg-btn active" onclick="setTab(this,0)">This Month</button>
+        <button class="seg-btn" onclick="setTab(this,1)">Payoff</button>
+        <button class="seg-btn" onclick="setTab(this,2)">Building</button>
+      </div>
+      <div class="momentum-body">
+        <!-- Ring: r=33, circumference=207.3 -->
+        <div class="ring-wrap">
+          <svg width="86" height="86" viewBox="0 0 86 86">
+            <circle cx="43" cy="43" r="33" fill="none"
+              stroke="rgba(245,240,232,0.08)" stroke-width="9"/>
+            <circle id="m-ring" cx="43" cy="43" r="33" fill="none"
+              stroke="#5C6B2E" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="143 207.3"
+              transform="rotate(-90 43 43)"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-num" id="m-num">9/13</span>
+            <span class="ring-sub" id="m-sub">handled</span>
+          </div>
+        </div>
+        <div class="momentum-copy">
+          <div class="momentum-headline" id="m-head">Almost there</div>
+          <div class="momentum-body-text" id="m-body">4 bills left this month. You've got this.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /phone-content -->
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-name">Home</span>
+      <div class="tab-dot"></div>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">📋</span>
+      <span class="tab-name">Bills</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">💳</span>
+      <span class="tab-name">Affirm</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">💰</span>
+      <span class="tab-name">Paycheck</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">⭐</span>
+      <span class="tab-name">Goals</span>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+  function toggleCat(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  const TABS = [
+    {
+      stroke: '#5C6B2E',
+      dash: '143 207.3',
+      num: '9/13',
+      sub: 'handled',
+      head: 'Almost there',
+      body: '4 bills left this month. You\'ve got this.'
+    },
+    {
+      stroke: '#C4522A',
+      dash: '103.7 207.3',
+      num: 'June',
+      sub: 'next payoff',
+      head: 'Plan 2 is close',
+      body: 'Clears June. $127/mo freed up right after.'
+    },
+    {
+      stroke: '#7B8F3A',
+      dash: '51.8 207.3',
+      num: '25%',
+      sub: 'car fund',
+      head: 'Growing steadily',
+      body: '$1,240 of $5,000. On track for December.'
+    }
+  ];
+
+  function setTab(btn, i) {
+    document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const t = TABS[i];
+    const ring = document.getElementById('m-ring');
+    ring.setAttribute('stroke', t.stroke);
+    ring.setAttribute('stroke-dasharray', t.dash);
+    document.getElementById('m-num').textContent  = t.num;
+    document.getElementById('m-sub').textContent  = t.sub;
+    document.getElementById('m-head').textContent = t.head;
+    document.getElementById('m-body').textContent = t.body;
+  }
+</script>
+
+</body>
+</html>

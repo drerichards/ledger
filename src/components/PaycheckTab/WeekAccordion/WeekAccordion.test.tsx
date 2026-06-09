@@ -96,7 +96,7 @@ describe("WeekAccordion — rendering", () => {
 
   it("renders savings amount when savingsForWeek is positive", () => {
     renderAccordion({ isExpanded: true, savingsForWeek: 5000 });
-    expect(screen.getByText("$50.00")).toBeInTheDocument();
+    expect(screen.getByText("$50.00 saved")).toBeInTheDocument();
   });
 
   it("renders onGoToAffirm as a button when provided", () => {
@@ -107,8 +107,9 @@ describe("WeekAccordion — rendering", () => {
   it("renders Affirm as plain text when onGoToAffirm is not provided", () => {
     renderAccordion({ isExpanded: true, onGoToAffirm: undefined });
     // No Affirm button in expanded body — text label exists
-    const labels = screen.getAllByText("Affirm");
+    const labels = screen.getAllByText(/Affirm/);
     expect(labels.length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: /Affirm/i })).not.toBeInTheDocument();
   });
 
   it("renders onGoToSavings as a button when provided", () => {

@@ -124,6 +124,126 @@ And throughout: **plain language. No finance-degree vocabulary.** If someone who
 
 ---
 
+## Tab Intent — What Each Tab Is For
+
+> Read this before designing, labeling, or restructuring any tab.
+> Each tab owns **one question**. If a feature doesn't serve that question, it belongs somewhere else or doesn't belong at all.
+
+---
+
+### Home — *"Am I covered?"*
+
+This is the first screen she sees. The question in her head is not "what's my balance?" — it's:
+**"Will my account survive the week without me having to scramble?"**
+
+She has a habit: she checks what bills are debiting her account this week and this month, and whether she has enough to cover them before they hit. She doesn't want to be caught off guard. She doesn't want an overdraft.
+
+**The number this tab owns:** How much of her balance is already spoken for vs. actually hers.
+The difference between $1,800 in the account and $35 she can actually spend — because the rest is already claimed by rent, Affirm, Verizon, Jazmin, Dre — is the most important number she doesn't currently see clearly. No other app shows her this explicitly.
+
+**The signal within 3 seconds:** You're covered / You need to act.
+
+**What she's asking:**
+- What bills are hitting this week, and on which day?
+- Do I have enough to cover them before Kia's check lands?
+- Which ones will hit automatically vs. which ones require me to do something?
+- After everything clears, what do I actually have left that's mine?
+- Is anything going to catch me off guard?
+
+**What most apps get wrong:** They show balance and a list of upcoming bills as separate items. She does the math in her head. Home does the math for her and tells her the answer.
+
+---
+
+### Bills (Accounts) — *"What do I owe and when?"*
+
+She's not worried about spending categories or trends. She has a fixed set of bills that hit every month. Her old Word doc was her mental map of them. This tab replaces that doc.
+
+**The signal this tab owns:** Nothing will surprise me this month.
+
+**What she's asking:**
+- What's paid? What's still due?
+- Which ones will hit automatically vs. which ones require me to log in and send money?
+- Is the total going to be covered by what we bring in this month?
+
+**Design rule:** Autopay and transfer are not the same. Autopay = she watches. Transfer = she acts. That distinction must always be visible.
+
+---
+
+### Income (Paycheck) — *"Where does each check go?"*
+
+Kia's paycheck fluctuates week to week. This tab is the allocation layer — after the check lands, where does every dollar go? Storage, Affirm, Rent, Jazmin, Dre, Savings, PayPal CC. The remainder is what's actually hers.
+
+**The signal this tab owns:** Every dollar has a job.
+
+**What she's asking:**
+- After I pay everyone, what's left?
+- Am I putting anything toward savings this week?
+- Is this week's check enough to cover the week's needs?
+
+---
+
+### Affirm — *"When does this end?"*
+
+Every Affirm plan is a countdown. She didn't take these on casually — they were necessary purchases. Now she's watching the finish line. The final payment month is highlighted. Payoff milestones get acknowledged.
+
+**The signal this tab owns:** The debt is shrinking. I can see the end.
+
+**What she's asking:**
+- How much am I paying toward Affirm total this month?
+- Which plans are almost done?
+- When does this one finally drop off?
+
+---
+
+### Snapshots — *"Is it getting better?"*
+
+Month-over-month. Not budget vs. actual — she doesn't budget in the traditional sense. This is: am I better off than last month? Is the shortfall smaller? Is savings going up?
+
+**The signal this tab owns:** I can see my own progress.
+
+**What she's asking:**
+- Is the shortfall shrinking over time?
+- Did I save more this month than last?
+- Are my bills quietly creeping up on me?
+
+---
+
+### Goals *(planned)* — *"What am I working toward?"*
+
+Survival is the floor. Goals is where it stops being about defense and starts being about offense. A car. An emergency fund. Something she chose, not something she owes.
+
+**The signal this tab owns:** I'm building something.
+
+**What she's asking:**
+- Am I making progress on my goal?
+- With my current surplus, how long until I get there?
+- What should I do with the money that frees up when Affirm ends?
+
+**Design rule:** Goals are independent — each tracks its own balance separately from total savings. A car goal and a vacation fund are not the same pool.
+
+---
+
+### Activity *(planned)* — *"What changed?"*
+
+Timeline of bill changes, payments, milestones. Not for daily checking — for when something feels off. "I thought that bill was $89. When did it become $109?"
+
+**The signal this tab owns:** Nothing changes without me knowing.
+
+**What she's asking:**
+- Did any bills go up recently?
+- Did I get any milestone this month?
+- What happened while I wasn't looking?
+
+---
+
+### Debt *(planned)* — *"How do I get out?"*
+
+Once Affirm clears, the broader debt picture. Credit cards, loans. Avalanche vs. snowball in plain language. "If you add $50/month here, you're done in X months." No jargon. No judgment.
+
+**The signal this tab owns:** There's a plan and I'm on it.
+
+---
+
 ## What Makes This Different
 
 | Feature | Rocket Money | Monarch | Ledger |
@@ -141,7 +261,7 @@ And throughout: **plain language. No finance-degree vocabulary.** If someone who
 
 ## Language Rules
 
-The app speaks to Kia, not at her. Every callout, tip, and label should pass this test:
+The app speaks to Adriane, not at her. Every callout, tip, and label should pass this test:
 **"Could someone who never had a savings account understand this in 5 seconds?"**
 
 - Say **"money left over"**, not "Est. Remainder"

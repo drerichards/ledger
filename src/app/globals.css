@@ -171,16 +171,3 @@ input[type='checkbox'] {
     background: var(--color-border);
     border-radius: var(--radius-sm);
 }
-
-/* ── Print ───────────────────────────────────────────────────────────────── */
-
-@media print {
-    [data-print-hide] {
-        display: none !important;
-    }
-
-    body {
-        background: white;
-        font-size: 12px;
-    }
-}

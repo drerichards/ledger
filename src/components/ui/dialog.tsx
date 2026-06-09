@@ -5,8 +5,21 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useActiveTab } from "@/components/AppShell/ActiveTabContext"
 
-const Dialog = DialogPrimitive.Root
+function Dialog(
+  props: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>
+) {
+  const activeTab = useActiveTab()
+  const mountedTab = React.useRef(activeTab)
+  const { open, onOpenChange } = props
+  React.useEffect(() => {
+    if (activeTab !== null && activeTab !== mountedTab.current && open) {
+      onOpenChange?.(false)
+    }
+  }, [activeTab, open, onOpenChange])
+  return <DialogPrimitive.Root {...props} />
+}
 
 const DialogTrigger = DialogPrimitive.Trigger
 

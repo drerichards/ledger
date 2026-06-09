@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useActiveTab } from "@/components/AppShell/ActiveTabContext";
 import styles from "./Modal.module.css";
 
 type Props = {
@@ -26,6 +27,14 @@ type Props = {
  *   </Modal>
  */
 export function Modal({ title, onClose, children, footer }: Props) {
+  const activeTab = useActiveTab();
+  const mountedTab = useRef(activeTab);
+  useEffect(() => {
+    if (activeTab !== null && activeTab !== mountedTab.current) {
+      onClose();
+    }
+  }, [activeTab, onClose]);
+
   return (
     <div
       className={styles.backdrop}

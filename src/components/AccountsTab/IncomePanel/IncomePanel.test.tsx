@@ -74,12 +74,12 @@ describe("IncomePanel", () => {
 
     it("renders Kia's Pay line when kiasPayCents > 0", () => {
       setup({ kiasPayCents: 50000 });
-      expect(screen.getByText(/kia/i)).toBeInTheDocument();
+      expect(screen.getByText("Kia's Pay")).toBeInTheDocument();
     });
 
     it("does not render Kia's Pay line when kiasPayCents is 0", () => {
       setup({ kiasPayCents: 0 });
-      expect(screen.queryByText(/kia/i)).not.toBeInTheDocument();
+      expect(screen.queryByText("Kia's Pay")).not.toBeInTheDocument();
     });
   });
 

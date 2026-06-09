@@ -200,13 +200,20 @@ describe("MonthSnapshot — canSave gate", () => {
 });
 
 describe("MonthSnapshot — income edge cases", () => {
-  it("shows zero income when no income entry exists for the month", () => {
+  it("shows shortfall when month-income record zeroes out fixed income", () => {
     renderSnapshot({
       month: "2026-05",
-      bills: [makeBill({ month: "2026-05" })],
-      income: [makeIncome({ month: "2026-04" })],
+      bills: [makeBill({ month: "2026-05", cents: 300000 })],
+      income: [
+        makeIncome({
+          month: "2026-05",
+          kias_pay: 0,
+          military_pay: 0,
+          retirement: 0,
+          social_security: 0,
+        }),
+      ],
     });
-    // With zero income and any bills, we get a shortfall
     expect(screen.getByText("Short")).toBeInTheDocument();
   });
 

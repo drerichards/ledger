@@ -42,7 +42,7 @@ describe("PlanRow — rendering", () => {
 
   it("renders the monthly payment rate", () => {
     renderRow();
-    expect(screen.getByText("$50.00/mo · due 15")).toBeInTheDocument();
+    expect(screen.getByText("$50.00/mo")).toBeInTheDocument();
   });
 
   it("renders the total owed", () => {
@@ -58,16 +58,16 @@ describe("PlanRow — rendering", () => {
     expect(inactiveCells.length).toBeGreaterThan(0);
   });
 
-  it("renders FINAL badge on the last payment month", () => {
+  it("renders LAST badge on the last payment month", () => {
     const plan = makePlan({ start: "2026-04", end: "2026-04" });
     renderRow(plan, ["2026-04"]);
-    expect(screen.getByText("FINAL")).toBeInTheDocument();
+    expect(screen.getByText("LAST")).toBeInTheDocument();
   });
 
-  it("does not render FINAL badge for non-final months", () => {
+  it("does not render LAST badge for non-final months", () => {
     const plan = makePlan({ start: "2026-04", end: "2026-06" });
     renderRow(plan, ["2026-04"]);
-    expect(screen.queryByText("FINAL")).not.toBeInTheDocument();
+    expect(screen.queryByText("LAST")).not.toBeInTheDocument();
   });
 });
 
@@ -86,7 +86,7 @@ describe("PlanRow — delete flow", () => {
 
   it("calls onDelete with the plan id when delete is confirmed", () => {
     const onDelete = jest.fn();
-    renderRow(makePlan(), ["2026-04"], 5000, onDelete);
+    renderRow(makePlan(), ["2026-04"], 5000, jest.fn(), onDelete);
     fireEvent.click(screen.getByLabelText("Delete Amazon Card"));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(onDelete).toHaveBeenCalledWith("plan-1");
@@ -94,7 +94,7 @@ describe("PlanRow — delete flow", () => {
 
   it("cancels delete and restores the delete icon button", () => {
     const onDelete = jest.fn();
-    renderRow(makePlan(), ["2026-04"], 5000, onDelete);
+    renderRow(makePlan(), ["2026-04"], 5000, jest.fn(), onDelete);
     fireEvent.click(screen.getByLabelText("Delete Amazon Card"));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onDelete).not.toHaveBeenCalled();

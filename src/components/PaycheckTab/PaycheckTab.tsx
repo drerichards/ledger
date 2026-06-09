@@ -187,6 +187,7 @@ export function PaycheckTab({
   useEffect(() => {
     try {
       const dismissedOn = window.sessionStorage.getItem(CHECK_TIP_STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe sessionStorage sync
       setShowCheckTip(dismissedOn !== today());
     } catch {
       setShowCheckTip(true);

@@ -20,6 +20,7 @@ export function HeaderMenu({ onSignOut, unseenCount = 0 }: Props) {
       ? window.localStorage.getItem(THEME_KEY)
       : null;
     const resolved = saved === "dark" ? "dark" : "light";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage sync
     setTheme(resolved);
     document.documentElement.dataset.theme = resolved;
   }, []);
@@ -45,7 +46,7 @@ export function HeaderMenu({ onSignOut, unseenCount = 0 }: Props) {
   };
 
   return (
-    <div className={styles.root} ref={ref} data-print-hide>
+    <div className={styles.root} ref={ref}>
       <button
         className={styles.trigger}
         onClick={() => setOpen((v) => !v)}

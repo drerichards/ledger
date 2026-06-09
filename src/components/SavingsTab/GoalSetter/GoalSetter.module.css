@@ -27,19 +27,20 @@
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-navy);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
+  border: 1px dashed rgba(39, 64, 88, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 7px 12px;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: background 0.12s;
+  transition: background 0.12s, border-color 0.12s;
 }
 
 .addBtn:hover {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(39, 64, 88, 0.5);
 }
 
 /* ── Form ────────────────────────────────────────────────────────── */

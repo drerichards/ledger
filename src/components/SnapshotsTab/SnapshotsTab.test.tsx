@@ -17,7 +17,7 @@ function makeSnapshot(overrides: Partial<MonthSnapshot> = {}): MonthSnapshot {
 describe("SnapshotsTab — empty state", () => {
   it("renders empty state message when no snapshots", () => {
     render(<SnapshotsTab snapshots={[]} />);
-    expect(screen.getByText(/No monthly summaries yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No snapshots yet/)).toBeInTheDocument();
   });
 });
 

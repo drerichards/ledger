@@ -16,9 +16,9 @@ Check off each item after visually verifying against mock.html.
 ### Home tab
 
 - [x] Accounts container scroll
-- [ ] **Cash flow: balance column** — add running "balance after" column to each transaction row
-- [ ] **Cash flow: collapsible weeks** — weeks collapse/expand using same acc table component pattern as Bills + Income tabs
-- [ ] **Stat cards swap positions with Next Due cards** — solid-fill StatCards move to top row; Next Due pill cards stack below. Universal pattern: solid stat cards always at top of each tab
+- [x] **Cash flow: balance column** — BALANCE column now renders running balance in `CF_COLUMNS`
+- [x] **Cash flow: collapsible weeks** — now wrapped in shared `<CollapsibleTable>` (same shell as Accounts BillGroup)
+- [x] **Stat cards swap positions with Next Due cards** — solid StatCards top row, Next Due stacks below
 
 ### Bills tab
 

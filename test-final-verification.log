@@ -1,0 +1,11 @@
+
+> ledger@0.1.0 test
+> eslint src --max-warnings=0 && jest --passWithNoTests --coverage --run --reporter=verbose
+
+● Unrecognized CLI Parameter:
+
+  Unrecognized option "run". Did you mean "u"?
+
+  CLI Options Documentation:
+  https://jestjs.io/docs/cli
+

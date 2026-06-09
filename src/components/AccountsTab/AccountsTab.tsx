@@ -89,7 +89,6 @@ export function AccountsTab({
     savingsLog,
     plans,
   });
-  const visibleBills = monthSummary.visibleBills;
   const kiasBills = monthSummary.kiasBills;
   const otherBills = monthSummary.otherBills;
   const kiasBillsCents = monthSummary.kiasBillsCents;
