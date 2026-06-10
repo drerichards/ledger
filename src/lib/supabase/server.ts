@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { SUPABASE_COOKIE_ENCODING, SUPABASE_COOKIE_OPTIONS } from "./cookieOptions";
 
 /**
  * Server-side Supabase client for use in Server Components, Route Handlers,
@@ -10,8 +11,10 @@ export async function createClient() {
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: SUPABASE_COOKIE_OPTIONS,
+      cookieEncoding: SUPABASE_COOKIE_ENCODING,
       cookies: {
         getAll() {
           return cookieStore.getAll();

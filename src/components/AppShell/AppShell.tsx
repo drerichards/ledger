@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fmtMoney } from "@/lib/money";
 import { currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { useMilestones } from "@/hooks/useMilestones";
 import { getMilestoneLabel, getUnseenMilestones } from "@/lib/milestones";
 import { getHouseholdMonthSummary } from "@/lib/household/household";
@@ -55,6 +56,10 @@ export function AppShell() {
   const [navMessageIndex, setNavMessageIndex] = useState(0);
   const appState = useAppState();
   const router = useRouter();
+
+  // Auto-logout after inactivity: real financial data must not stay
+  // authenticated on an unattended device (council-flagged, Phase-1 security).
+  useIdleTimeout();
 
   // Fetch logged-in user's first name
   useEffect(() => {

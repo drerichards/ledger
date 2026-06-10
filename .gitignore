@@ -53,3 +53,13 @@ LEDGER.md
 .claude/
 .wolf/
 ctx/
+
+# test artifacts (output dirs + stray logs)
+/test-results/
+/playwright-report/
+*.log
+
+# local caches / holding pen
+.pnpm-store/
+.remember/
+/stale/
