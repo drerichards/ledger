@@ -25,6 +25,15 @@ import { SUPABASE_COOKIE_ENCODING, SUPABASE_COOKIE_OPTIONS } from "@/lib/supabas
  * `proxy.ts`/`export proxy` (nodejs runtime, no edge). This file IS the gate.
  */
 export async function proxy(request: NextRequest) {
+  // ── DEV-ONLY local auth bypass (QA / screenshots) ──────────────────────────
+  // Double-gated: requires BOTH the dev runtime AND an explicit opt-in flag in
+  // .env.local (git-ignored, never deployed). NODE_ENV is "production" on every
+  // deployed build, so this can NEVER disable the gate in prod — even if the
+  // flag somehow leaked into a prod env. Returns before any auth/allowlist check.
+  if (process.env.NODE_ENV === "development" && process.env.DEV_AUTH_BYPASS === "1") {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

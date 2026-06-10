@@ -35,7 +35,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "accounts",  label: "Accounts" },
   { id: "paycheck",  label: "Income" },
   { id: "affirm",    label: "Payoff" },
-  { id: "snapshots", label: "Snapshots" },
+  // Snapshots hidden for post-ship rollout — render case + type kept intact.
+  // { id: "snapshots", label: "Snapshots" },
 ];
 
 // Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
@@ -44,6 +45,10 @@ const SafeAccountsTab = withErrorBoundary(AccountsTab, "AccountsTab");
 const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
 const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
 const SafeSnapshotsTab = withErrorBoundary(SnapshotsTab, "SnapshotsTab");
+
+// Nav status ticker ("$X left this month") hidden for post-ship rollout.
+// Flip to true to re-enable; the ticker machinery below is kept intact.
+const SHOW_NAV_TICKER = false;
 
 function isWithin24Hrs(isoDatetime: string): boolean {
   return Date.now() - new Date(isoDatetime).getTime() < 86_400_000;
@@ -244,15 +249,17 @@ export function AppShell() {
               {tab.label}
             </button>
           ))}
-          <div className={styles.navStatus} aria-live="polite">
-            <div className={styles.navTicker}>
-              <div className={styles.navTickerTrack}>
-                <span key={`${activeTab}-${navMessageIndex}`} className={styles.navMessage}>
-                  {tabMessages[navMessageIndex] ?? milestoneMessages[0] ?? "All caught up"}
-                </span>
+          {SHOW_NAV_TICKER && (
+            <div className={styles.navStatus} aria-live="polite">
+              <div className={styles.navTicker}>
+                <div className={styles.navTickerTrack}>
+                  <span key={`${activeTab}-${navMessageIndex}`} className={styles.navMessage}>
+                    {tabMessages[navMessageIndex] ?? milestoneMessages[0] ?? "All caught up"}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <time className={styles.viewMonth} dateTime={viewMonth}>
             {fmtMonthFull(viewMonth)}
           </time>

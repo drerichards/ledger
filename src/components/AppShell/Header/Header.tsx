@@ -10,6 +10,9 @@ type Props = {
   onSignOut: () => void;
   milestones?: Milestone[];
   unseenCount?: number;
+  /** Messages + Dark-mode are hidden for the initial ship; flip on for rollout. */
+  showMessages?: boolean;
+  showDarkMode?: boolean;
 };
 
 function timeGreeting(): string {
@@ -33,6 +36,8 @@ export function Header({
   onSignOut,
   milestones = [],
   unseenCount = 0,
+  showMessages = false,
+  showDarkMode = false,
 }: Props) {
   const greetingText = userName ? `${timeGreeting()}, ${userName}` : timeGreeting();
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -71,6 +76,7 @@ export function Header({
       </div>
 
       <div className={styles.actions}>
+        {showMessages && (
         <div className={styles.msgWrap}>
           <button
             type="button"
@@ -109,6 +115,8 @@ export function Header({
             )}
           </div>
         </div>
+        )}
+        {showDarkMode && (
         <button
           type="button"
           className={styles.headerAction}
@@ -120,6 +128,7 @@ export function Header({
             {theme === "dark" ? "Light" : "Dark"}
           </span>
         </button>
+        )}
         <button
           type="button"
           className={styles.headerAction}

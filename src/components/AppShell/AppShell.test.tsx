@@ -111,12 +111,13 @@ describe("AppShell — rendering", () => {
   it("renders the tab navigation", () => {
     render(<AppShell />);
     const nav = screen.getByRole("navigation");
-    expect(within(nav).getAllByRole("tab")).toHaveLength(5);
+    expect(within(nav).getAllByRole("tab")).toHaveLength(4);
     expect(within(nav).getByRole("tab", { name: "Home" })).toBeInTheDocument();
     expect(within(nav).getByRole("tab", { name: "Accounts" })).toBeInTheDocument();
     expect(within(nav).getByRole("tab", { name: "Income" })).toBeInTheDocument();
     expect(within(nav).getByRole("tab", { name: "Payoff" })).toBeInTheDocument();
-    expect(within(nav).getByRole("tab", { name: "Snapshots" })).toBeInTheDocument();
+    // Snapshots hidden for post-ship rollout (render case + type kept)
+    expect(within(nav).queryByRole("tab", { name: "Snapshots" })).not.toBeInTheDocument();
     expect(within(nav).queryByRole("tab", { name: "Goals" })).not.toBeInTheDocument();
     expect(within(nav).queryByRole("tab", { name: "Activity" })).not.toBeInTheDocument();
   });
@@ -144,12 +145,7 @@ describe("AppShell — tab navigation", () => {
     expect(screen.getAllByRole("heading", { name: "April 2026" }).length).toBeGreaterThan(0);
   });
 
-  it("switches to Snapshots tab on click (line 173 tabPanelActive branch)", () => {
-    render(<AppShell />);
-    const tab = screen.getByRole("tab", { name: "Snapshots" });
-    fireEvent.click(tab);
-    expect(tab).toHaveAttribute("aria-selected", "true");
-  });
+  // Snapshots tab is hidden for post-ship rollout — no nav entry to click.
 });
 
 describe("AppShell — user auth", () => {
@@ -219,10 +215,10 @@ describe("AppShell — PaycheckTab cross-tab navigation", () => {
   });
 });
 
-describe("AppShell — Messages button", () => {
-  it("renders the Messages icon and nav status rail", () => {
+describe("AppShell — header + nav status", () => {
+  it("hides the Messages button and the nav status ticker (both deferred to rollout)", () => {
     render(<AppShell />);
-    expect(screen.getByRole("button", { name: "Messages" })).toBeInTheDocument();
-    expect(screen.getByText("$2,351.37 left this month")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Messages" })).not.toBeInTheDocument();
+    expect(screen.queryByText("$2,351.37 left this month")).not.toBeInTheDocument();
   });
 });
