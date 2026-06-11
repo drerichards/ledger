@@ -46,6 +46,18 @@
     --color-gold-alpha-10: color-mix(in srgb, var(--color-gold) 10%, transparent);
     --color-gold-alpha-20: color-mix(in srgb, var(--color-gold) 20%, transparent);
 
+    /* ── Spending-donut category palette — one per BillCategory enum value ──
+       All sourced from brand tokens; keep distinct for legibility in the ring. */
+    --cat-housing: var(--color-rust);
+    --cat-utilities: var(--color-gold);
+    --cat-insurance: var(--color-olive);
+    --cat-transfers: var(--color-brown);
+    --cat-subscriptions: var(--color-fawn);
+    --cat-credit-cards: var(--color-navy);
+    --cat-loans: var(--color-olive-dark);
+    --cat-savings: var(--color-olive-darker);
+    --cat-other: var(--color-fawn-border);
+
     /* ── Typography ──────────────────────────────────────────────── */
     /* next/font injects --font-poppins / --font-dm-sans / --font-dm-mono on <html> */
     --font-heading: var(--font-poppins, 'Poppins', sans-serif);   /* display headings, brand name */

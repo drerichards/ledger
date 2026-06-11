@@ -127,6 +127,9 @@ export function IncomePanel({
                 </span>
               </div>
             )}
+            {otherIncomeCents > 0 && (
+              <div className={styles.reconSubhead}>Fixed Income</div>
+            )}
             {FIELDS.map(({ key, label }) => {
               const val = fieldCents(income, key);
               return val > 0 ? (
@@ -154,7 +157,7 @@ export function IncomePanel({
           </div>
           <div className={styles.reconRow}>
             <span className={styles.reconTotalLabel}>
-              {isShort ? "Short" : "Surplus"}
+              {isShort ? "Gap" : "Surplus"}
             </span>
             <span
               className={`${styles.reconTotalValue} ${
@@ -172,7 +175,7 @@ export function IncomePanel({
                 <strong>{weeksEntered ?? 0}</strong> weeks entered
               </span>
               <span className={styles.statusStat}>
-                <strong>{fmtMoney(kiasPayCents)}</strong> from Kia&apos;s pay
+                <strong>{fmtMoney(kiasPayCents)}</strong>&nbsp;from Kia&apos;s Pay
               </span>
             </div>
           </div>

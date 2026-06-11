@@ -19,7 +19,10 @@
     box-shadow: none;
     border-radius: var(--radius-md);
     overflow: hidden;
-    flex: 1 1 0;
+    /* Size to content by default so a solo-open group (sibling collapsed) does
+       not stretch and leave an empty band below its subtotal. Only .groupSplit
+       (both groups open) stretches to share the available height. */
+    flex: 0 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;

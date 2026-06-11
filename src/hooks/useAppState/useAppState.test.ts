@@ -290,6 +290,22 @@ describe("useAppState — ADD_PLAN / UPDATE_PLAN / DELETE_PLAN", () => {
   });
 });
 
+describe("useAppState — HYDRATE plan dedupe", () => {
+  it("collapses content-identical plans with different ids on hydrate", () => {
+    const dup = (id: string) =>
+      makePlan({ id, label: "Affirm Couch", mc: 7500, start: "2026-04", end: "2026-06", dueDay: 12 });
+    const { loadState } = jest.requireMock("@/lib/storage") as { loadState: jest.Mock };
+    loadState.mockReturnValueOnce({
+      ...mockInitialState,
+      plans: [dup("a"), dup("b"), dup("c"), makePlan({ id: "x", label: "Other", mc: 1000 })],
+    });
+    const { result } = setup();
+    // 3 identical "Affirm Couch" rows collapse to 1; the distinct plan survives → 2 total.
+    expect(result.current.state.plans).toHaveLength(2);
+    expect(result.current.state.plans.filter((p) => p.label === "Affirm Couch")).toHaveLength(1);
+  });
+});
+
 describe("useAppState — ADD_CHECK_ENTRY / DELETE_CHECK_ENTRY", () => {
   it("appends a check entry", () => {
     const { result } = setup();

@@ -126,7 +126,7 @@ export function SnapshotsTab({ snapshots }: Props) {
                   <div className={`${styles.snapshotHdr} ${styles[`snapshotHdr_${color}`]}`}>
                     <div className={styles.snapshotMonth}>{fmtMonthFull(snap.month)}</div>
                     <div className={styles.snapshotLabel}>
-                      {isBest ? "Best Month 🏆" : isSurplus ? "Surplus ✓" : "Shortfall"}
+                      {isBest ? "Best Month 🏆" : isSurplus ? "Surplus ✓" : "Gap"}
                     </div>
                   </div>
                   <div className={styles.snapshotBody}>

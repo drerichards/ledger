@@ -117,6 +117,17 @@
     color: var(--color-text-mid);
 }
 
+/* Sub-group label for the constant income sources (mil/retirement/SS) —
+   distinguishes them from Kia's fluctuating pay listed above. */
+.reconSubhead {
+    margin-top: 4px;
+    font-size: var(--text-mini);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-mid);
+}
+
 .reconValue {
     font-family: var(--font-mono);
     font-weight: 500;

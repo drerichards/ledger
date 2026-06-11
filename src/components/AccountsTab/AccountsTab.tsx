@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   Bill,
   InstallmentPlan,
@@ -31,7 +31,6 @@ import styles from "./AccountsTab.module.css";
 
 type SortKey = "due" | "name" | "cents" | "method" | "category";
 type SortDir = "asc" | "desc";
-type PanelMode = "both" | "kias" | "other";
 
 type Props = {
   bills: Bill[];
@@ -73,11 +72,10 @@ export function AccountsTab({
   const [editing, setEditing] = useState<Bill | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("due");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [rolloverPrompt, setRolloverPrompt] = useState<{
-    from: string;
-    to: string;
-  } | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("both");
+  // Each group expands/collapses independently, with one invariant: at least
+  // one group is always open (closing the only-open group is a no-op).
+  const [kiasOpen, setKiasOpen] = useState(true);
+  const [otherOpen, setOtherOpen] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const monthSummary = getHouseholdMonthSummary({
@@ -106,28 +104,29 @@ export function AccountsTab({
       const prevHasRecurring = bills.some(
         (b) => b.month === viewMonth && b.entry === "recurring",
       );
+      // Auto-carry: recurring payees + amounts roll forward into a new empty
+      // month with no prompt (they persist until deselected or removed).
       if (!nextHasBills && prevHasRecurring) {
-        setRolloverPrompt({ from: viewMonth, to: next });
-        return;
+        onRollover(viewMonth, next);
       }
     }
     setViewMonth(next);
   };
 
-  const confirmRollover = () => {
-    // istanbul ignore next — confirmRollover only callable when rolloverPrompt is set; guard is unreachable via UI
-    if (!rolloverPrompt) return;
-    onRollover(rolloverPrompt.from, rolloverPrompt.to);
-    setViewMonth(rolloverPrompt.to);
-    setRolloverPrompt(null);
-  };
-
-  const dismissRollover = () => {
-    // istanbul ignore next — dismissRollover only callable when rolloverPrompt is set; guard is unreachable via UI
-    if (!rolloverPrompt) return;
-    setViewMonth(rolloverPrompt.to);
-    setRolloverPrompt(null);
-  };
+  // Auto-fill an empty current/future month from the most recent prior month
+  // that has recurring bills, so payees carry forward with no manual step.
+  // (ROLLOVER_BILLS no-ops if the target month already has bills, so this is
+  // safe to run on every render; it fires at most once per empty month.)
+  useEffect(() => {
+    if (viewMonth < currentMonth()) return; // don't backfill history
+    if (bills.some((b) => b.month === viewMonth)) return;
+    const priorRecurringMonths = bills
+      .filter((b) => b.entry === "recurring" && b.month < viewMonth)
+      .map((b) => b.month)
+      .sort();
+    const source = priorRecurringMonths.at(-1);
+    if (source) onRollover(source, viewMonth);
+  }, [bills, viewMonth, onRollover]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -155,16 +154,17 @@ export function AccountsTab({
     setEditing(null);
   };
 
-  const kiasCollapsed = panelMode === "other";
-  const otherCollapsed = panelMode === "kias";
-  const splitGroups = panelMode === "both";
+  const kiasCollapsed = !kiasOpen;
+  const otherCollapsed = !otherOpen;
+  const splitGroups = kiasOpen && otherOpen;
 
+  // Toggle a group, but never let both collapse — keep at least one open.
   const handleKiasToggle = () => {
-    setPanelMode((current) => (current === "other" ? "both" : "other"));
+    setKiasOpen((open) => (open && !otherOpen ? open : !open));
   };
 
   const handleOtherToggle = () => {
-    setPanelMode((current) => (current === "kias" ? "both" : "kias"));
+    setOtherOpen((open) => (open && !kiasOpen ? open : !open));
   };
 
   return (
@@ -188,38 +188,17 @@ export function AccountsTab({
           >
             + Add Bill
           </button>
-          <button
+          {/* Close Month hidden for v1 — re-enable post-ship. Snapshot dialog + handler kept intact. */}
+          {/* <button
             className={styles.toolBtn}
             onClick={() => setShowSnapshot(true)}
           >
             Close Month
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* ── Rollover Prompt ───────────────────────────────────────── */}
-      {rolloverPrompt && (
-        <div className={styles.rolloverPrompt}>
-          <span className={styles.rolloverMsg}>
-            Start {fmtMonthFull(rolloverPrompt.to)} from{" "}
-            {fmtMonthFull(rolloverPrompt.from)}&apos;s recurring bills?
-          </span>
-          <div className={styles.rolloverActions}>
-            <button
-              className={styles.btnGhost}
-              onClick={() => setRolloverPrompt(null)}
-            >
-              Cancel
-            </button>
-            <button className={styles.btnGhost} onClick={dismissRollover}>
-              Start fresh
-            </button>
-            <button className={styles.btnPrimary} onClick={confirmRollover}>
-              Copy recurring bills
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Stat row ─────────────────────────────────────────────── */}
       {(() => {
@@ -238,23 +217,27 @@ export function AccountsTab({
                 { label: "Affirm Plans",       value: fmtMoney(monthSummary.affirmBurdenCents) },
               ]}
               progress={100}
+              noHover
             />
             <StatCard
               label="Paid"
               value={fmtMoney(paidCents)}
               color="olive"
               progress={paidPct}
+              noHover
             />
             <StatCard
               label="Unpaid"
               value={fmtMoney(unpaidCents)}
               color="rust"
               progress={unpaidPct}
+              noHover
             />
             <StatCard
-              label={shortfall > 0 ? "Short" : "Est. Surplus"}
+              label={shortfall > 0 ? "Gap" : "Est. Surplus"}
               value={fmtMoney(Math.abs(shortfall))}
               color="gold"
+              noHover
             />
           </div>
         );

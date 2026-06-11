@@ -63,3 +63,6 @@ ctx/
 .pnpm-store/
 .remember/
 /stale/
+
+# Session memory — local only, never tracked
+.scratch/

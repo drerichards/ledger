@@ -24,6 +24,7 @@ import { AccountsTab } from "@/components/AccountsTab";
 import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
 import { SnapshotsTab } from "@/components/SnapshotsTab";
+import { CalcFab } from "@/components/ui/CalcFab";
 import styles from "./AppShell.module.css";
 
 type Tab = "home" | "accounts" | "paycheck" | "affirm" | "snapshots";
@@ -137,7 +138,7 @@ export function AppShell() {
           activeMonthSummary.weeksEntered > 0
             ? `${activeMonthSummary.weeksEntered} weeks entered`
             : "Add this week's check",
-          `${fmtMoney(activeMonthSummary.kiasPayCents)} from Kia's pay`,
+          `${fmtMoney(activeMonthSummary.kiasPayCents)} from Kia's Pay`,
         ];
       case "affirm":
         return [
@@ -183,7 +184,7 @@ export function AppShell() {
     onViewMonthChange: setViewMonth,
   };
 
-  const homeTabProps = buildHomeTabProps(deps);
+  const homeTabProps = buildHomeTabProps(deps, () => setActiveTab("affirm"));
   const accountsTabProps = buildAccountsTabProps(deps);
   const affirmTabProps = buildAffirmTabProps(deps);
   const paycheckTabProps = buildPaycheckTabProps(
@@ -271,6 +272,9 @@ export function AppShell() {
           {renderActiveTab()}
         </div>
       </main>
+
+      {/* Floating Quick Math calculator — draggable, persists position */}
+      <CalcFab />
     </div>
     </ActiveTabProvider>
   );

@@ -182,7 +182,15 @@ export function PaycheckTab({
   const currentWeekVisible = viewScope === "weekly" && selectedWeekOf === currentWeekOf;
 
   const toggleMonth = (month: string) =>
-    setCollapsed((prev) => ({ ...prev, [month]: !prev[month] }));
+    setCollapsed((prev) => {
+      const willCollapse = !prev[month];
+      // Keep at least one month open — block collapsing the only open one.
+      if (willCollapse) {
+        const openCount = visibleMonths.filter((m) => !prev[m]).length;
+        if (openCount <= 1) return prev;
+      }
+      return { ...prev, [month]: !prev[month] };
+    });
 
   useEffect(() => {
     try {
@@ -655,7 +663,7 @@ export function PaycheckTab({
               onClick={dismissCheckTip}
               aria-label="Dismiss tip"
             >
-              Dismiss
+              ×
             </button>
           </div>
         </div>

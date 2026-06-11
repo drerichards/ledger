@@ -12,7 +12,15 @@ import type {
   SavingsEntry,
   SavingsGoal,
 } from "@/types";
-import { generateId } from "@/lib/id";
+// Stable, deterministic seed ids. The seed arrays are built in a fixed order
+// every load, so a simple per-prefix counter yields the SAME id each time.
+// This is critical: random ids (generateId) made every re-seed look like new
+// records, so the Supabase upsert inserted duplicates instead of overwriting.
+const _seq: Record<string, number> = {};
+const seedId = (prefix: string): string => {
+  _seq[prefix] = (_seq[prefix] ?? 0) + 1;
+  return `seed-${prefix}-${_seq[prefix]}`;
+};
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 
 const APRIL = "2026-04";
@@ -30,7 +38,7 @@ const bill = (
   notes = "",
   flagged = false,
 ): Bill => ({
-  id: generateId(),
+  id: seedId("bill"),
   month: APRIL,
   name,
   cents: Math.round(dollars * 100),
@@ -215,7 +223,7 @@ const plan = (
   end: string,
   dueDay: number,
 ): InstallmentPlan => ({
-  id: generateId(),
+  id: seedId("plan"),
   label,
   mc: Math.round(dollars * 100),
   start,
@@ -322,7 +330,7 @@ const CHECK_LOG: KiasCheckEntry[] = [
 // Total: ~$3,250 → enough to show meaningful goal progress across all states.
 
 const se = (date: string, dollars: number): SavingsEntry => ({
-  id: generateId(),
+  id: seedId("savings"),
   date,
   amount: Math.round(dollars * 100),
 });
@@ -348,7 +356,7 @@ const SAVINGS_LOG: SavingsEntry[] = [
 
 const GOALS: SavingsGoal[] = [
   {
-    id: generateId(),
+    id: "seed-goal-emergency",
     label: "Emergency Fund",
     targetCents: 500000, // $5,000
     targetDate: "2026-10",
@@ -356,7 +364,7 @@ const GOALS: SavingsGoal[] = [
     priority: 1,
   },
   {
-    id: generateId(),
+    id: "seed-goal-car",
     label: "Car Down Payment",
     targetCents: 300000, // $3,000 — current balance is $3,250 → achieved
     targetDate: "2026-06",
@@ -364,7 +372,7 @@ const GOALS: SavingsGoal[] = [
     priority: 2,
   },
   {
-    id: generateId(),
+    id: "seed-goal-vacation",
     label: "Vacation Fund",
     targetCents: 200000, // $2,000 — only $3,250 total but due next month → behind
     targetDate: "2026-05",

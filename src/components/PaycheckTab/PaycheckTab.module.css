@@ -726,13 +726,24 @@
 }
 
 .tipDismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
     border: none;
+    border-radius: 999px;
     background: transparent;
     color: var(--color-text-mid);
-    font-size: var(--text-xs);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: var(--text-lg);
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--anim-speed), color var(--anim-speed);
+}
+
+.tipDismiss:hover {
+    background: var(--color-cream-mid);
+    color: var(--color-text);
 }
 
 .statsRow {

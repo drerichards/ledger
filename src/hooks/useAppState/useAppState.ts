@@ -71,10 +71,26 @@ type Action =
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
+/**
+ * Collapses installment plans that are identical in content (same label, payment,
+ * and span) but carry different ids. Stale Supabase rows from an earlier
+ * non-deterministic-id seed can otherwise resurface on HYDRATE and balloon the
+ * monthly burden. Keeps the first occurrence of each unique plan.
+ */
+function dedupePlans(plans: InstallmentPlan[]): InstallmentPlan[] {
+  const seen = new Set<string>();
+  return plans.filter((p) => {
+    const key = `${p.label}|${p.mc}|${p.start}|${p.end}|${p.dueDay ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case "HYDRATE":
-      return action.payload;
+      return { ...action.payload, plans: dedupePlans(action.payload.plans) };
 
     case "ADD_BILL":
       return { ...state, bills: [...state.bills, action.payload] };

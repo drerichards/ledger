@@ -301,13 +301,12 @@ describe("PaycheckTab — navigation (weekly + today branches)", () => {
 // ─── toggleMonth ─────────────────────────────────────────────────────────────
 
 describe("PaycheckTab — toggleMonth", () => {
-  it("collapses the month block when the MonthAccordion header is clicked (line 138)", () => {
-    renderPaycheck();
-    // Multiple role="button" aria-expanded="true" elements exist (MonthAccordion + WeekAccordion).
-    // Disambiguate by accessible name — the month header contains "April 2026".
+  it("keeps at least one month open — the only open month does not collapse", () => {
+    renderPaycheck(); // monthly view = a single visible month (April 2026), open
     const monthHeader = screen.getByRole("button", { expanded: true, name: /April 2026/ });
     fireEvent.click(monthHeader);
-    expect(monthHeader).toHaveAttribute("aria-expanded", "false");
+    // Invariant: collapsing the only open month is a no-op — it stays expanded.
+    expect(monthHeader).toHaveAttribute("aria-expanded", "true");
   });
 });
 

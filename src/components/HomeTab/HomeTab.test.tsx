@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { HomeTab } from "@/components/HomeTab/HomeTab";
-import type { BankAccount, Bill, InstallmentPlan, SavingsEntry } from "@/types";
+import type { Bill, InstallmentPlan, SavingsEntry, SavingsGoal } from "@/types";
 
 // today() drives the week/month math — pin it so cash-flow ranges are deterministic.
 jest.mock("@/lib/dates", () => ({
@@ -9,16 +9,6 @@ jest.mock("@/lib/dates", () => ({
 }));
 
 // ─── Factories ──────────────────────────────────────────────────────────────
-
-function makeAccount(overrides: Partial<BankAccount> = {}): BankAccount {
-  return {
-    id: "acct-1",
-    name: "Chase Checking",
-    balanceCents: 180000,
-    updatedDate: "2026-04-10",
-    ...overrides,
-  };
-}
 
 function makeBill(overrides: Partial<Bill> = {}): Bill {
   return {
@@ -43,263 +33,109 @@ const noop = () => {};
 
 type RenderOverrides = {
   checkingBalance?: number;
-  checkingBalanceDate?: string;
-  bankAccounts?: BankAccount[];
   bills?: Bill[];
   plans?: InstallmentPlan[];
   savingsLog?: SavingsEntry[];
-  onSetBalance?: (balance: number, date: string) => void;
-  onAddBankAccount?: (account: BankAccount) => void;
-  onUpdateBankAccount?: (account: BankAccount) => void;
-  onDeleteBankAccount?: (id: string) => void;
+  onTogglePaid?: (id: string) => void;
+  goals?: SavingsGoal[];
 };
 
 function renderHome(overrides: RenderOverrides = {}) {
   return render(
     <HomeTab
       checkingBalance={overrides.checkingBalance ?? 150000}
-      checkingBalanceDate={overrides.checkingBalanceDate ?? "2026-04-10"}
-      bankAccounts={overrides.bankAccounts ?? []}
+      checkingBalanceDate="2026-04-10"
+      bankAccounts={[]}
       bills={overrides.bills ?? []}
       income={[]}
       plans={overrides.plans ?? []}
       paycheck={[]}
       checkLog={[]}
       savingsLog={overrides.savingsLog ?? []}
-      onSetBalance={overrides.onSetBalance ?? noop}
-      onAddBankAccount={overrides.onAddBankAccount ?? noop}
-      onUpdateBankAccount={overrides.onUpdateBankAccount ?? noop}
-      onDeleteBankAccount={overrides.onDeleteBankAccount ?? noop}
+      goals={overrides.goals ?? []}
+      onSetBalance={noop}
+      onAddBankAccount={noop}
+      onUpdateBankAccount={noop}
+      onDeleteBankAccount={noop}
+      onTogglePaid={overrides.onTogglePaid ?? noop}
     />,
   );
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-describe("HomeTab — rendering", () => {
-  it("renders the Savings and Total Liquid stat cards", () => {
+describe("HomeTab — bento tiles render", () => {
+  it("renders the verdict tile with THE ANSWER and a bills-handled progress bar", () => {
+    renderHome({ bills: [makeBill({ id: "x", paid: true }), makeBill({ id: "y" })] });
+    expect(screen.getByText("THE ANSWER")).toBeInTheDocument();
+    expect(screen.getByText(/bills handled this month/)).toBeInTheDocument();
+  });
+
+  it("renders the action strip (Next bill / Next paycheck)", () => {
     renderHome();
-    expect(screen.getByText("Savings")).toBeInTheDocument();
-    expect(screen.getByText("Total Liquid")).toBeInTheDocument();
+    expect(screen.getByText("Next bill to pay")).toBeInTheDocument();
+    expect(screen.getByText("Next paycheck")).toBeInTheDocument();
   });
 
-  it("renders the legacy checking balance and its updated date when no bank accounts", () => {
-    // Savings entry makes Total Liquid ($1,600) differ from checking ($1,500),
-    // so the checking value is unique in the DOM.
-    renderHome({
-      checkingBalance: 150000,
-      checkingBalanceDate: "2026-04-10",
-      savingsLog: [{ id: "s1", date: "2026-04-01", amount: 10000 }],
-    });
-    expect(screen.getByText("$1,500.00")).toBeInTheDocument();
-    expect(screen.getByText(/Updated/)).toBeInTheDocument();
+  it("renders the spending donut tile", () => {
+    renderHome({ bills: [makeBill({ category: "Housing", cents: 50000 })] });
+    expect(screen.getByText("Where your money goes")).toBeInTheDocument();
   });
 
-  it("shows 'Not set' when the legacy balance date is empty", () => {
-    renderHome({ checkingBalanceDate: "" });
-    expect(screen.getByText("Not set")).toBeInTheDocument();
-  });
-
-  it("shows the empty next-due message when there are no upcoming items", () => {
+  it("renders the week rail with 7 day cards", () => {
     renderHome();
-    expect(
-      screen.getByText("No due items remaining this month."),
-    ).toBeInTheDocument();
-  });
-});
-
-describe("HomeTab — legacy balance editing", () => {
-  it("saves a new balance with today's date when Update → Save", () => {
-    const onSetBalance = jest.fn();
-    renderHome({ onSetBalance });
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    fireEvent.change(screen.getByPlaceholderText("0.00"), {
-      target: { value: "200.00" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onSetBalance).toHaveBeenCalledWith(20000, "2026-04-15");
+    // ("This week" also appears as the action-strip overdue label — assert the
+    // day cards instead, which are unique to the rail.)
+    expect(screen.getByText("Mon")).toBeInTheDocument();
+    expect(screen.getByText("Wed")).toBeInTheDocument();
+    expect(screen.getByText("Sun")).toBeInTheDocument();
   });
 
-  it("does not save a zero/empty balance (guard)", () => {
-    const onSetBalance = jest.fn();
-    renderHome({ onSetBalance });
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onSetBalance).not.toHaveBeenCalled();
-  });
-
-  it("closes the edit form without saving when Cancel is clicked", () => {
-    const onSetBalance = jest.fn();
-    renderHome({ onSetBalance });
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.queryByPlaceholderText("0.00")).not.toBeInTheDocument();
-    expect(onSetBalance).not.toHaveBeenCalled();
-  });
-});
-
-describe("HomeTab — adding a first bank account (from legacy card)", () => {
-  it("adds an account with name and balance when '+ Add Accounts' → Add", () => {
-    const onAddBankAccount = jest.fn();
-    renderHome({ onAddBankAccount });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Accounts" }));
-    fireEvent.change(screen.getByPlaceholderText("e.g. Chase Checking"), {
-      target: { value: "Ally Savings" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("0.00"), {
-      target: { value: "500.00" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
-    expect(onAddBankAccount).toHaveBeenCalledTimes(1);
-    expect(onAddBankAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Ally Savings", balanceCents: 50000 }),
-    );
-  });
-
-  it("does not add an account with a blank name (guard)", () => {
-    const onAddBankAccount = jest.fn();
-    renderHome({ onAddBankAccount });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Accounts" }));
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
-    expect(onAddBankAccount).not.toHaveBeenCalled();
-  });
-});
-
-describe("HomeTab — bank accounts mode", () => {
-  it("renders each account's name and balance", () => {
-    // A savings entry makes Total Liquid ($2,000) differ from the account
-    // balance ($1,800), so the balance text is unique to the account card.
-    renderHome({
-      bankAccounts: [makeAccount()],
-      savingsLog: [{ id: "s1", date: "2026-04-01", amount: 20000 }],
-    });
-    expect(screen.getByText("Chase Checking")).toBeInTheDocument();
-    expect(screen.getByText("$1,800.00")).toBeInTheDocument();
-  });
-
-  it("edits an account and calls onUpdateBankAccount with the new name", () => {
-    const onUpdateBankAccount = jest.fn();
-    renderHome({ bankAccounts: [makeAccount()], onUpdateBankAccount });
-    fireEvent.click(screen.getByTitle("Edit"));
-    fireEvent.change(screen.getByPlaceholderText("e.g. Chase Checking"), {
-      target: { value: "Chase Premier" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(onUpdateBankAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "acct-1", name: "Chase Premier" }),
-    );
-  });
-
-  it("deletes an account when the delete button is clicked", () => {
-    const onDeleteBankAccount = jest.fn();
-    renderHome({ bankAccounts: [makeAccount()], onDeleteBankAccount });
-    fireEvent.click(screen.getByTitle("Delete"));
-    expect(onDeleteBankAccount).toHaveBeenCalledWith("acct-1");
-  });
-
-  it("opens the add-account form via '+ Add Account'", () => {
-    renderHome({ bankAccounts: [makeAccount()] });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Account" }));
-    expect(
-      screen.getByPlaceholderText("e.g. Chase Checking"),
-    ).toBeInTheDocument();
-  });
-});
-
-describe("HomeTab — cash flow sections", () => {
-  it("expands the collapsed 'Next week' section when its header is clicked", () => {
+  it("renders the day-detail tile with a balance footer", () => {
     renderHome();
-    const nextWeek = screen.getByRole("button", { name: /Next week/ });
-    expect(nextWeek).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(nextWeek);
-    expect(nextWeek).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Balance after this day")).toBeInTheDocument();
   });
 
-  it("renders a Next Due pill when a bill is due later this month", () => {
-    renderHome({ bills: [makeBill({ due: 25 })] });
-    expect(
-      screen.queryByText("No due items remaining this month."),
-    ).not.toBeInTheDocument();
+  it("renders the momentum gauges tile", () => {
+    renderHome();
+    expect(screen.getByText("Momentum")).toBeInTheDocument();
+    expect(screen.getByText("Bills handled")).toBeInTheDocument();
+  });
+});
+
+describe("HomeTab — interactions", () => {
+  it("selecting a day in the rail updates the day-detail tile", () => {
+    renderHome();
+    fireEvent.click(screen.getByText("Mon"));
+    expect(screen.getAllByText(/Mon ·/).length).toBeGreaterThan(0);
   });
 
-  it("renders cash-flow rows for bills that fall within the week window", () => {
-    // today is mocked to 2026-04-15, so a bill due the 15th lands inside the
-    // current-week range; projectCashFlowRows emits a row the table maps.
-    renderHome({ checkingBalance: 200000, bills: [makeBill({ due: 15, name: "Verizon" })] });
+  it("shows a bill on its due day in the detail when that day is selected", () => {
+    // today is 2026-04-15 (Wed); a bill due the 14th lands Tue this week.
+    renderHome({ bills: [makeBill({ name: "Verizon", due: 14, method: "transfer" })] });
+    fireEvent.click(screen.getByText("Tue"));
     expect(screen.getAllByText("Verizon").length).toBeGreaterThan(0);
   });
-});
 
-describe("HomeTab — keyboard and cancel interactions", () => {
-  it("saves the legacy balance on Enter", () => {
-    const onSetBalance = jest.fn();
-    renderHome({ onSetBalance });
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    const input = screen.getByPlaceholderText("0.00");
-    fireEvent.change(input, { target: { value: "300.00" } });
-    fireEvent.keyDown(input, { key: "Enter" });
-    expect(onSetBalance).toHaveBeenCalledWith(30000, "2026-04-15");
-  });
-
-  it("cancels the legacy balance edit on Escape", () => {
-    renderHome();
-    fireEvent.click(screen.getByRole("button", { name: "Update" }));
-    fireEvent.keyDown(screen.getByPlaceholderText("0.00"), { key: "Escape" });
-    expect(screen.queryByPlaceholderText("0.00")).not.toBeInTheDocument();
-  });
-
-  it("submits the add-account form on Enter in the name field", () => {
-    const onAddBankAccount = jest.fn();
-    renderHome({ onAddBankAccount });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Accounts" }));
-    const nameInput = screen.getByPlaceholderText("e.g. Chase Checking");
-    fireEvent.change(nameInput, { target: { value: "Wells Fargo" } });
-    fireEvent.keyDown(nameInput, { key: "Enter" });
-    expect(onAddBankAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Wells Fargo", balanceCents: 0 }),
-    );
-  });
-
-  it("cancels the add-account form on Escape in the balance field", () => {
-    renderHome();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Accounts" }));
-    fireEvent.keyDown(screen.getByPlaceholderText("0.00"), { key: "Escape" });
-    expect(
-      screen.queryByPlaceholderText("e.g. Chase Checking"),
-    ).not.toBeInTheDocument();
-  });
-
-  it("closes the legacy add-account form on Cancel", () => {
-    renderHome();
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Accounts" }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(
-      screen.queryByPlaceholderText("e.g. Chase Checking"),
-    ).not.toBeInTheDocument();
-  });
-
-  it("adds a second account from bank-accounts mode", () => {
-    const onAddBankAccount = jest.fn();
-    renderHome({ bankAccounts: [makeAccount()], onAddBankAccount });
-    fireEvent.click(screen.getByRole("button", { name: "+ Add Account" }));
-    fireEvent.change(screen.getByPlaceholderText("e.g. Chase Checking"), {
-      target: { value: "BoA Savings" },
+  it("fires onTogglePaid from the day-detail Mark paid button", () => {
+    const onTogglePaid = jest.fn();
+    renderHome({
+      bills: [makeBill({ id: "vz", name: "Verizon", due: 14, method: "transfer" })],
+      onTogglePaid,
     });
-    fireEvent.change(screen.getByPlaceholderText("0.00"), {
-      target: { value: "750.00" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
-    expect(onAddBankAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "BoA Savings", balanceCents: 75000 }),
-    );
+    fireEvent.click(screen.getByText("Tue"));
+    fireEvent.click(screen.getByRole("button", { name: "Mark paid" }));
+    expect(onTogglePaid).toHaveBeenCalledWith("vz");
   });
 
-  it("cancels editing an account without calling onUpdate", () => {
-    const onUpdateBankAccount = jest.fn();
-    renderHome({ bankAccounts: [makeAccount()], onUpdateBankAccount });
-    fireEvent.click(screen.getByTitle("Edit"));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(onUpdateBankAccount).not.toHaveBeenCalled();
-    expect(screen.getByText("Chase Checking")).toBeInTheDocument();
+  it("shows goal progress in the gauges when a goal + savings exist", () => {
+    renderHome({
+      goals: [
+        { id: "g1", label: "Car fund", targetCents: 500000, targetDate: "2026-12", createdAt: "2026-01-01" },
+      ],
+      savingsLog: [{ id: "s1", date: "2026-04-01", amount: 350000 }],
+    });
+    expect(screen.getByText("Car fund")).toBeInTheDocument();
+    expect(screen.getByText("70%")).toBeInTheDocument();
   });
 });

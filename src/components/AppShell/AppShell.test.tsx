@@ -124,8 +124,8 @@ describe("AppShell — rendering", () => {
 
   it("renders the Home tab by default", () => {
     render(<AppShell />);
-    // HomeTab renders the Checking balance card
-    expect(screen.getByText("Checking")).toBeInTheDocument();
+    // HomeTab renders the verdict tile with the "THE ANSWER" eyebrow badge.
+    expect(screen.getByText("THE ANSWER")).toBeInTheDocument();
   });
 });
 

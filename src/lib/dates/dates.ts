@@ -188,3 +188,25 @@ export function advanceMonth(ym: string, n: number): string {
   const newMonth = (totalMonths % 12) + 1;
   return `${newYear}-${String(newMonth).padStart(2, "0")}`;
 }
+
+/**
+ * Adds n days to a YYYY-MM-DD string, returning YYYY-MM-DD.
+ * Uses numeric-arg Date (year, monthIndex, day) — not string parsing — so it
+ * is drift-safe (same pattern as getFridaysInMonth); Date normalizes overflow.
+ */
+export function addDays(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + n);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
+    dt.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+/**
+ * Formats a YYYY-MM-DD string as a short "Mon D" label, e.g. "2026-04-15" → "Apr 15".
+ * Numeric-arg Date avoids timezone drift.
+ */
+export function fmtDayMonth(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleString("default", { month: "short", day: "numeric" });
+}

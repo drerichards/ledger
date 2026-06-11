@@ -91,11 +91,22 @@ describe("useAffirmTabState — milestonePlans", () => {
 });
 
 describe("useAffirmTabState — grandTotalOwed + monthlyTotals", () => {
-  it("computes grandTotalOwed as sum of mc × active months per plan", () => {
-    // Plan active Jan–Mar (3 months) with mc=5000 → 15000
-    const plans = [makePlan({ id: "p1", mc: 5000, start: "2026-01", end: "2026-03" })];
+  it("computes grandTotalOwed from remaining months only (now = 2026-04)", () => {
+    // Plan spans Apr–Jun → 3 remaining months from now with mc=5000 → 15000.
+    const plans = [makePlan({ id: "p1", mc: 5000, start: "2026-04", end: "2026-06" })];
     const { result } = renderHook(() => useAffirmTabState(plans));
     expect(result.current.grandTotalOwed).toBe(15000);
+  });
+
+  it("excludes already-ended plans (end < now) from grandTotalOwed", () => {
+    // Jan–Mar plan ended before now (Apr) → owes 0; only the active plan counts.
+    const plans = [
+      makePlan({ id: "ended", mc: 5000, start: "2026-01", end: "2026-03" }),
+      makePlan({ id: "active", mc: 4000, start: "2026-04", end: "2026-05" }),
+    ];
+    const { result } = renderHook(() => useAffirmTabState(plans));
+    expect(result.current.totalOwedByPlan.get("ended")).toBe(0);
+    expect(result.current.grandTotalOwed).toBe(8000); // only the active plan (2 × 4000)
   });
 
   it("grandTotalOwed is 0 for an empty plans array", () => {
