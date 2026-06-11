@@ -12,8 +12,6 @@ type Props = {
   subRows?: SubRow[];
   /** Progress bar fill 0–100. Renders a thin bar below the value. */
   progress?: number;
-  /** Disables the hover lift/shimmer (e.g. the Accounts summary boxes). */
-  noHover?: boolean;
 };
 
 /**
@@ -26,13 +24,11 @@ export const StatCard = React.memo(function StatCard({
   color,
   subRows,
   progress,
-  noHover,
 }: Props) {
   const colorClass = color ? styles[`card_${color}`] : "";
-  const staticClass = noHover ? styles.cardStatic : "";
 
   return (
-    <div className={`${styles.card} ${colorClass} ${staticClass}`}>
+    <div className={`${styles.card} ${colorClass}`}>
       <span className={styles.label}>{label}</span>
 
       {subRows ? (

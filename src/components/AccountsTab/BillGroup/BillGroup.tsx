@@ -17,7 +17,6 @@ type Props = {
   sortKey: SortKey;
   sortDir: SortDir;
   isCollapsed: boolean;
-  split: boolean;
   onToggle: () => void;
   onSort: (key: SortKey) => void;
   onEdit: (bill: Bill) => void;
@@ -46,7 +45,6 @@ export const BillGroup = React.memo(function BillGroup({
   sortKey,
   sortDir,
   isCollapsed,
-  split,
   onToggle,
   onSort,
   onEdit,
@@ -62,7 +60,6 @@ export const BillGroup = React.memo(function BillGroup({
       variant={variant}
       isCollapsed={isCollapsed}
       onToggle={onToggle}
-      split={split}
       collapsedSubtotal={fmtMoney(total)}
       footerLabel={sorted.length > 0 ? footerLabel : undefined}
       footerValue={sorted.length > 0 ? fmtMoney(total) : undefined}

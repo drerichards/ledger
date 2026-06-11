@@ -57,21 +57,18 @@ export function AffirmTab({ plans, onAdd, onUpdate = () => {}, onDelete }: Props
             color="navy"
             value={fmtMoney(grandTotalOwed)}
             subRows={[{ label: "Active plans", value: String(plans.length) }]}
-            noHover
           />
           <StatCard
             label="Monthly Burden"
             color="rust"
             value={fmtMoney(currentBurden)}
             subRows={[{ label: "Current load", value: fmtMoney(currentBurden) }]}
-            noHover
           />
           <StatCard
             label="All Plans Clear"
             color="olive"
             value={payoffMonth ? fmtMonthFull(payoffMonth) : "—"}
             subRows={[{ label: "At current pace", value: payoffMonth ? fmtMonthFull(payoffMonth) : "—" }]}
-            noHover
           />
         </div>
       )}

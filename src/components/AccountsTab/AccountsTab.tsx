@@ -156,15 +156,25 @@ export function AccountsTab({
 
   const kiasCollapsed = !kiasOpen;
   const otherCollapsed = !otherOpen;
-  const splitGroups = kiasOpen && otherOpen;
 
-  // Toggle a group, but never let both collapse — keep at least one open.
+  // Toggling the only open group swaps to the other (close one → the other
+  // auto-expands); otherwise just toggle. Both can be open; both can't be closed.
   const handleKiasToggle = () => {
-    setKiasOpen((open) => (open && !otherOpen ? open : !open));
+    if (kiasOpen && !otherOpen) {
+      setKiasOpen(false);
+      setOtherOpen(true);
+    } else {
+      setKiasOpen((open) => !open);
+    }
   };
 
   const handleOtherToggle = () => {
-    setOtherOpen((open) => (open && !kiasOpen ? open : !open));
+    if (otherOpen && !kiasOpen) {
+      setOtherOpen(false);
+      setKiasOpen(true);
+    } else {
+      setOtherOpen((open) => !open);
+    }
   };
 
   return (
@@ -217,27 +227,23 @@ export function AccountsTab({
                 { label: "Affirm Plans",       value: fmtMoney(monthSummary.affirmBurdenCents) },
               ]}
               progress={100}
-              noHover
             />
             <StatCard
               label="Paid"
               value={fmtMoney(paidCents)}
               color="olive"
               progress={paidPct}
-              noHover
             />
             <StatCard
               label="Unpaid"
               value={fmtMoney(unpaidCents)}
               color="rust"
               progress={unpaidPct}
-              noHover
             />
             <StatCard
               label={shortfall > 0 ? "Gap" : "Est. Surplus"}
               value={fmtMoney(Math.abs(shortfall))}
               color="gold"
-              noHover
             />
           </div>
         );
@@ -268,7 +274,6 @@ export function AccountsTab({
             sortKey={sortKey}
             sortDir={sortDir}
             isCollapsed={kiasCollapsed}
-            split={splitGroups}
             onToggle={handleKiasToggle}
             onSort={handleSort}
             onEdit={handleEdit}
@@ -283,7 +288,6 @@ export function AccountsTab({
             sortKey={sortKey}
             sortDir={sortDir}
             isCollapsed={otherCollapsed}
-            split={splitGroups}
             onToggle={handleOtherToggle}
             onSort={handleSort}
             onEdit={handleEdit}

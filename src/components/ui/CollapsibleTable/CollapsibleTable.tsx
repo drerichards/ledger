@@ -46,23 +46,21 @@ export function CollapsibleTable({
       >
         <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
         <span className={styles.groupLabel}>{label}</span>
-        {isCollapsed && collapsedSubtotal != null && (
-          <span className={styles.groupTotal}>{collapsedSubtotal}</span>
-        )}
       </button>
 
-      <div
-        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""}`}
-      >
+      {/* Row list — clips to 0 in a collapsed group (flex-grow 0 → min-content). */}
+      <div className={styles.tableWrapper}>
         <div className={styles.tableWrapperInner}>
           <div className={styles.tableViewport}>{children}</div>
         </div>
       </div>
 
-      {!isCollapsed && footerValue != null && (
+      {/* Subtotal bar — always shown (open or collapsed), so the running total
+          stays visible even when the rows are hidden. */}
+      {(footerValue ?? collapsedSubtotal) != null && (
         <div className={`${styles.totalBar} ${variant === "olive" ? styles.totalBarOlive : ""}`}>
           {footerLabel != null && <div className={styles.totalLabel}>{footerLabel}</div>}
-          <div className={styles.totalValue}>{footerValue}</div>
+          <div className={styles.totalValue}>{footerValue ?? collapsedSubtotal}</div>
         </div>
       )}
     </div>
