@@ -20,6 +20,8 @@ import {
   getKiasPayForMonth,
   getWeeksEnteredForMonth,
   getPaycheckAllocatedForMonth,
+  getPlanDueDay,
+  getAffirmTotalForMonth,
 } from "./household";
 import { INCOME_DEFAULTS } from "@/lib/income";
 import { getMondaysInMonth } from "@/lib/dates";
@@ -481,5 +483,32 @@ describe("household money engine", () => {
     expect(rowsSameDaySort[1].type).toBe("income");
     expect(rowsSameDaySort[2].type).not.toBe("income");
     expect(rowsSameDaySort[3].type).not.toBe("income");
+  });
+
+  it("calculates getAffirmTotalForMonth and getPlanDueDay correctly", () => {
+    // getPlanDueDay with string/label due day
+    const planWithLabelDue = makePlan({ dueDay: undefined, label: "Affirm Couch due 15" });
+    expect(getPlanDueDay(planWithLabelDue)).toBe(15);
+
+    const planWithNoDue = makePlan({ dueDay: undefined, label: "Affirm Couch" });
+    expect(getPlanDueDay(planWithNoDue)).toBe(1);
+
+    // getAffirmTotalForMonth
+    const plans = [
+      makePlan({ id: "p1", mc: 5000, start: "2026-04", end: "2026-06" }),
+      makePlan({ id: "p2", mc: 3000, start: "2026-05", end: "2026-07" }),
+    ];
+    expect(getAffirmTotalForMonth(plans, "2026-04")).toBe(5000);
+    expect(getAffirmTotalForMonth(plans, "2026-05")).toBe(8000);
+    expect(getAffirmTotalForMonth(plans, "2026-07")).toBe(3000);
+    expect(getAffirmTotalForMonth(plans, "2026-08")).toBe(0);
+
+    // getSavingsMovedForMonth branch coverage
+    const savingsLog = [
+      makeSavingsEntry({ date: undefined, weekOf: "2026-04-13", amount: 5000 }),
+      makeSavingsEntry({ date: undefined, weekOf: undefined, amount: 2000 }),
+      makeSavingsEntry({ date: "2026-04-06", amount: 1500 }),
+    ];
+    expect(getSavingsMovedForMonth("2026-04", savingsLog)).toBe(6500);
   });
 });

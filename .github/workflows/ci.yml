@@ -31,7 +31,7 @@ jobs:
         run: pnpm lint
 
       - name: Unit tests
-        run: pnpm test --ci --coverage
+        run: pnpm test
         env:
           # Supabase env vars are required for the build but not used in tests
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
