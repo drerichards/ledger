@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type {
   Bill,
   InstallmentPlan,
@@ -31,7 +31,6 @@ import styles from "./AccountsTab.module.css";
 
 type SortKey = "due" | "name" | "cents" | "method" | "category";
 type SortDir = "asc" | "desc";
-type PanelMode = "both" | "kias" | "other";
 
 type Props = {
   bills: Bill[];
@@ -73,11 +72,10 @@ export function AccountsTab({
   const [editing, setEditing] = useState<Bill | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("due");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [rolloverPrompt, setRolloverPrompt] = useState<{
-    from: string;
-    to: string;
-  } | null>(null);
-  const [panelMode, setPanelMode] = useState<PanelMode>("both");
+  // Each group expands/collapses independently, with one invariant: at least
+  // one group is always open (closing the only-open group is a no-op).
+  const [kiasOpen, setKiasOpen] = useState(true);
+  const [otherOpen, setOtherOpen] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const monthSummary = getHouseholdMonthSummary({
@@ -106,28 +104,29 @@ export function AccountsTab({
       const prevHasRecurring = bills.some(
         (b) => b.month === viewMonth && b.entry === "recurring",
       );
+      // Auto-carry: recurring payees + amounts roll forward into a new empty
+      // month with no prompt (they persist until deselected or removed).
       if (!nextHasBills && prevHasRecurring) {
-        setRolloverPrompt({ from: viewMonth, to: next });
-        return;
+        onRollover(viewMonth, next);
       }
     }
     setViewMonth(next);
   };
 
-  const confirmRollover = () => {
-    // istanbul ignore next — confirmRollover only callable when rolloverPrompt is set; guard is unreachable via UI
-    if (!rolloverPrompt) return;
-    onRollover(rolloverPrompt.from, rolloverPrompt.to);
-    setViewMonth(rolloverPrompt.to);
-    setRolloverPrompt(null);
-  };
-
-  const dismissRollover = () => {
-    // istanbul ignore next — dismissRollover only callable when rolloverPrompt is set; guard is unreachable via UI
-    if (!rolloverPrompt) return;
-    setViewMonth(rolloverPrompt.to);
-    setRolloverPrompt(null);
-  };
+  // Auto-fill an empty current/future month from the most recent prior month
+  // that has recurring bills, so payees carry forward with no manual step.
+  // (ROLLOVER_BILLS no-ops if the target month already has bills, so this is
+  // safe to run on every render; it fires at most once per empty month.)
+  useEffect(() => {
+    if (viewMonth < currentMonth()) return; // don't backfill history
+    if (bills.some((b) => b.month === viewMonth)) return;
+    const priorRecurringMonths = bills
+      .filter((b) => b.entry === "recurring" && b.month < viewMonth)
+      .map((b) => b.month)
+      .sort();
+    const source = priorRecurringMonths.at(-1);
+    if (source) onRollover(source, viewMonth);
+  }, [bills, viewMonth, onRollover]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -155,17 +154,104 @@ export function AccountsTab({
     setEditing(null);
   };
 
-  const kiasCollapsed = panelMode === "other";
-  const otherCollapsed = panelMode === "kias";
-  const splitGroups = panelMode === "both";
+  const kiasCollapsed = !kiasOpen;
+  const otherCollapsed = !otherOpen;
 
+  // Toggling the only open group swaps to the other (close one → the other
+  // auto-expands); otherwise just toggle. Both can be open; both can't be closed.
   const handleKiasToggle = () => {
-    setPanelMode((current) => (current === "other" ? "both" : "other"));
+    if (kiasOpen && !otherOpen) {
+      setKiasOpen(false);
+      setOtherOpen(true);
+    } else {
+      setKiasOpen((open) => !open);
+    }
   };
 
   const handleOtherToggle = () => {
-    setPanelMode((current) => (current === "kias" ? "both" : "kias"));
+    if (otherOpen && !kiasOpen) {
+      setOtherOpen(false);
+      setKiasOpen(true);
+    } else {
+      setOtherOpen((open) => !open);
+    }
   };
+
+  // ── Accordion layout ────────────────────────────────────────────────────────
+  // Give each bill group an explicit height so the two move as one piece: an open
+  // group sizes to its content (no blank above its subtotal), a collapsed group
+  // shows its chrome (header + subtotal) plus any leftover space as a peek of
+  // rows. The heights always sum to the container, so the divider slides smoothly.
+  const billGroupsRef = useRef<HTMLDivElement>(null);
+  const firstLayout = useRef(true);
+  useLayoutEffect(() => {
+    const container = billGroupsRef.current;
+    if (!container) return;
+    const groups = Array.from(container.querySelectorAll<HTMLElement>("[data-acc-group]"));
+    if (groups.length === 0) return;
+
+    const runLayout = () => {
+      const GAP = 8; // matches .billGroups gap (--space-2)
+      const stageH = container.clientHeight - GAP * (groups.length - 1);
+      const info = groups.map((el) => {
+        const chrome = Array.from(el.querySelectorAll<HTMLElement>("[data-acc-chrome]")).reduce(
+          (sum, c) => sum + c.offsetHeight,
+          0,
+        );
+        const list = el.querySelector<HTMLElement>("[data-acc-list]");
+        return { el, open: el.dataset.accOpen === "true", chrome, content: chrome + (list?.scrollHeight ?? 0) };
+      });
+
+      // Every group's chrome (header + subtotal bar) is reserved FIRST so its
+      // subtotal is always on-screen; collapsed groups take only their chrome.
+      // Open groups then share the remaining height in proportion to how much
+      // content each wants. Targets always sum to exactly stageH, so no group's
+      // box (and therefore no subtotal bar) is ever pushed below the stage — the
+      // rows scroll inside each open group instead.
+      const openCount = info.filter((g) => g.open).length;
+
+      let targets: number[];
+      if (openCount > 1) {
+        // Multiple groups open → each gets an EQUAL share of the stage (50/50 for
+        // two). Rows scroll inside; chrome (header + subtotal) is always visible.
+        const share = stageH / openCount;
+        targets = info.map((g) => (g.open ? share : g.chrome));
+        // Collapsed groups still need their chrome; take it from the open shares.
+        const collapsedChrome = info.reduce((sum, g) => sum + (g.open ? 0 : g.chrome), 0);
+        if (collapsedChrome > 0) {
+          const perOpen = collapsedChrome / openCount;
+          targets = info.map((g) => (g.open ? share - perOpen : g.chrome));
+        }
+      } else {
+        // One (or zero) group open → it sizes to its content, the collapsed
+        // sibling takes its chrome plus any leftover as a peek of rows.
+        const totalChrome = info.reduce((sum, g) => sum + g.chrome, 0);
+        targets = info.map((g) => {
+          if (!g.open) return g.chrome;
+          return Math.min(g.content, stageH - (totalChrome - g.chrome));
+        });
+        const leftover = stageH - targets.reduce((sum, h) => sum + h, 0);
+        if (leftover > 0) {
+          const closedIdx = info.findIndex((g) => !g.open);
+          targets[closedIdx >= 0 ? closedIdx : info.length - 1] += leftover;
+        }
+      }
+
+      const animate = !firstLayout.current;
+      firstLayout.current = false;
+      info.forEach((g, i) => {
+        if (!animate) g.el.style.transition = "none";
+        g.el.style.height = `${Math.max(0, targets[i])}px`;
+        if (!animate) requestAnimationFrame(() => {
+          g.el.style.transition = "";
+        });
+      });
+    };
+
+    runLayout();
+    window.addEventListener("resize", runLayout);
+    return () => window.removeEventListener("resize", runLayout);
+  }, [kiasOpen, otherOpen, viewMonth, bills]);
 
   return (
     <div className={styles.container}>
@@ -188,38 +274,17 @@ export function AccountsTab({
           >
             + Add Bill
           </button>
-          <button
+          {/* Close Month hidden for v1 — re-enable post-ship. Snapshot dialog + handler kept intact. */}
+          {/* <button
             className={styles.toolBtn}
             onClick={() => setShowSnapshot(true)}
           >
             Close Month
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* ── Rollover Prompt ───────────────────────────────────────── */}
-      {rolloverPrompt && (
-        <div className={styles.rolloverPrompt}>
-          <span className={styles.rolloverMsg}>
-            Start {fmtMonthFull(rolloverPrompt.to)} from{" "}
-            {fmtMonthFull(rolloverPrompt.from)}&apos;s recurring bills?
-          </span>
-          <div className={styles.rolloverActions}>
-            <button
-              className={styles.btnGhost}
-              onClick={() => setRolloverPrompt(null)}
-            >
-              Cancel
-            </button>
-            <button className={styles.btnGhost} onClick={dismissRollover}>
-              Start fresh
-            </button>
-            <button className={styles.btnPrimary} onClick={confirmRollover}>
-              Copy recurring bills
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Stat row ─────────────────────────────────────────────── */}
       {(() => {
@@ -252,7 +317,7 @@ export function AccountsTab({
               progress={unpaidPct}
             />
             <StatCard
-              label={shortfall > 0 ? "Short" : "Est. Surplus"}
+              label={shortfall > 0 ? "Gap" : "Est. Surplus"}
               value={fmtMoney(Math.abs(shortfall))}
               color="gold"
             />
@@ -276,7 +341,7 @@ export function AccountsTab({
           </div>
         </div>
 
-        <div className={styles.billGroups}>
+        <div ref={billGroupsRef} className={styles.billGroups}>
           <BillGroup
             label="From Kia's Pay"
             variant="navy"
@@ -285,7 +350,6 @@ export function AccountsTab({
             sortKey={sortKey}
             sortDir={sortDir}
             isCollapsed={kiasCollapsed}
-            split={splitGroups}
             onToggle={handleKiasToggle}
             onSort={handleSort}
             onEdit={handleEdit}
@@ -300,7 +364,6 @@ export function AccountsTab({
             sortKey={sortKey}
             sortDir={sortDir}
             isCollapsed={otherCollapsed}
-            split={splitGroups}
             onToggle={handleOtherToggle}
             onSort={handleSort}
             onEdit={handleEdit}

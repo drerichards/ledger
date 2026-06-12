@@ -16,6 +16,8 @@ export {
   getMondaysInMonth,
   mondayOf,
   advanceMonth,
+  addDays,
+  fmtDayMonth,
   getFridaysInMonth,
   getFridaysUpToMonth,
   getMondaysUpToMonth,

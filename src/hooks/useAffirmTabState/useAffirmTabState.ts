@@ -16,12 +16,14 @@ export function useAffirmTabState(plans: InstallmentPlan[]) {
     const months = getAffirmGridMonths(plans);
     const milestonePlans = getPlansEndingInMonth(plans, now);
 
-    // Per-plan total owed (mc × number of active months in the grid).
-    // Keyed by plan id so PlanRow receives a single number prop.
+    // Per-plan total owed = what is STILL owed from now forward: mc × the count
+    // of remaining payment months (m >= now within the plan's range). A plan
+    // that has already ended (p.end < now) owes nothing and contributes 0, so
+    // ended rows no longer inflate the grand total.
     const totalOwedByPlan = new Map<string, number>(
       plans.map((p) => {
-        const activeCount = months.filter((m) => p.start <= m && p.end >= m).length;
-        return [p.id, p.mc * activeCount];
+        const remainingCount = months.filter((m) => m >= now && p.start <= m && p.end >= m).length;
+        return [p.id, p.mc * remainingCount];
       }),
     );
 

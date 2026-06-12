@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "tailwind.config.ts",
     // Git worktrees created by Claude Code — not project source
     ".claude/**",
+    // Stale/unused code directory
+    "stale/**",
   ]),
   {
     rules: {

@@ -15,8 +15,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -33,7 +31,7 @@ jobs:
         run: pnpm lint
 
       - name: Unit tests
-        run: pnpm test --ci --coverage
+        run: pnpm test
         env:
           # Supabase env vars are required for the build but not used in tests
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co

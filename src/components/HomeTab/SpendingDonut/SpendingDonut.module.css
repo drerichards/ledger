@@ -1,0 +1,153 @@
+.donut {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 16px 18px;
+  box-sizing: border-box;
+  background: var(--color-rust);
+  border-radius: 14px;
+  color: var(--color-white);
+  box-shadow: 0 14px 40px var(--color-rust-alpha-25);
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glass-lift sheen on hover — matches the verdict + week tiles. */
+.donut::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, color-mix(in srgb, var(--color-white) 16%, transparent) 50%, transparent 70%);
+  opacity: 0;
+  transform: translateX(-30%);
+  transition: opacity 0.3s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.donut:hover {
+  transform: translateY(-2px);
+}
+
+.donut:hover::after {
+  opacity: 1;
+  transform: translateX(30%);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.meta {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: color-mix(in srgb, var(--color-white) 78%, transparent);
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+  flex: 1;
+}
+
+.ringWrap {
+  flex: 0 0 auto;
+  width: 150px;
+  height: 150px;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.track {
+  stroke: color-mix(in srgb, var(--color-white) 18%, transparent);
+}
+
+.seg {
+  stroke-linecap: butt;
+  transition: stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Category segment + legend swatch colors — sourced from --cat-* tokens. */
+.catHousing { stroke: var(--cat-housing); color: var(--cat-housing); }
+.catUtilities { stroke: var(--cat-utilities); color: var(--cat-utilities); }
+.catInsurance { stroke: var(--cat-insurance); color: var(--cat-insurance); }
+.catTransfers { stroke: var(--cat-transfers); color: var(--cat-transfers); }
+.catSubscriptions { stroke: var(--cat-subscriptions); color: var(--cat-subscriptions); }
+.catCreditCards { stroke: var(--cat-credit-cards); color: var(--cat-credit-cards); }
+.catLoans { stroke: var(--cat-loans); color: var(--cat-loans); }
+.catSavings { stroke: var(--cat-savings); color: var(--cat-savings); }
+.catOther { stroke: var(--cat-other); color: var(--cat-other); }
+
+.centerNum {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 500;
+  fill: var(--color-white);
+}
+
+.centerSub {
+  font-size: var(--text-mini);
+  fill: color-mix(in srgb, var(--color-white) 70%, transparent);
+}
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  align-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.swatch {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.legendLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--color-white) 88%, transparent);
+}
+
+.legendAmt {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-white);
+}

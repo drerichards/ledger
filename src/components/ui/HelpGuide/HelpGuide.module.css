@@ -1,0 +1,177 @@
+/* Plain-language help guide — comfortable reading for a non-technical user. */
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.intro {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-text-mid);
+  margin: 0;
+}
+
+/* Clickable index of sections. */
+.index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-mid);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--anim-speed), color var(--anim-speed), border var(--anim-speed);
+}
+
+.chip:hover {
+  background: var(--color-cream-mid);
+  color: var(--color-text);
+}
+
+.chipActive {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Fixed body height so the modal never resizes between sections;
+     longer sections scroll internally. */
+  height: 500px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.blockHeading {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-rust);
+  margin: 0;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+.sectionBody {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.footerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.pageCount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-mid);
+}
+
+.pageBtn {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  padding: 9px 16px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--anim-speed);
+}
+.pageBtn:hover:not(:disabled) {
+  background: var(--color-cream-mid);
+}
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gotIt {
+  background: var(--color-navy);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md, 6px);
+  padding: 9px 18px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gotIt:hover {
+  background: var(--color-navy-dark);
+}
+
+.screenshotWrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--color-surface);
+  max-height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform var(--anim-speed, 0.2s) ease, box-shadow var(--anim-speed, 0.2s) ease, border-color var(--anim-speed, 0.2s) ease;
+  cursor: zoom-in;
+}
+
+.screenshotWrap:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-navy);
+}
+
+.screenshot {
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  display: block;
+  transition: opacity var(--anim-speed, 0.2s) ease;
+}
+
+.screenshot:hover {
+  opacity: 0.95;
+}
+
+.screenshotLink {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+

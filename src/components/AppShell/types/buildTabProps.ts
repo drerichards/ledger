@@ -147,7 +147,10 @@ export const buildSavingsTabProps = (
   onGoToPaycheck,
 });
 
-export const buildHomeTabProps = ({ state, actions }: TabPropsDeps) => ({
+export const buildHomeTabProps = (
+  { state, actions }: TabPropsDeps,
+  onGoToPayoff?: () => void,
+) => ({
   checkingBalance: state.checkingBalance,
   checkingBalanceDate: state.checkingBalanceDate,
   bankAccounts: state.bankAccounts ?? [],
@@ -157,8 +160,11 @@ export const buildHomeTabProps = ({ state, actions }: TabPropsDeps) => ({
   paycheck: state.paycheck,
   checkLog: state.checkLog,
   savingsLog: state.savingsLog,
+  goals: state.goals ?? [],
   onSetBalance: actions.setCheckingBalance,
   onAddBankAccount: actions.addBankAccount,
   onUpdateBankAccount: actions.updateBankAccount,
   onDeleteBankAccount: actions.deleteBankAccount,
+  onTogglePaid: actions.toggleBillPaid,
+  onGoToPayoff,
 });

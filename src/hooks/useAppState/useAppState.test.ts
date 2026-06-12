@@ -266,15 +266,19 @@ describe("useAppState — ADD_PLAN / UPDATE_PLAN / DELETE_PLAN", () => {
 
   it("updates a plan by id", () => {
     const { result } = setup();
-    act(() => { result.current.addPlan(makePlan({ id: "p1", mc: 5000, dueDay: 10 })); });
+    act(() => {
+      result.current.addPlan(makePlan({ id: "p1", mc: 5000, dueDay: 10 }));
+      result.current.addPlan(makePlan({ id: "p2", mc: 3000, dueDay: 5 }));
+    });
 
     act(() => {
       result.current.updatePlan(makePlan({ id: "p1", mc: 7200, dueDay: 12 }));
     });
 
-    expect(result.current.state.plans).toHaveLength(1);
+    expect(result.current.state.plans).toHaveLength(2);
     expect(result.current.state.plans[0].mc).toBe(7200);
     expect(result.current.state.plans[0].dueDay).toBe(12);
+    expect(result.current.state.plans[1].mc).toBe(3000);
   });
 
   it("removes a plan by id", () => {
@@ -287,6 +291,28 @@ describe("useAppState — ADD_PLAN / UPDATE_PLAN / DELETE_PLAN", () => {
 
     expect(result.current.state.plans).toHaveLength(1);
     expect(result.current.state.plans[0].id).toBe("p2");
+  });
+});
+
+describe("useAppState — HYDRATE plan dedupe", () => {
+  it("collapses content-identical plans with different ids on hydrate", () => {
+    const dup = (id: string, dueDay?: number) =>
+      makePlan({ id, label: "Affirm Couch", mc: 7500, start: "2026-04", end: "2026-06", dueDay });
+    const { loadState } = jest.requireMock("@/lib/storage") as { loadState: jest.Mock };
+    loadState.mockReturnValueOnce({
+      ...mockInitialState,
+      plans: [
+        dup("a", 12),
+        dup("b", 12),
+        dup("c"),
+        dup("d"),
+        makePlan({ id: "x", label: "Other", mc: 1000 }),
+      ],
+    });
+    const { result } = setup();
+    // Duplicates collapse; distinct survives → 3 total.
+    expect(result.current.state.plans).toHaveLength(3);
+    expect(result.current.state.plans.filter((p) => p.label === "Affirm Couch")).toHaveLength(2);
   });
 });
 

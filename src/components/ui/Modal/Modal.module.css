@@ -70,3 +70,15 @@
   gap: var(--space-2);
   border-top: 1px solid var(--color-border);
 }
+
+.modalSm {
+  max-width: 400px;
+}
+
+.modalLg {
+  max-width: 680px;
+}
+
+.modalXl {
+  max-width: 840px;
+}

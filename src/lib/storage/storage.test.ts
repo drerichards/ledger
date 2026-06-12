@@ -7,6 +7,7 @@
 
 import { loadState, saveState, clearState, INITIAL_STATE } from "./storage";
 import type { AppState } from "@/types";
+import { SEED_STATE } from "@/lib/seed";
 
 // ── localStorage mock ──────────────────────────────────────────────────────────
 
@@ -30,6 +31,10 @@ function setRaw(data: unknown) {
 
 beforeEach(() => {
   localStorageMock.clear();
+  // Mark the one-time dummy reset as already done so the general migration tests
+  // exercise the steady-state path (savings/goals preserved). The reset itself
+  // is covered by its own test below.
+  localStorageMock.setItem("ledger-dummy-reset-v1", "1");
 });
 
 // ── loadState ─────────────────────────────────────────────────────────────────
@@ -103,6 +108,51 @@ describe("loadState", () => {
     expect(entry.id).toBeTruthy();
     expect(entry.date).toBe("2026-03-30");
     expect(entry.amount).toBe(5000);
+  });
+
+  it("clears dummy savings, goals, and bank accounts once (keeps bills/income) on first load", () => {
+    localStorageMock.removeItem("ledger-dummy-reset-v1"); // reset not yet done
+    setRaw({
+      ...INITIAL_STATE,
+      bills: [
+        {
+          id: "b1", month: "2026-04", name: "Rent", cents: 100000, due: 1, paid: false,
+          method: "transfer", group: "kias_pay", entry: "recurring", category: "Housing",
+          flagged: false, notes: "", amountHistory: [],
+        },
+      ],
+      savingsLog: [{ id: "s1", date: "2026-03-30", amount: 5000 }],
+      goals: [{ id: "g1", label: "X", targetCents: 1000, targetDate: "2026-12", createdAt: "2026-01-01" }],
+      bankAccounts: [{ id: "a1", name: "Chase", balanceCents: 500, updatedDate: "2026-04-01" }],
+    });
+    const state = loadState();
+    expect(state.savingsLog).toEqual([]);
+    expect(state.goals).toEqual([]);
+    expect(state.bankAccounts).toEqual([]);
+    expect(state.bills).toHaveLength(1); // real data kept
+    // Flag is set → a second load preserves new entries.
+    expect(localStorageMock.getItem("ledger-dummy-reset-v1")).toBe("1");
+  });
+
+  it("prevents migration wipe on first reload after starting a clean device (regression F1)", () => {
+    localStorageMock.removeItem(STORAGE_KEY);
+    localStorageMock.removeItem("ledger-dummy-reset-v1");
+
+    // 1. Clean load (no raw)
+    const state1 = loadState();
+    expect(localStorageMock.getItem("ledger-dummy-reset-v1")).toBe("1");
+
+    // 2. User adds a goal and saves it
+    const modifiedState = {
+      ...state1,
+      goals: [{ id: "user-goal-1", label: "My Goal", targetCents: 50000, targetDate: "2026-12", createdAt: "2026-06-12" }],
+    };
+    saveState(modifiedState);
+
+    // 3. Subsequent load preserves the goal and does not run reset again
+    const state2 = loadState();
+    expect(state2.goals).toHaveLength(1);
+    expect(state2.goals[0].id).toBe("user-goal-1");
   });
 
   it("preserves new-shape SavingsEntry records that already have id", () => {
@@ -181,11 +231,63 @@ describe("loadState", () => {
 
   // ── Plan migration ────────────────────────────────────────────────────────────
 
+  it("defaults snapshots to SEED_STATE.snapshots when snapshots is missing or empty", () => {
+    setRaw({ ...INITIAL_STATE, snapshots: undefined });
+    const state = loadState();
+    expect(state.snapshots).toEqual(SEED_STATE.snapshots);
+
+    setRaw({ ...INITIAL_STATE, snapshots: [] });
+    const state2 = loadState();
+    expect(state2.snapshots).toEqual(SEED_STATE.snapshots);
+  });
+
+  it("preserves non-empty snapshots from stored state", () => {
+    const snapshots = [
+      {
+        month: "2026-05",
+        totalBilled: 100,
+        totalPaid: 100,
+        shortfall: 0,
+        savingsMoved: 0,
+        kiasPayActual: 0,
+      },
+    ];
+    setRaw({ ...INITIAL_STATE, snapshots });
+    const state = loadState();
+    expect(state.snapshots).toEqual(snapshots);
+  });
+
+  it("defaults plans to SEED_STATE.plans when plans is missing or empty", () => {
+    setRaw({ ...INITIAL_STATE, plans: undefined });
+    const state = loadState();
+    expect(state.plans).toEqual(SEED_STATE.plans);
+
+    setRaw({ ...INITIAL_STATE, plans: [] });
+    const state2 = loadState();
+    expect(state2.plans).toEqual(SEED_STATE.plans);
+  });
+
   it("uses parsed plans when stored state has non-empty plans (line 58 true branch)", () => {
     const plans = [{ id: "custom-plan", label: "Test Plan", mc: 5000, start: "2026-01", end: "2026-06" }];
     setRaw({ ...INITIAL_STATE, plans });
     const state = loadState();
     expect(state.plans[0].id).toBe("custom-plan");
+  });
+
+  it("preserves dueDay when it is already a number on stored plans", () => {
+    const plans = [
+      {
+        id: "custom-plan",
+        label: "Affirm Couch",
+        mc: 5000,
+        start: "2026-01",
+        end: "2026-06",
+        dueDay: 25,
+      },
+    ];
+    setRaw({ ...INITIAL_STATE, plans });
+    const state = loadState();
+    expect(state.plans[0].dueDay).toBe(25);
   });
 
   it("backfills missing dueDay on stored plans from the label hint", () => {

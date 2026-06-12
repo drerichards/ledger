@@ -108,6 +108,15 @@ describe("calcGoalMetrics", () => {
     expect(result.progressRatio).toBe(1);
     expect(result.status).toBe("achieved");
   });
+
+  it("handles a future target date that is the same as or before the creation date", () => {
+    const goal = makeGoal({
+      createdAt: "2026-05-01T00:00:00.000Z",
+      targetDate: "2026-05", // same month as createdAt, but future relative to currentMonth "2026-04"
+    });
+    const result = calcGoalMetrics(goal, 0);
+    expect(result.status).toBe("behind");
+  });
 });
 
 // ─── getGoalMonths ────────────────────────────────────────────────────────────

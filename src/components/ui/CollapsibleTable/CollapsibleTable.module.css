@@ -17,12 +17,21 @@
     -webkit-backdrop-filter: none;
     border: none;
     box-shadow: none;
-    border-radius: var(--radius-md);
+    /* 16px radius + overflow:hidden auto-rounds the corners: a collapsed group
+       (header + subtotal only) reads as a rounded pill; an open group rounds the
+       footer's bottom while the header's bottom edge stays square. */
+    border-radius: 16px;
     overflow: hidden;
-    flex: 1 1 0;
-    min-height: 0;
     display: flex;
     flex-direction: column;
+    /* Height is set explicitly (px) by the accordion layout effect in AccountsTab:
+       an open group gets its content height (capped), a collapsed group gets its
+       chrome (header + subtotal) plus any leftover as a peek — so the two heights
+       always sum to the container and the divider slides as one coupled motion
+       (no blank, no bounce). The transition animates that height. 16px radius +
+       overflow:hidden round the corners (pill when only chrome shows). */
+    flex: 0 0 auto;
+    transition: height 0.34s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .groupNavy {
@@ -43,15 +52,14 @@
     --group-total-bg: rgb(65, 82, 31);
 }
 
+/* Collapsed: flex-grow 0 → it yields all flexible height to the open sibling and
+   floors at min-content (header + subtotal); the row list clips to 0. */
 .groupCollapsed {
-    flex: 0 0 auto;
-}
-
-.groupSplit {
-    flex: 1 1 0;
+    flex-grow: 0;
 }
 
 .groupHeader {
+    flex: 0 0 auto;
     padding: 10px 16px;
     font-size: var(--text-xs);
     font-weight: 700;
@@ -68,15 +76,12 @@
     width: 100%;
     margin: 0;
     border: none;
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    /* Square — the group's radius + overflow:hidden round the corners. */
+    border-radius: 0;
     text-align: left;
     font-family: var(--font-primary);
     box-shadow: none;
     background: linear-gradient(90deg, var(--group-header-bg-start), var(--group-header-bg-end));
-}
-
-.groupCollapsed .groupHeader {
-    border-radius: 16px;
 }
 
 button.groupHeader:active:not(:disabled) {
@@ -109,29 +114,27 @@ button.groupHeader:active:not(:disabled) {
 
 /* ── Body (collapsible) ──────────────────────────────────────────────────── */
 
+/* The row list fills the group's flexible height. As the group's flex-grow
+   animates, this resizes in lockstep with it (no separate timeline = no bounce);
+   in a collapsed group it clips to 0 so only header + subtotal show. */
 .tableWrapper {
-    display: grid;
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    flex: 0 0 auto;
-    min-height: 0;
-}
-
-.groupSplit .tableWrapper {
     flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .tableWrapperInner {
     overflow: hidden;
     min-height: 0;
     padding: 0;
+    height: 100%;
 }
 
 .tableViewport {
+    height: 100%;
     overflow-x: auto;
     overflow-y: auto;
     min-height: 0;
-    max-height: min(52vh, 640px);
     scrollbar-width: none;
 }
 
@@ -140,36 +143,17 @@ button.groupHeader:active:not(:disabled) {
     height: 0;
 }
 
-.tableWrapperCollapsed {
-    grid-template-rows: 0fr;
-}
-
-.tableWrapperCollapsed .tableWrapperInner {
-    padding: 0;
-}
-
-.tableWrapperCollapsed .tableViewport {
-    overflow: hidden;
-}
-
-.groupSplit .tableViewport {
-    height: 100%;
-    max-height: none;
-}
-
 /* ── Footer (total bar) ──────────────────────────────────────────────────── */
 
 .totalBar {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 12px;
     min-height: var(--group-footer-height);
     padding: 10px 12px;
     background: var(--group-total-bg);
-    /* border-top-left-radius: 14px;
-    border-top-right-radius: 14px; */
-    border-bottom-left-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
+    /* Bottom corners come from the group's 16px clip. */
 }
 
 .totalBarOlive {

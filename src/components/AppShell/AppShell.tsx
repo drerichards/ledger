@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fmtMoney } from "@/lib/money";
 import { currentMonth, fmtMonthFull } from "@/lib/dates";
 import { useAppState } from "@/hooks/useAppState";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { useMilestones } from "@/hooks/useMilestones";
 import { getMilestoneLabel, getUnseenMilestones } from "@/lib/milestones";
 import { getHouseholdMonthSummary } from "@/lib/household/household";
@@ -23,6 +24,7 @@ import { AccountsTab } from "@/components/AccountsTab";
 import { AffirmTab } from "@/components/AffirmTab/AffirmTab";
 import { PaycheckTab } from "@/components/PaycheckTab/PaycheckTab";
 import { SnapshotsTab } from "@/components/SnapshotsTab";
+import { CalcFab } from "@/components/ui/CalcFab";
 import styles from "./AppShell.module.css";
 
 type Tab = "home" | "accounts" | "paycheck" | "affirm" | "snapshots";
@@ -34,7 +36,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "accounts",  label: "Accounts" },
   { id: "paycheck",  label: "Income" },
   { id: "affirm",    label: "Payoff" },
-  { id: "snapshots", label: "Snapshots" },
+  // Snapshots hidden for post-ship rollout — render case + type kept intact.
+  // { id: "snapshots", label: "Snapshots" },
 ];
 
 // Wrap each tab in an isolated error boundary so one crash doesn't kill the shell.
@@ -43,6 +46,10 @@ const SafeAccountsTab = withErrorBoundary(AccountsTab, "AccountsTab");
 const SafeAffirmTab = withErrorBoundary(AffirmTab, "AffirmTab");
 const SafePaycheckTab = withErrorBoundary(PaycheckTab, "PaycheckTab");
 const SafeSnapshotsTab = withErrorBoundary(SnapshotsTab, "SnapshotsTab");
+
+// Nav status ticker ("$X left this month") hidden for post-ship rollout.
+// Flip to true to re-enable; the ticker machinery below is kept intact.
+const SHOW_NAV_TICKER = false;
 
 function isWithin24Hrs(isoDatetime: string): boolean {
   return Date.now() - new Date(isoDatetime).getTime() < 86_400_000;
@@ -55,6 +62,10 @@ export function AppShell() {
   const [navMessageIndex, setNavMessageIndex] = useState(0);
   const appState = useAppState();
   const router = useRouter();
+
+  // Auto-logout after inactivity: real financial data must not stay
+  // authenticated on an unattended device (council-flagged, Phase-1 security).
+  useIdleTimeout();
 
   // Fetch logged-in user's first name
   useEffect(() => {
@@ -127,7 +138,7 @@ export function AppShell() {
           activeMonthSummary.weeksEntered > 0
             ? `${activeMonthSummary.weeksEntered} weeks entered`
             : "Add this week's check",
-          `${fmtMoney(activeMonthSummary.kiasPayCents)} from Kia's pay`,
+          `${fmtMoney(activeMonthSummary.kiasPayCents)} from Kia's Pay`,
         ];
       case "affirm":
         return [
@@ -173,7 +184,7 @@ export function AppShell() {
     onViewMonthChange: setViewMonth,
   };
 
-  const homeTabProps = buildHomeTabProps(deps);
+  const homeTabProps = buildHomeTabProps(deps, () => setActiveTab("affirm"));
   const accountsTabProps = buildAccountsTabProps(deps);
   const affirmTabProps = buildAffirmTabProps(deps);
   const paycheckTabProps = buildPaycheckTabProps(
@@ -239,15 +250,17 @@ export function AppShell() {
               {tab.label}
             </button>
           ))}
-          <div className={styles.navStatus} aria-live="polite">
-            <div className={styles.navTicker}>
-              <div className={styles.navTickerTrack}>
-                <span key={`${activeTab}-${navMessageIndex}`} className={styles.navMessage}>
-                  {tabMessages[navMessageIndex] ?? milestoneMessages[0] ?? "All caught up"}
-                </span>
+          {SHOW_NAV_TICKER && (
+            <div className={styles.navStatus} aria-live="polite">
+              <div className={styles.navTicker}>
+                <div className={styles.navTickerTrack}>
+                  <span key={`${activeTab}-${navMessageIndex}`} className={styles.navMessage}>
+                    {tabMessages[navMessageIndex] ?? milestoneMessages[0] ?? "All caught up"}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <time className={styles.viewMonth} dateTime={viewMonth}>
             {fmtMonthFull(viewMonth)}
           </time>
@@ -259,6 +272,9 @@ export function AppShell() {
           {renderActiveTab()}
         </div>
       </main>
+
+      {/* Floating Quick Math calculator — draggable, persists position */}
+      <CalcFab />
     </div>
     </ActiveTabProvider>
   );

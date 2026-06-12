@@ -128,7 +128,7 @@ describe("MonthSnapshot — rendering", () => {
     const bills = [makeBill({ cents: 300000 })]; // $3,000
     const income = [makeIncome({ military_pay: 200000, retirement: 0, social_security: 0, kias_pay: 0 })];
     renderSnapshot({ bills, income });
-    expect(screen.getByText("Short")).toBeInTheDocument();
+    expect(screen.getByText("Gap")).toBeInTheDocument();
   });
 
   it("renders surplus label when income exceeds billed", () => {
@@ -214,7 +214,7 @@ describe("MonthSnapshot — income edge cases", () => {
         }),
       ],
     });
-    expect(screen.getByText("Short")).toBeInTheDocument();
+    expect(screen.getByText("Gap")).toBeInTheDocument();
   });
 
   it("filters savings by month prefix (e.weekOf fallback)", () => {

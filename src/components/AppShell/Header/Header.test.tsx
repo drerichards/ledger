@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Header } from "./Header";
 
 const noop = () => {};
@@ -26,14 +26,29 @@ describe("Header", () => {
     expect(screen.getByText(/, Kia$/)).toBeInTheDocument();
   });
 
-  it("renders the Messages button", () => {
+  it("hides the Messages button (deferred to post-ship rollout)", () => {
     render(<Header {...defaultProps} />);
-    expect(screen.getByLabelText("Messages")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Messages")).not.toBeInTheDocument();
   });
 
-  it("renders inline header actions", () => {
+  it("renders Sign out; Dark-mode toggle is hidden for rollout", () => {
     render(<Header {...defaultProps} />);
-    expect(screen.getByLabelText(/mode/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/mode/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Sign out")).toBeInTheDocument();
+  });
+
+  // ── Rollout-flagged features (showMessages / showDarkMode) ──────────────────
+  it("renders the Messages panel + unread badge when showMessages is on", () => {
+    render(<Header {...defaultProps} showMessages unseenCount={2} />);
+    expect(screen.getByLabelText("Messages")).toBeInTheDocument();
+    expect(screen.getByLabelText("2 unread")).toBeInTheDocument();
+    expect(screen.getByText("No new messages")).toBeInTheDocument();
+  });
+
+  it("renders + toggles the Dark-mode button when showDarkMode is on", () => {
+    render(<Header {...defaultProps} showDarkMode />);
+    const toggle = screen.getByLabelText("Dark mode");
+    fireEvent.click(toggle);
+    expect(screen.getByLabelText("Light mode")).toBeInTheDocument();
   });
 });

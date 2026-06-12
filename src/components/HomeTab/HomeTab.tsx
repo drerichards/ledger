@@ -4,27 +4,31 @@ import { useState } from "react";
 import type {
   BankAccount,
   Bill,
+  BillCategory,
   InstallmentPlan,
   KiasCheckEntry,
   MonthlyIncome,
   PaycheckWeek,
   SavingsEntry,
+  SavingsGoal,
 } from "@/types";
-import { fmtMoney, sumCents, toCents } from "@/lib/money";
-import { today, mondayOf } from "@/lib/dates";
+import { fmtMoney, sumCents } from "@/lib/money";
+import { today, mondayOf, addDays, fmtDayMonth, fmtMonthFull } from "@/lib/dates";
 import {
-  calcWeekSurplus,
+  getAffirmTotalForMonth,
   getHouseholdMonthSummary,
   getUpcomingDueItems,
-  isCovered,
   projectCashFlowRows,
 } from "@/lib/household/household";
-import type { CashFlowRow } from "@/lib/household/household";
-import { generateId } from "@/lib/id";
-import { LedgerTable } from "@/components/ui/LedgerTable/LedgerTable";
-import type { LedgerRow, LedgerSection } from "@/components/ui/LedgerTable/LedgerTable";
+import { ActionStrip } from "./ActionStrip";
+import { SpendingDonut } from "./SpendingDonut";
+import type { DonutSegment } from "./SpendingDonut";
+import { DayDetail } from "./DayDetail";
+import type { DayItem } from "./DayDetail";
+import { MomentumGauges } from "./MomentumGauges";
+import type { GaugeData } from "./MomentumGauges";
+import type { GaugeTone } from "./GaugeMeter";
 import styles from "./HomeTab.module.css";
-import { StatCard } from "@/components/ui/StatCard";
 
 type Props = {
   checkingBalance: number; // cents — legacy fallback when no bankAccounts
@@ -36,156 +40,34 @@ type Props = {
   paycheck: PaycheckWeek[];
   checkLog: KiasCheckEntry[];
   savingsLog: SavingsEntry[];
+  goals: SavingsGoal[];
   onSetBalance: (balance: number, date: string) => void;
   onAddBankAccount: (account: BankAccount) => void;
   onUpdateBankAccount: (account: BankAccount) => void;
   onDeleteBankAccount: (id: string) => void;
+  onTogglePaid: (id: string) => void;
+  onGoToPayoff?: () => void;
 };
 
-// ── Date helpers ───────────────────────────────────────────────────────────────
+const WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function addDays(dateStr: string, n: number): string {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
-function fmtDateShort(dateStr: string): string {
-  const [y, m, day] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, day).toLocaleString("default", { month: "short", day: "numeric" });
-}
-
-function fmtBalanceDate(dateStr: string): string {
-  if (!dateStr) return "Not set";
-  return "Updated " + fmtDateShort(dateStr);
-}
-
-// ── Legacy single-balance edit form ───────────────────────────────────────────
-
-type BalanceEditProps = {
-  onSave: (balance: number, date: string) => void;
-  onCancel: () => void;
-};
-
-function BalanceEditForm({ onSave, onCancel }: BalanceEditProps) {
-  const [val, setVal] = useState("");
-
-  const handleSave = () => {
-    const cents = toCents(val);
-    if (cents <= 0) return;
-    onSave(cents, today());
-  };
-
-  return (
-    <div className={styles.balanceEditForm}>
-      <input
-        className={styles.balanceInput}
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="0.00"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onCancel(); }}
-        autoFocus
-      />
-      <button type="button" className={styles.saveBtn} onClick={handleSave}>Save</button>
-      <button type="button" className={styles.cancelBtn} onClick={onCancel}>Cancel</button>
-    </div>
-  );
-}
-
-// ── Bank account add/edit form ─────────────────────────────────────────────────
-
-type AccountFormProps = {
-  initialName?: string;
-  initialBalance?: number; // cents
-  onSave: (name: string, balanceCents: number) => void;
-  onCancel: () => void;
-};
-
-function AccountForm({ initialName = "", initialBalance, onSave, onCancel }: AccountFormProps) {
-  const [name, setName] = useState(initialName);
-  const [val, setVal] = useState(initialBalance != null ? (initialBalance / 100).toFixed(2) : "");
-
-  const handleSave = () => {
-    if (!name.trim()) return;
-    const cents = toCents(val);
-    if (cents < 0) return;
-    onSave(name.trim(), cents);
-  };
-
-  return (
-    <div className={styles.acctEditForm}>
-      <div className={styles.acctFormRow}>
-        <span className={styles.acctFormLabel}>Name</span>
-        <input
-          className={styles.acctFormInput}
-          type="text"
-          placeholder="e.g. Chase Checking"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onCancel(); }}
-          autoFocus
-        />
-      </div>
-      <div className={styles.acctFormRow}>
-        <span className={styles.acctFormLabel}>Balance</span>
-        <input
-          className={styles.acctFormInput}
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="0.00"
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onCancel(); }}
-        />
-      </div>
-      <div className={styles.acctFormBtns}>
-        <button type="button" className={styles.saveBtn} onClick={handleSave}>
-          {initialName ? "Save" : "Add"}
-        </button>
-        <button type="button" className={styles.cancelBtn} onClick={onCancel}>Cancel</button>
-      </div>
-    </div>
-  );
-}
-
-// ── Cash flow helpers ──────────────────────────────────────────────────────────
-
-const CF_COLUMNS = [
-  { key: "date",    header: "Date" },
-  { key: "payee",   header: "Payee" },
-  { key: "amount",  header: "Amount",  align: "right" as const },
-  { key: "balance", header: "Balance", align: "right" as const },
+// All nine BillCategory values — donut groups this month's bills by these.
+const DONUT_CATEGORIES: BillCategory[] = [
+  "Housing",
+  "Utilities",
+  "Insurance",
+  "Transfers",
+  "Subscriptions",
+  "Credit Cards",
+  "Loans",
+  "Savings",
+  "Other",
 ];
-
-function toCfSection(label: string, rows: CashFlowRow[]): LedgerSection {
-  return {
-    label,
-    rows: rows.map((r, i): LedgerRow => ({
-      id: `${label}-${i}`,
-      variant: r.runningBalance < 0 ? "danger" : r.type === "income" ? "income" : "default",
-      cells: [
-        <span key="date" className={styles.cfDateCell}>{fmtDateShort(r.date)}</span>,
-        <span key="payee" className={styles.cfPayee}>{r.payee}</span>,
-        <span key="amt" className={`${styles.cfMono} ${r.cents > 0 ? styles.cfPos : styles.cfNeg}`}>
-          {r.cents > 0 ? "+" : "−"}{fmtMoney(Math.abs(r.cents))}
-        </span>,
-        <span key="bal" className={`${styles.cfMono} ${r.runningBalance < 0 ? styles.cfDanger : r.runningBalance < 10000 ? styles.cfWarn : ""}`}>
-          {fmtMoney(r.runningBalance)}
-        </span>,
-      ],
-    })),
-  };
-}
 
 // ── Main HomeTab ───────────────────────────────────────────────────────────────
 
 export function HomeTab({
   checkingBalance,
-  checkingBalanceDate,
   bankAccounts,
   bills,
   income,
@@ -193,25 +75,18 @@ export function HomeTab({
   paycheck,
   checkLog,
   savingsLog,
-  onSetBalance,
-  onAddBankAccount,
-  onUpdateBankAccount,
-  onDeleteBankAccount,
+  goals,
+  onTogglePaid,
+  onGoToPayoff,
 }: Props) {
-  const [editingBalance, setEditingBalance] = useState(false);
-  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
-  const [addingAccount, setAddingAccount] = useState(false);
-  const [thisWeekOpen, setThisWeekOpen] = useState(true);
-  const [nextWeekOpen, setNextWeekOpen] = useState(false);
+  const [activeDate, setActiveDate] = useState("");
 
   const todayStr = today();
   const currentMonday = mondayOf(todayStr);
   const currentSunday = addDays(currentMonday, 6);
-  const nextMonday = addDays(currentMonday, 7);
-  const nextSunday = addDays(currentMonday, 13);
   const month = todayStr.slice(0, 7);
+  const todayDom = Number(todayStr.slice(8, 10));
 
-  const savingsTotal = sumCents(savingsLog.map((e) => e.amount));
   const monthSummary = getHouseholdMonthSummary({
     month,
     bills,
@@ -222,12 +97,9 @@ export function HomeTab({
     plans,
   });
 
-  // Effective checking balance: sum of bank accounts when present, else legacy single balance
-  const bankAccountsTotal = bankAccounts.length > 0
-    ? sumCents(bankAccounts.map((a) => a.balanceCents))
-    : checkingBalance;
-
-  const totalLiquid = bankAccountsTotal + savingsTotal;
+  // Effective checking balance: sum of bank accounts when present, else legacy single balance.
+  const bankAccountsTotal =
+    bankAccounts.length > 0 ? sumCents(bankAccounts.map((a) => a.balanceCents)) : checkingBalance;
 
   const thisWeekRows = projectCashFlowRows({
     startBalance: bankAccountsTotal,
@@ -241,247 +113,222 @@ export function HomeTab({
     aggregateAffirm: true,
   });
 
-  const nextWeekRows = projectCashFlowRows({
-    startBalance: thisWeekRows.at(-1)?.runningBalance ?? bankAccountsTotal,
-    bills,
-    plans,
-    paycheck,
-    checkLog,
-    month,
-    fromDate: nextMonday,
-    toDate: nextSunday,
-    aggregateAffirm: true,
-  });
+  // ── Verdict hero — month-level answer-first summary ──
+  const isCoveredMonth = monthSummary.shortfallCents <= 0;
+  const amountLeftCents = Math.abs(monthSummary.shortfallCents);
 
-  const surplus = calcWeekSurplus(thisWeekRows);
-  const covered = isCovered(thisWeekRows);
-  const upcomingBills = getUpcomingDueItems({
+  // ── Bills handled (progress bar + gauge) ──
+  const monthBills = bills.filter((b) => b.month === month);
+  const paidCount = monthBills.filter((b) => b.paid).length;
+  const totalBills = monthBills.length;
+  const handledPct = totalBills > 0 ? paidCount / totalBills : 0;
+
+  // ── Action strip data ──
+  const upcoming = getUpcomingDueItems({
     month,
     bills,
     plans,
     fromDate: todayStr,
-    limit: 3,
+    limit: 20,
     aggregateAffirm: true,
   });
+  const nextBillItem = upcoming.find((i) => i.kind === "bill") ?? null;
+  const nextBill = nextBillItem
+    ? { id: nextBillItem.id, name: nextBillItem.label, cents: nextBillItem.cents }
+    : null;
 
-  const surplusLabel = surplus >= 0
-    ? `+${fmtMoney(surplus)} this week`
-    : `${fmtMoney(surplus)} this week`;
+  const nextIncomeRow = thisWeekRows.find((r) => r.type === "income" && r.date >= todayStr);
+  const nextPaycheck = nextIncomeRow
+    ? { whenLabel: fmtDayMonth(nextIncomeRow.date), cents: nextIncomeRow.cents }
+    : null;
 
-  const coveredThrough = fmtDateShort(currentSunday);
+  const overdueBills = monthBills.filter((b) => !b.paid && b.method === "transfer" && b.due < todayDom);
+  const overdue = { count: overdueBills.length, cents: sumCents(overdueBills.map((b) => b.cents)) };
 
-  const thisWeekLabel = `This week — ${fmtDateShort(currentMonday)}–${fmtDateShort(currentSunday)}`;
-  const nextWeekLabel = `Next week — ${fmtDateShort(nextMonday)}–${fmtDateShort(nextSunday)}`;
+  // ── Donut — this month's bills grouped by category ──
+  const donutSegments: DonutSegment[] = DONUT_CATEGORIES.map((category) => ({
+    category,
+    cents: sumCents(monthBills.filter((b) => b.category === category).map((b) => b.cents)),
+  })).filter((s) => s.cents > 0);
+  const donutSubtitle = `${fmtMonthFull(month)} so far`;
 
-  const hasAccounts = bankAccounts.length > 0;
+  // ── Week rail + day detail ──
+  type WeekDay = {
+    key: string;
+    name: string;
+    date: string;
+    payday: boolean;
+    paycheck: number; // cents
+    items: DayItem[];
+    endBalance: number; // cents
+  };
+  const weekDays = WEEKDAY_NAMES.reduce<WeekDay[]>((acc, name, i) => {
+    const date = addDays(currentMonday, i);
+    const dom = Number(date.slice(8, 10));
+    const rows = thisWeekRows.filter((r) => r.date === date);
+    const incomeCents = rows.filter((r) => r.type === "income").reduce((a, r) => a + r.cents, 0);
+    const prevEnd = acc.length ? acc[acc.length - 1].endBalance : bankAccountsTotal;
+    const endBalance = rows.length ? rows[rows.length - 1].runningBalance : prevEnd;
+    const items: DayItem[] = monthBills
+      .filter((b) => b.due === dom)
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        kind: (b.method === "transfer" ? "pay" : "auto") as "pay" | "auto",
+        amt: b.cents,
+      }));
+    acc.push({
+      key: date,
+      name,
+      date: fmtDayMonth(date),
+      payday: incomeCents > 0,
+      paycheck: incomeCents,
+      items,
+      endBalance,
+    });
+    return acc;
+  }, []);
+  const activeKey = activeDate || todayStr;
+  const activeDay = weekDays.find((d) => d.key === activeKey) ?? weekDays[0];
+
+  // ── Momentum gauges ──
+  const affirmThisMonth = getAffirmTotalForMonth(plans, month);
+  const activePlans = plans.filter((p) => p.start <= month && p.end >= month).length;
+
+  const primaryGoal = goals[0] ?? null;
+  const goalSaved = primaryGoal ? sumCents(savingsLog.map((e) => e.amount)) : 0;
+  const goalTarget = primaryGoal?.targetCents ?? 0;
+  const goalPct = goalTarget > 0 ? Math.min(1, goalSaved / goalTarget) : 0;
+  const goalTone: GaugeTone = goalPct > 0.6 ? "olive" : goalPct >= 0.3 ? "amber" : "rust";
+
+  const gauges: [GaugeData, GaugeData, GaugeData] = [
+    {
+      value: handledPct,
+      tone: handledPct >= 0.66 ? "olive" : handledPct >= 0.33 ? "amber" : "rust",
+      big: `${paidCount}/${totalBills}`,
+      label: "Bills handled",
+      tag: handledPct >= 0.66 ? "ON TRACK" : handledPct >= 0.33 ? "GETTING THERE" : "EARLY",
+    },
+    {
+      value: activePlans > 0 ? 0.5 : 1,
+      tone: activePlans > 0 ? "amber" : "olive",
+      big: activePlans > 0 ? fmtMoney(affirmThisMonth) : "—",
+      label: "Next payoff",
+      tag: activePlans > 0 ? "SOON" : "CLEAR",
+      onClick: onGoToPayoff, // links to the Payoff tab totals
+    },
+    {
+      value: goalPct,
+      tone: primaryGoal ? goalTone : "navy",
+      big: primaryGoal ? `${Math.round(goalPct * 100)}%` : "—",
+      label: primaryGoal ? primaryGoal.label : "No goal yet",
+      // No "set one" call-to-action — goals are entered from Savings, not nudged here.
+      tag: primaryGoal ? (goalPct >= 0.6 ? "CLOSE" : goalPct >= 0.3 ? "BUILDING" : "EARLY") : "",
+    },
+  ];
 
   return (
-    <div className={styles.container}>
+    <div className={styles.bento}>
+      {/* ── 1. The answer — verdict ──────────────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileAnswer}`}>
+        <div className={`${styles.verdict} ${isCoveredMonth ? styles.verdictGood : styles.verdictBad}`}>
+          <span className={styles.vBadge}>
+            <span className={styles.vPulse} aria-hidden="true" />
+            THE ANSWER
+          </span>
+          <p className={styles.vLabel}>{isCoveredMonth ? "You're covered" : "You'll need to add"}</p>
+          <p className={styles.vNum}>{fmtMoney(amountLeftCents)}</p>
+          <p className={styles.vSub}>
+            {isCoveredMonth ? "left after all bills this month" : "to cover every bill this month"}
+          </p>
 
-      {/* ── Balance row ────────────────────────────────────────────── */}
-      <div className={styles.balanceRow}>
-
-        {/* Checking accounts — multi-account list or legacy single balance */}
-        {hasAccounts ? (
-          <div className={styles.accountsCol}>
-            <p className={styles.accountsColLabel}>Checking</p>
-
-            {bankAccounts.map((acct) =>
-              editingAccountId === acct.id ? (
-                <AccountForm
-                  key={acct.id}
-                  initialName={acct.name}
-                  initialBalance={acct.balanceCents}
-                  onSave={(name, balanceCents) => {
-                    onUpdateBankAccount({ ...acct, name, balanceCents, updatedDate: today() });
-                    setEditingAccountId(null);
-                  }}
-                  onCancel={() => setEditingAccountId(null)}
-                />
-              ) : (
-                <div key={acct.id} className={styles.statCardSm}>
-                  <div className={styles.acctInfo}>
-                    <p className={styles.acctName}>{acct.name}</p>
-                    <p className={styles.acctBalance}>{fmtMoney(acct.balanceCents)}</p>
-                  </div>
-                  <div className={styles.acctActions}>
-                    <button
-                      type="button"
-                      className={styles.acctBtn}
-                      title="Edit"
-                      onClick={() => setEditingAccountId(acct.id)}
-                    >
-                      ✎
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.acctBtn} ${styles.acctBtnDelete}`}
-                      title="Delete"
-                      onClick={() => onDeleteBankAccount(acct.id)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              )
-            )}
-
-            {addingAccount ? (
-              <AccountForm
-                onSave={(name, balanceCents) => {
-                  onAddBankAccount({ id: generateId(), name, balanceCents, updatedDate: today() });
-                  setAddingAccount(false);
-                }}
-                onCancel={() => setAddingAccount(false)}
-              />
-            ) : (
-              <button
-                type="button"
-                className={styles.addAccountBtn}
-                onClick={() => setAddingAccount(true)}
-              >
-                + Add Account
-              </button>
-            )}
+          <div className={styles.vProgress}>
+            <progress
+              className={styles.vProgressBar}
+              value={paidCount}
+              max={totalBills || 1}
+              aria-label={`${paidCount} of ${totalBills} bills handled this month`}
+            />
+            <span className={styles.vProgressLabel}>
+              {paidCount} of {totalBills} bills handled this month
+            </span>
           </div>
-        ) : (
-          /* Legacy single-balance card — shown until first account is added */
-          <div className={`${styles.statCard} ${styles.statCard_navy}`}>
-            <p className={styles.statLabel}>Checking</p>
-            {editingBalance ? (
-              <BalanceEditForm
-                onSave={(bal, date) => { onSetBalance(bal, date); setEditingBalance(false); }}
-                onCancel={() => setEditingBalance(false)}
-              />
-            ) : (
-              <>
-                <p className={styles.statValue}>{fmtMoney(checkingBalance)}</p>
-                <div className={styles.statMeta}>
-                  <div className={styles.statSub}>
-                    <span className={styles.statSubItem}>{fmtBalanceDate(checkingBalanceDate)}</span>
-                    <button
-                      type="button"
-                      className={`${styles.updateLink} ${styles.statSubItem}`}
-                      onClick={() => setEditingBalance(true)}
-                    >
-                      Update
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.updateLink} ${styles.statSubItem}`}
-                      onClick={() => setAddingAccount(true)}
-                    >
-                      + Add Accounts
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-            {addingAccount && (
-              <AccountForm
-                onSave={(name, balanceCents) => {
-                  onAddBankAccount({ id: generateId(), name, balanceCents, updatedDate: today() });
-                  setAddingAccount(false);
-                }}
-                onCancel={() => setAddingAccount(false)}
-              />
-            )}
-          </div>
-        )}
+        </div>
+      </div>
 
-        <StatCard
-          label="Savings"
-          color="olive"
-          value={fmtMoney(savingsTotal)}
-        />
-
-        <StatCard
-          label="Total Liquid"
-          color="gold"
-          value={fmtMoney(totalLiquid)}
-        />
-        <StatCard
-          label={monthSummary.shortfallCents > 0 ? "This Month Short" : "This Month Left"}
-          color={monthSummary.shortfallCents > 0 ? "rust" : "olive"}
-          value={fmtMoney(Math.abs(monthSummary.shortfallCents))}
+      {/* ── 2. Action stats ──────────────────────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileStats}`}>
+        <ActionStrip
+          nextBill={nextBill}
+          nextPaycheck={nextPaycheck}
+          overdue={overdue}
+          onMarkPaid={onTogglePaid}
         />
       </div>
 
-      {/* ── Two-column body ─────────────────────────────────────────── */}
-      <div className={styles.body}>
+      {/* ── 3. Where your money goes — donut ─────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileDonut}`}>
+        <SpendingDonut segments={donutSegments} subtitle={donutSubtitle} />
+      </div>
 
-        {/* Left: next due */}
-        <div className={styles.nextDue}>
-          <p className={styles.colLabel}>Next Due</p>
-          <div className={styles.nextDuePanel}>
-            {upcomingBills.length === 0 ? (
-              <p className={styles.emptyDue}>No due items remaining this month.</p>
-            ) : (
-              upcomingBills.map((b, i) => {
-                const color = (["navy", "rust", "olive"] as const)[i % 3];
-                return (
-                  <div key={b.id} className={`${styles.duePill} ${styles[`duePill_${color}`]}`}>
-                    <p className={styles.dueDate}>{fmtDateShort(b.date)}</p>
-                    <p className={styles.dueName}>{b.label}</p>
-                    <p className={styles.dueAmount}>{fmtMoney(b.cents)}</p>
-                  </div>
-                );
-              })
-            )}
+      {/* ── 4. This week — day rail ──────────────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileWeek}`}>
+        <section className={styles.week}>
+          <div className={styles.weekHead}>
+            <p className={styles.panelTitle}>This week</p>
+            <p className={styles.panelMeta}>
+              {fmtDayMonth(currentMonday)} – {fmtDayMonth(currentSunday)} · tap a day
+            </p>
           </div>
-        </div>
-
-        <div className={styles.mainColumn}>
-          <div className={`${styles.coveredBand} ${covered ? styles.coveredBand_ok : styles.coveredBand_warn}`}>
-            <div>
-              <p className={styles.surplusLabel}>Week {surplus >= 0 ? "Surplus" : "Shortfall"}</p>
-              <p className={`${styles.surplusAmount} ${surplus >= 0 ? styles.surplusPos : styles.surplusNeg}`}>
-                {surplusLabel}
-              </p>
-            </div>
-            <div className={styles.coveredRight}>
-              <span className={styles.coveredEmoji}>{covered ? "✅" : "⚠️"}</span>
-              <p className={styles.coveredStatus}>{covered ? "You're covered" : "Shortfall risk"}</p>
-              <p className={styles.coveredThrough}>through {coveredThrough}</p>
-            </div>
-          </div>
-
-          {/* Right: cash flow table */}
-          <div className={styles.cashFlow}>
-            <p className={styles.colLabel}>Cash flow — balance after each transaction</p>
-            <div className={styles.cashSections}>
-              {[
-                { id: "this", label: thisWeekLabel, rows: thisWeekRows, open: thisWeekOpen, setOpen: setThisWeekOpen },
-                { id: "next", label: nextWeekLabel, rows: nextWeekRows, open: nextWeekOpen, setOpen: setNextWeekOpen },
-              ].map((section) => (
-                <section key={section.id} className={styles.cashSection}>
-                  <button
-                    type="button"
-                    className={styles.cashSectionToggle}
-                    onClick={() => section.setOpen((v) => !v)}
-                    aria-expanded={section.open}
-                  >
-                    <span className={styles.cashSectionLabel}>{section.label}</span>
-                    <span className={styles.cashSectionChevron} aria-hidden="true">
-                      {section.open ? "▾" : "▸"}
+          <div className={styles.weekGrid}>
+            {weekDays.map((d) => {
+              const total = d.items.reduce((a, b) => a + b.amt, 0);
+              const status = d.payday
+                ? "olive"
+                : d.items.some((i) => i.kind === "pay")
+                  ? "rust"
+                  : d.items.some((i) => i.kind === "auto")
+                    ? "gray"
+                    : "none";
+              return (
+                <button
+                  key={d.key}
+                  type="button"
+                  className={`${styles.wday} ${d.key === activeKey ? styles.wdayOn : ""}`}
+                  onClick={() => setActiveDate(d.key)}
+                  aria-pressed={d.key === activeKey}
+                >
+                  <span className={styles.wdayHead}>
+                    <span className={styles.wdayName}>{d.name}</span>
+                    <span className={styles.wdayDate}>{d.date.replace(/^\w+\s/, "")}</span>
+                  </span>
+                  {d.payday && <span className={styles.wdayPayday}>+{fmtMoney(d.paycheck)}</span>}
+                  {total > 0 ? (
+                    <span className={styles.wdayTotal}>{fmtMoney(total)}</span>
+                  ) : !d.payday ? (
+                    <span className={styles.wdayNothing}>—</span>
+                  ) : null}
+                  {d.items.length > 0 && (
+                    <span className={styles.wdayCount}>
+                      {d.items.length} bill{d.items.length !== 1 ? "s" : ""}
                     </span>
-                  </button>
-                  {section.open && (
-                    <div className={styles.cashSectionBody}>
-                      <LedgerTable
-                        columns={CF_COLUMNS}
-                        sections={[toCfSection(section.label, section.rows)]}
-                        showSectionLabels={false}
-                        emptyMessage="No transactions found. Add bills or check entries to see your cash flow."
-                      />
-                    </div>
                   )}
-                </section>
-              ))}
-            </div>
+                  <span className={`${styles.wdayDot} ${styles[`dot_${status}`]}`} aria-hidden="true" />
+                </button>
+              );
+            })}
           </div>
-        </div>
+        </section>
+      </div>
 
+      {/* ── 5. Selected day detail ───────────────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileDetail}`}>
+        {activeDay && <DayDetail day={activeDay} onMarkPaid={onTogglePaid} />}
+      </div>
+
+      {/* ── 6. Momentum — gauges ─────────────────────────────────────── */}
+      <div className={`${styles.tile} ${styles.tileMom}`}>
+        <MomentumGauges gauges={gauges} />
       </div>
     </div>
   );

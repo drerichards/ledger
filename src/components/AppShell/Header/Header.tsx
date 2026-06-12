@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Milestone } from "@/types";
 import { getMilestoneLabel } from "@/lib/milestones";
+import { HelpGuide } from "@/components/ui/HelpGuide";
 import styles from "./Header.module.css";
 
 type Props = {
@@ -10,6 +11,9 @@ type Props = {
   onSignOut: () => void;
   milestones?: Milestone[];
   unseenCount?: number;
+  /** Messages + Dark-mode are hidden for the initial ship; flip on for rollout. */
+  showMessages?: boolean;
+  showDarkMode?: boolean;
 };
 
 function timeGreeting(): string {
@@ -33,9 +37,12 @@ export function Header({
   onSignOut,
   milestones = [],
   unseenCount = 0,
+  showMessages = false,
+  showDarkMode = false,
 }: Props) {
   const greetingText = userName ? `${timeGreeting()}, ${userName}` : timeGreeting();
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [guideOpen, setGuideOpen] = useState(false);
 
   useEffect(() => {
     const saved = typeof window !== "undefined"
@@ -71,6 +78,7 @@ export function Header({
       </div>
 
       <div className={styles.actions}>
+        {showMessages && (
         <div className={styles.msgWrap}>
           <button
             type="button"
@@ -109,6 +117,8 @@ export function Header({
             )}
           </div>
         </div>
+        )}
+        {showDarkMode && (
         <button
           type="button"
           className={styles.headerAction}
@@ -120,16 +130,57 @@ export function Header({
             {theme === "dark" ? "Light" : "Dark"}
           </span>
         </button>
+        )}
+        <button
+          type="button"
+          className={styles.headerAction}
+          aria-label="How to use this app"
+          onClick={() => setGuideOpen(true)}
+        >
+          {/* Note / document icon — a page with text lines. */}
+          <svg viewBox="0 0 24 24" className={styles.headerActionIcon} aria-hidden="true">
+            <path
+              d="M6 2h8l4 4v16H6V2z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            />
+            <path d="M14 2v4h4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M9 12h6M9 15.5h6M9 8.5h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+          <span className={styles.headerActionLabel}>Guide</span>
+        </button>
         <button
           type="button"
           className={styles.headerAction}
           aria-label="Sign out"
           onClick={onSignOut}
         >
-          ⇢
+          {/* Door with an exit arrow. */}
+          <svg viewBox="0 0 24 24" className={styles.headerActionIcon} aria-hidden="true">
+            <path
+              d="M13 3H5v18h8"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 12h10m0 0l-3.5-3.5M20 12l-3.5 3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           <span className={styles.headerActionLabel}>Sign out</span>
         </button>
       </div>
+
+      {guideOpen && <HelpGuide onClose={() => setGuideOpen(false)} />}
     </header>
   );
 }

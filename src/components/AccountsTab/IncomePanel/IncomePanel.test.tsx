@@ -36,7 +36,7 @@ describe("IncomePanel", () => {
     it("shows 'Short' when total bills exceed total income", () => {
       // bills: $3000 · income: $2351.27 (defaults) → short
       setup({ totalExpenseCents: 300000 });
-      expect(screen.getByText("Short")).toBeInTheDocument();
+      expect(screen.getByText("Gap")).toBeInTheDocument();
     });
 
     it("shows 'Surplus' when total income exceeds total bills", () => {
@@ -131,7 +131,7 @@ describe("IncomePanel", () => {
           onUpdate={jest.fn()}
         />
       );
-      expect(screen.getByText("Short")).toBeInTheDocument();
+      expect(screen.getByText("Gap")).toBeInTheDocument();
     });
   });
 });

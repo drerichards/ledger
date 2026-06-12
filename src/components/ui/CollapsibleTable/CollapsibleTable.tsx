@@ -15,8 +15,6 @@ type Props = {
   /** Left label in the footer bar — omit footerValue to hide bar entirely. */
   footerLabel?: React.ReactNode;
   footerValue?: React.ReactNode;
-  /** Flex-1 layout mode (both groups share vertical space). */
-  split?: boolean;
   /** Table markup or any content to render inside the collapsible body. */
   children: React.ReactNode;
 };
@@ -29,40 +27,43 @@ export function CollapsibleTable({
   collapsedSubtotal,
   footerLabel,
   footerValue,
-  split = false,
   children,
 }: Props) {
   const variantClass = variant === "olive" ? styles.groupOlive : styles.groupNavy;
 
   return (
     <div
-      className={`${styles.group} ${variantClass} ${split ? styles.groupSplit : ""} ${isCollapsed ? styles.groupCollapsed : ""}`}
+      data-acc-group
+      data-acc-open={isCollapsed ? "false" : "true"}
+      className={`${styles.group} ${variantClass} ${isCollapsed ? styles.groupCollapsed : ""}`}
     >
       <button
         type="button"
+        data-acc-chrome
         className={styles.groupHeader}
         onClick={onToggle}
         aria-expanded={!isCollapsed}
       >
         <span className={styles.collapseIcon}>{isCollapsed ? "►" : "▼"}</span>
         <span className={styles.groupLabel}>{label}</span>
-        {isCollapsed && collapsedSubtotal != null && (
-          <span className={styles.groupTotal}>{collapsedSubtotal}</span>
-        )}
       </button>
 
-      <div
-        className={`${styles.tableWrapper} ${isCollapsed ? styles.tableWrapperCollapsed : ""}`}
-      >
+      {/* Row list. Its parent group's height is set by the accordion layout
+          effect (in AccountsTab); this clips/scrolls to fit. */}
+      <div className={styles.tableWrapper}>
         <div className={styles.tableWrapperInner}>
-          <div className={styles.tableViewport}>{children}</div>
+          <div data-acc-list className={styles.tableViewport}>{children}</div>
         </div>
       </div>
 
-      {!isCollapsed && footerValue != null && (
-        <div className={`${styles.totalBar} ${variant === "olive" ? styles.totalBarOlive : ""}`}>
+      {/* Subtotal bar — always shown (open or collapsed). */}
+      {(footerValue ?? collapsedSubtotal) != null && (
+        <div
+          data-acc-chrome
+          className={`${styles.totalBar} ${variant === "olive" ? styles.totalBarOlive : ""}`}
+        >
           {footerLabel != null && <div className={styles.totalLabel}>{footerLabel}</div>}
-          <div className={styles.totalValue}>{footerValue}</div>
+          <div className={styles.totalValue}>{footerValue ?? collapsedSubtotal}</div>
         </div>
       )}
     </div>

@@ -9,10 +9,16 @@ import type {
   MonthlyIncome,
   MonthSnapshot,
   PaycheckWeek,
-  SavingsEntry,
-  SavingsGoal,
 } from "@/types";
-import { generateId } from "@/lib/id";
+// Stable, deterministic seed ids. The seed arrays are built in a fixed order
+// every load, so a simple per-prefix counter yields the SAME id each time.
+// This is critical: random ids (generateId) made every re-seed look like new
+// records, so the Supabase upsert inserted duplicates instead of overwriting.
+const _seq: Record<string, number> = {};
+const seedId = (prefix: string): string => {
+  _seq[prefix] = (_seq[prefix] ?? 0) + 1;
+  return `seed-${prefix}-${_seq[prefix]}`;
+};
 import { DEFAULT_PAYCHECK_COLUMNS } from "@/lib/paycheck";
 
 const APRIL = "2026-04";
@@ -30,7 +36,7 @@ const bill = (
   notes = "",
   flagged = false,
 ): Bill => ({
-  id: generateId(),
+  id: seedId("bill"),
   month: APRIL,
   name,
   cents: Math.round(dollars * 100),
@@ -215,7 +221,7 @@ const plan = (
   end: string,
   dueDay: number,
 ): InstallmentPlan => ({
-  id: generateId(),
+  id: seedId("plan"),
   label,
   mc: Math.round(dollars * 100),
   start,
@@ -317,61 +323,6 @@ const CHECK_LOG: KiasCheckEntry[] = [
   { weekOf: "2026-03-27", amount: 81684 }, // $816.84
 ];
 
-// ─── Savings Log — rolling deposits Dec 2025 – Apr 2026 ──────────────────────
-// Represents consistent $250/week allocations with a few missed weeks.
-// Total: ~$3,250 → enough to show meaningful goal progress across all states.
-
-const se = (date: string, dollars: number): SavingsEntry => ({
-  id: generateId(),
-  date,
-  amount: Math.round(dollars * 100),
-});
-
-const SAVINGS_LOG: SavingsEntry[] = [
-  se("2025-12-26", 250.0),
-  se("2026-01-09", 250.0),
-  se("2026-01-16", 250.0),
-  se("2026-01-30", 250.0),
-  se("2026-02-06", 250.0),
-  se("2026-02-13", 500.0), // double week — good check
-  se("2026-02-27", 250.0),
-  se("2026-03-06", 250.0),
-  se("2026-03-20", 250.0),
-  se("2026-03-27", 250.0),
-  se("2026-04-07", 250.0),
-  se("2026-04-14", 250.0),
-  se("2026-04-21", 250.0), // total = $3,250.00
-];
-
-// ─── Savings Goals ────────────────────────────────────────────────────────────
-// Three goals covering the three status states: on track, behind, achieved.
-
-const GOALS: SavingsGoal[] = [
-  {
-    id: generateId(),
-    label: "Emergency Fund",
-    targetCents: 500000, // $5,000
-    targetDate: "2026-10",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    priority: 1,
-  },
-  {
-    id: generateId(),
-    label: "Car Down Payment",
-    targetCents: 300000, // $3,000 — current balance is $3,250 → achieved
-    targetDate: "2026-06",
-    createdAt: "2026-01-01T00:00:00.000Z",
-    priority: 2,
-  },
-  {
-    id: generateId(),
-    label: "Vacation Fund",
-    targetCents: 200000, // $2,000 — only $3,250 total but due next month → behind
-    targetDate: "2026-05",
-    createdAt: "2026-03-01T00:00:00.000Z",
-    priority: 3,
-  },
-];
 
 // ─── Monthly Snapshots — Dec 2025 – Mar 2026 ─────────────────────────────────
 // Seeded so the Snapshots tab renders real data instead of the empty state.
@@ -421,12 +372,14 @@ export const SEED_STATE: AppState = {
   plans: PLANS,
   paycheck: PAYCHECK_WEEKS,
   checkLog: CHECK_LOG,
-  savingsLog: SAVINGS_LOG,
+  // Savings deposits + goals were dummy demo data — the user starts these from
+  // scratch and enters her own (real bills/plans/income above are kept).
+  savingsLog: [],
   paycheckViewScope: "monthly",
   paycheckColumns: DEFAULT_PAYCHECK_COLUMNS,
   seenNotificationIds: [],
   checkEditWarningAcked: false,
-  goals: GOALS,
+  goals: [],
   milestones: [],
   checkingBalance: 0,
   checkingBalanceDate: "",

@@ -174,7 +174,10 @@
 }
 
 .viewMonth {
-  margin-left: 18px;
+  /* auto pushes the month to the far right of the nav bar. Previously the
+     flex:1 .navStatus ticker filled this space; it's hidden for rollout, so
+     the month anchors right on its own. */
+  margin-left: auto;
   font-family: var(--font-primary);
   font-size: var(--text-sm);
   font-weight: 600;

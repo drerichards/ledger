@@ -84,7 +84,7 @@ export function MonthSnapshot({
         <Stat label="Total Billed" value={fmtMoney(snapshot.totalBilled)} />
         <Stat label="Total Paid" value={fmtMoney(snapshot.totalPaid)} />
         <Stat
-          label={snapshot.shortfall > 0 ? "Short" : "Surplus"}
+          label={snapshot.shortfall > 0 ? "Gap" : "Surplus"}
           value={fmtMoney(Math.abs(snapshot.shortfall))}
           color={snapshot.shortfall > 0 ? "rust" : "olive"}
         />

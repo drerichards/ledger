@@ -143,6 +143,17 @@ describe("deriveNewMilestones", () => {
     const milestones = deriveNewMilestones(state);
     expect(milestones.find((m) => m.type === "first_surplus")).toBeUndefined();
   });
+
+  it("handles missing milestones field gracefully when deriving new milestones", () => {
+    const state: AppState = {
+      ...emptyState,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      milestones: undefined as any,
+    };
+    expect(() => deriveNewMilestones(state)).not.toThrow();
+    const milestones = deriveNewMilestones(state);
+    expect(Array.isArray(milestones)).toBe(true);
+  });
 });
 
 // ─── getMilestoneLabel ────────────────────────────────────────────────────────

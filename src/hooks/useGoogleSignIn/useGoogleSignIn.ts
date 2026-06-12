@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type UseGoogleSignIn = {
@@ -15,13 +15,19 @@ type UseGoogleSignIn = {
  */
 export function useGoogleSignIn(): UseGoogleSignIn {
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(() => {
-    // istanbul ignore next — JSDOM always has window; SSR guard is not testable in jest
-    if (typeof window === "undefined") return null;
-    return new URLSearchParams(window.location.search).get("error")
-      ? "Sign-in failed. Please try again."
-      : null;
-  });
+  // Start null so the client's first render matches the server's (which has no
+  // `window`). Reading the URL here would diverge server vs client HTML → a
+  // hydration mismatch. We read it AFTER mount, in the effect below.
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read the URL only after mount (client-only) — the server render has no
+    // `window`, so reading it during render would diverge server vs client HTML.
+    if (new URLSearchParams(window.location.search).get("error")) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe URL error-param read on mount
+      setErrorMsg("Sign-in failed. Please try again.");
+    }
+  }, []);
 
   const signIn = async () => {
     setLoading(true);

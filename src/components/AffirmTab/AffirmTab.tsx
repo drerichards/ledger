@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { InstallmentPlan } from "@/types";
 import { fmtMoney } from "@/lib/money";
-import { fmtMonthLabel } from "@/lib/dates";
+import { fmtMonthLabel, fmtMonthFull } from "@/lib/dates";
 import { useAffirmTabState } from "@/hooks/useAffirmTabState";
 import { StatCard } from "@/components/ui/StatCard";
 import {
@@ -67,8 +67,8 @@ export function AffirmTab({ plans, onAdd, onUpdate = () => {}, onDelete }: Props
           <StatCard
             label="All Plans Clear"
             color="olive"
-            value={payoffMonth ? fmtMonthLabel(payoffMonth) : "—"}
-            subRows={[{ label: "At current pace", value: payoffMonth ? fmtMonthLabel(payoffMonth) : "—" }]}
+            value={payoffMonth ? fmtMonthFull(payoffMonth) : "—"}
+            subRows={[{ label: "At current pace", value: payoffMonth ? fmtMonthFull(payoffMonth) : "—" }]}
           />
         </div>
       )}

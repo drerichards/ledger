@@ -1,0 +1,1 @@
+export { QuickMathCalculator } from "./QuickMathCalculator";
