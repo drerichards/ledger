@@ -16,11 +16,18 @@ type Props = {
   onClose: () => void;
 };
 
+type Block = {
+  heading?: string;
+  body: string;
+  screenshot?: string;
+};
+
 type Section = {
   id: string;
   chip: string; // short index label
   title: string;
-  blocks: Array<{ heading?: string; body: string }>;
+  screenshot?: string;
+  blocks: Block[];
 };
 
 const SECTIONS: Section[] = [
@@ -44,20 +51,24 @@ const SECTIONS: Section[] = [
     id: "home",
     chip: "Home",
     title: "Home — your quick answer",
+    screenshot: "/screenshots/home-tab.png",
     blocks: [
       {
         body:
-          "The big colored box gives you the one number that matters: how much is truly yours after every bill. Green means you're covered. Orange means you'll need to add money — the amount shown is the gap.",
+          "The green or orange card in the top-left (labeled 'THE ANSWER') shows your estimated budget surplus or gap. It is calculated by taking your total income for the month (your fixed military, retirement, and Social Security checks plus Kia's check projections) and subtracting the total cost of all monthly bills.",
+        screenshot: "/screenshots/verdict-card.png",
       },
       {
         heading: "This week",
         body:
-          "The row of days shows what's happening this week. Tap any day to see the bills due that day and how much you'll have left after.",
+          "The 'This week' section on the right shows a 7-day calendar rail. Below the days, you see the bills due on the selected day and the projected cash balance remaining in your checking account after those specific bills clear.",
+        screenshot: "/screenshots/this-week.png",
       },
       {
         heading: "This month's spending",
         body:
-          "The ring breaks down where your money goes by category (housing, utilities, and so on). The three small gauges show how many bills you've handled, your next payoff, and savings progress. Tap the payoff gauge to jump to the Payoff screen.",
+          "The category ring breaks down your total bills by type (housing, utilities, transfers). The three gauges at the bottom track the number of bills you have marked paid, your upcoming Affirm installment payment total, and your progress toward savings goals. Tap the Affirm gauge to switch to the Payoff screen.",
+        screenshot: "/screenshots/momentum-gauges.png",
       },
     ],
   },
@@ -65,6 +76,7 @@ const SECTIONS: Section[] = [
     id: "accounts",
     chip: "Accounts",
     title: "Accounts — your bills",
+    screenshot: "/screenshots/accounts-tab.png",
     blocks: [
       {
         body:
@@ -74,11 +86,13 @@ const SECTIONS: Section[] = [
         heading: "Add a bill",
         body:
           'Tap "+ Add Bill" at the top. Fill in the payee name, amount, the day it\'s due, and whether it pays itself (Autopay) or you send it (Transfer). Save it and it appears in the list.',
+        screenshot: "/screenshots/add-bill-modal.png",
       },
       {
         heading: "Edit or delete a bill",
         body:
           "On any bill row, tap the three dots ( ⋯ ) on the right. A small menu opens with Edit (change the name, amount, or due day) and Delete (remove it). You can also tap the Unpaid/Paid pill to mark a bill paid.",
+        screenshot: "/screenshots/edit-delete-menu.png",
       },
       {
         heading: "Recurring bills carry over",
@@ -96,10 +110,12 @@ const SECTIONS: Section[] = [
     id: "income",
     chip: "Income",
     title: "Income — where each paycheck goes",
+    screenshot: "/screenshots/income-tab.png",
     blocks: [
       {
         body:
           "This screen tracks Kia's weekly checks and splits each one across your set categories (rent, savings, transfers, and so on). The PAY column is what's left after everything is set aside.",
+        screenshot: "/screenshots/income-splitting.png",
       },
       {
         heading: "Add a week",
@@ -122,6 +138,7 @@ const SECTIONS: Section[] = [
     id: "payoff",
     chip: "Payoff",
     title: "Payoff — your payment plans",
+    screenshot: "/screenshots/payoff-tab.png",
     blocks: [
       {
         body:
@@ -131,6 +148,7 @@ const SECTIONS: Section[] = [
         heading: "Add or edit a plan",
         body:
           'Tap "+ Add Plan" to enter a new one (name, monthly amount, start and final month). To change or remove a plan, use the Edit and Delete buttons on its row. Finished plans no longer count toward your totals.',
+        screenshot: "/screenshots/add-plan-modal.png",
       },
     ],
   },
@@ -166,6 +184,7 @@ export function HelpGuide({ onClose }: Props) {
     <Modal
       title="How to use Ledger"
       onClose={onClose}
+      size="xl"
       footer={
         <div className={styles.footerBar}>
           <button
@@ -212,10 +231,46 @@ export function HelpGuide({ onClose }: Props) {
 
         <section className={styles.section} aria-live="polite">
           <h4 className={styles.sectionTitle}>{active.title}</h4>
+          {active.screenshot && (
+            <div className={styles.screenshotWrap}>
+              <a
+                href={active.screenshot}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Click to view full size in new tab"
+                className={styles.screenshotLink}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={active.screenshot}
+                  alt={`${active.title} Screenshot`}
+                  className={styles.screenshot}
+                />
+              </a>
+            </div>
+          )}
           {active.blocks.map((b, i) => (
             <div key={i} className={styles.block}>
               {b.heading && <p className={styles.blockHeading}>{b.heading}</p>}
               <p className={styles.sectionBody}>{b.body}</p>
+              {b.screenshot && (
+                <div className={styles.screenshotWrap}>
+                  <a
+                    href={b.screenshot}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Click to view full size in new tab"
+                    className={styles.screenshotLink}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={b.screenshot}
+                      alt={`${b.heading || active.title} Screenshot`}
+                      className={styles.screenshot}
+                    />
+                  </a>
+                </div>
+              )}
             </div>
           ))}
         </section>

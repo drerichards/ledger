@@ -11,6 +11,7 @@ type Props = {
   children: ReactNode;
   /** Footer content — rendered in the footer bar (buttons, etc.). */
   footer: ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
 };
 
 /**
@@ -26,7 +27,7 @@ type Props = {
  *     <form id="my-form" onSubmit={...}>{fields}</form>
  *   </Modal>
  */
-export function Modal({ title, onClose, children, footer }: Props) {
+export function Modal({ title, onClose, children, footer, size = "md" }: Props) {
   const activeTab = useActiveTab();
   const mountedTab = useRef(activeTab);
   useEffect(() => {
@@ -35,6 +36,8 @@ export function Modal({ title, onClose, children, footer }: Props) {
     }
   }, [activeTab, onClose]);
 
+  const sizeClass = size === "lg" ? styles.modalLg : size === "xl" ? styles.modalXl : size === "sm" ? styles.modalSm : "";
+
   return (
     <div
       className={styles.backdrop}
@@ -42,7 +45,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className={styles.modal}>
+      <div className={`${styles.modal} ${sizeClass}`}>
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>{title}</h3>
           <button

@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-width: 560px;
+  width: 100%;
 }
 
 .intro {
@@ -49,10 +49,10 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   /* Fixed body height so the modal never resizes between sections;
      longer sections scroll internally. */
-  height: 300px;
+  height: 500px;
   overflow-y: auto;
   padding-right: 6px;
 }
@@ -135,3 +135,43 @@
 .gotIt:hover {
   background: var(--color-navy-dark);
 }
+
+.screenshotWrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: var(--color-surface);
+  max-height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform var(--anim-speed, 0.2s) ease, box-shadow var(--anim-speed, 0.2s) ease, border-color var(--anim-speed, 0.2s) ease;
+  cursor: zoom-in;
+}
+
+.screenshotWrap:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--color-navy);
+}
+
+.screenshot {
+  max-width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  display: block;
+  transition: opacity var(--anim-speed, 0.2s) ease;
+}
+
+.screenshot:hover {
+  opacity: 0.95;
+}
+
+.screenshotLink {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
