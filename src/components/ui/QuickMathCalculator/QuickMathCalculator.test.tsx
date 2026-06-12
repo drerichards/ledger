@@ -50,6 +50,12 @@ describe("QuickMathCalculator", () => {
     press("0");
     press("=");
     expect(display()).toBe("0");
+
+    press("8");
+    press("÷");
+    press("2");
+    press("=");
+    expect(display()).toBe("4");
   });
 
   it("clears with C", () => {
@@ -78,5 +84,17 @@ describe("QuickMathCalculator", () => {
     press(".");
     press("5");
     expect(display()).toBe("1.5");
+  });
+
+  it("enters 3 and 6, and handles dot after evaluate", () => {
+    render(<QuickMathCalculator />);
+    press("3");
+    press("+");
+    press("6");
+    press("=");
+    expect(display()).toBe("9");
+
+    press(".");
+    expect(display()).toBe("0.");
   });
 });

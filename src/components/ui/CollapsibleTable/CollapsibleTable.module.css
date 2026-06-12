@@ -24,16 +24,14 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    /* The two groups share one fixed-height container. flex-basis:0 + an animated
-       flex-grow means their heights always sum to the container — as one grows by
-       N px the other shrinks by N px, so the divider between them slides as a
-       single coupled motion (one piece, two parts). min-content floors a closed
-       group at header + subtotal (the row list clips to 0). */
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 0;
-    min-height: min-content;
-    transition: flex-grow 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Height is set explicitly (px) by the accordion layout effect in AccountsTab:
+       an open group gets its content height (capped), a collapsed group gets its
+       chrome (header + subtotal) plus any leftover as a peek — so the two heights
+       always sum to the container and the divider slides as one coupled motion
+       (no blank, no bounce). The transition animates that height. 16px radius +
+       overflow:hidden round the corners (pill when only chrome shows). */
+    flex: 0 0 auto;
+    transition: height 0.34s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .groupNavy {

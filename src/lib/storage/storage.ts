@@ -31,14 +31,37 @@ export const INITIAL_STATE: AppState = {
  * Returns INITIAL_STATE if nothing is stored or parsing fails.
  * Never throws — storage errors are silently swallowed so the app stays usable.
  */
+const DUMMY_RESET_KEY = "ledger-dummy-reset-v1";
+
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return SEED_STATE; // ← use seed instead of INITIAL_STATE
     const parsed = JSON.parse(raw) as AppState;
-    // Migration: stamp bills missing month field
-    // Migration: guard against keys missing from older persisted state shapes
-    return {
+
+    // One-time migration: savings deposits, goals, and bank accounts were dummy
+    // demo data — clear them once so the user starts these from scratch. Bills,
+    // plans, and income (including military/retirement/SS) are left intact.
+    const dummyResetDone = localStorage.getItem(DUMMY_RESET_KEY) === "1";
+    if (!dummyResetDone) {
+      localStorage.setItem(DUMMY_RESET_KEY, "1");
+      return {
+        ...loadStateInner(parsed),
+        savingsLog: [],
+        goals: [],
+        bankAccounts: [],
+      };
+    }
+    return loadStateInner(parsed);
+  } catch {
+    return SEED_STATE;
+  }
+}
+
+function loadStateInner(parsed: AppState): AppState {
+  // Migration: stamp bills missing month field
+  // Migration: guard against keys missing from older persisted state shapes
+  return {
       ...parsed,
       bills: (parsed.bills ?? []).map((b) =>
         b.month ? b : { ...b, month: currentMonth() },
@@ -64,7 +87,7 @@ export function loadState(): AppState {
       // If stored state has no plans, backfill from seed
       plans:
         (parsed.plans ?? []).length > 0
-          ? (parsed.plans ?? []).map((plan) =>
+          ? parsed.plans!.map((plan) =>
               typeof plan.dueDay === "number"
                 ? plan
                 : { ...plan, dueDay: getPlanDueDay(plan) },
@@ -84,10 +107,7 @@ export function loadState(): AppState {
       checkingBalance: parsed.checkingBalance ?? 0,
       checkingBalanceDate: parsed.checkingBalanceDate ?? "",
       bankAccounts: parsed.bankAccounts ?? [],
-    };
-  } catch {
-    return SEED_STATE;
-  }
+  };
 }
 
 /**

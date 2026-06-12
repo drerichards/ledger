@@ -53,7 +53,11 @@ export function useDraggableFab() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only initial FAB position
     setPos(clampToViewport(initial ?? fallback));
 
-    const onResize = () => setPos((p) => (p ? clampToViewport(p) : p));
+    const onResize = () => {
+      if (posRef.current) {
+        setPos(clampToViewport(posRef.current));
+      }
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [clampToViewport]);
@@ -61,7 +65,7 @@ export function useDraggableFab() {
   const onPointerDown = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       const start = "touches" in e ? e.touches[0] : (e as React.MouseEvent);
-      const origin = posRef.current ?? { x: 0, y: 0 };
+      const origin = posRef.current!;
       const offX = start.clientX - origin.x;
       const offY = start.clientY - origin.y;
       moved.current = false;

@@ -62,4 +62,38 @@ describe("useDraggableFab", () => {
     act(() => result.current.toggle());
     expect(result.current.open).toBe(false);
   });
+
+  it("supports dragging via touch events and clamps the position", () => {
+    const { result } = renderHook(() => useDraggableFab());
+    act(() => {
+      result.current.onPointerDown({
+        touches: [{ clientX: 944, clientY: 688 }],
+      } as unknown as React.TouchEvent);
+    });
+    act(() => {
+      window.dispatchEvent(
+        Object.assign(new Event("touchmove", { cancelable: true }), {
+          touches: [{ clientX: 600, clientY: 400 }],
+        }),
+      );
+    });
+    act(() => {
+      window.dispatchEvent(new Event("touchend"));
+    });
+    expect(result.current.pos).toEqual({ x: 600, y: 400 });
+  });
+
+  it("re-clamps the position when the window is resized", () => {
+    const { result } = renderHook(() => useDraggableFab());
+    expect(result.current.pos).toEqual({ x: 1024 - 80, y: 768 - 80 });
+
+    act(() => {
+      Object.defineProperty(window, "innerWidth", { value: 500, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 400, writable: true });
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    expect(result.current.pos!.x).toBeLessThanOrEqual(500 - 70);
+    expect(result.current.pos!.y).toBeLessThanOrEqual(400 - 70);
+  });
 });

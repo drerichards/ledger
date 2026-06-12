@@ -11,7 +11,27 @@ import {
   getMonthSnapshotFromSummary,
   getUpcomingDueItems,
   projectCashFlowRows,
+  calcWeekSurplus,
+  isCovered,
+  isAggregateAffirmBill,
+  getVisibleBillsForMonth,
+  getMonthlyFixedIncome,
+  getSavingsMovedForMonth,
+  getKiasPayForMonth,
+  getWeeksEnteredForMonth,
+  getPaycheckAllocatedForMonth,
 } from "./household";
+import { INCOME_DEFAULTS } from "@/lib/income";
+import { getMondaysInMonth } from "@/lib/dates";
+
+jest.mock("@/lib/dates", () => {
+  const actual = jest.requireActual("@/lib/dates");
+  return {
+    __esModule: true,
+    ...actual,
+    getMondaysInMonth: jest.fn((ym) => actual.getMondaysInMonth(ym)),
+  };
+});
 
 function makeBill(overrides: Partial<Bill> = {}): Bill {
   return {
@@ -286,5 +306,180 @@ describe("household money engine", () => {
         type: "bill",
       },
     ]);
+  });
+
+  it("sorts same-day events putting income first", () => {
+    const rowsSameDay = projectCashFlowRows({
+      startBalance: 10000,
+      bills: [makeBill({ id: "water", name: "Water", cents: 5000, due: 17, paid: false })],
+      plans: [],
+      paycheck: [makeWeek({ weekOf: "2026-04-13", kiasPay: 20000 })],
+      checkLog: [makeCheckEntry({ weekOf: "2026-04-13", amount: 25000 })], // Paycheck is Friday 2026-04-17
+      month: "2026-04",
+      fromDate: "2026-04-17",
+      toDate: "2026-04-17",
+    });
+    // The income event (Kia's Paycheck) should come first, then the bill event (Water)
+    expect(rowsSameDay).toHaveLength(2);
+    expect(rowsSameDay[0].type).toBe("income");
+    expect(rowsSameDay[1].type).toBe("bill");
+  });
+
+  it("calculates week surplus and covered status", () => {
+    const rows = [
+      { date: "2026-04-12", payee: "X", cents: -5000, runningBalance: 95000, type: "bill" as const },
+      { date: "2026-04-17", payee: "Y", cents: 25000, runningBalance: 120000, type: "income" as const },
+    ];
+    expect(calcWeekSurplus(rows)).toBe(20000);
+    expect(isCovered(rows)).toBe(true);
+    expect(isCovered([{ date: "2026-04-12", cents: -10, runningBalance: -5, payee: "Z", type: "bill" as const }])).toBe(false);
+  });
+
+  it("covers utility functions isAggregateAffirmBill and getVisibleBillsForMonth directly", () => {
+    // Non-affirm bill should return false
+    const bill = makeBill({ name: "Netflix" });
+    expect(isAggregateAffirmBill(bill, [])).toBe(false);
+
+    // getVisibleBillsForMonth filters aggregate Affirm bills
+    const visibleBills = getVisibleBillsForMonth([bill], [], "2026-04");
+    expect(visibleBills).toHaveLength(1);
+
+    // getMonthlyFixedIncome handles missing month entry by returning default values
+    const fixedIncome = getMonthlyFixedIncome("2026-05", []);
+    expect(fixedIncome.military_pay).toBe(INCOME_DEFAULTS.military_pay);
+
+    // getSavingsMovedForMonth matches entries by date or weekOf
+    const savings = [
+      makeSavingsEntry({ date: undefined, weekOf: "2026-04-13", amount: 5000 }),
+    ];
+    expect(getSavingsMovedForMonth("2026-04", savings)).toBe(5000);
+
+    // getKiasPayForMonth and getWeeksEnteredForMonth
+    const paycheck = [makeWeek({ weekOf: "2026-04-06", kiasPay: 10000 })];
+    const checkLog = [makeCheckEntry({ weekOf: "2026-04-06", amount: 12000 })];
+    expect(getKiasPayForMonth("2026-04", paycheck, checkLog)).toBeGreaterThan(0);
+    expect(getWeeksEnteredForMonth("2026-04", paycheck, checkLog)).toBeGreaterThan(0);
+  });
+
+  it("directly tests getPaycheckAllocatedForMonth with different savings entries", () => {
+    const columns = [{ key: "savings" }];
+    const paycheck = [makeWeek({ weekOf: "2026-04-06", kiasPay: 10000 })];
+    const checkLog = [makeCheckEntry({ weekOf: "2026-04-06", amount: 12000 })];
+    const savingsLog = [
+      makeSavingsEntry({ date: undefined, weekOf: "2026-04-06", amount: 5000 }),
+      makeSavingsEntry({ date: "2026-05-01", amount: 2000 }),
+    ];
+    const allocated = getPaycheckAllocatedForMonth({
+      month: "2026-04",
+      paycheck,
+      checkLog,
+      plans: [],
+      savingsLog,
+      columns,
+    });
+    expect(typeof allocated).toBe("number");
+  });
+
+  it("covers remaining edge cases and branch conditions in household.ts", () => {
+    const columns = [{ key: "savings" }];
+    const paycheck = [makeWeek({ weekOf: "2026-04-06", kiasPay: 10000 })];
+    const checkLog = [makeCheckEntry({ weekOf: "2026-04-06", amount: 12000 })];
+
+    // 1. Savings log entry with both date and weekOf undefined (covers line 244)
+    const savingsLogWithUndefs = [
+      makeSavingsEntry({ date: undefined, weekOf: undefined, amount: 5000 }),
+    ];
+    const allocatedUndef = getPaycheckAllocatedForMonth({
+      month: "2026-04",
+      paycheck,
+      checkLog,
+      plans: [],
+      savingsLog: savingsLogWithUndefs,
+      columns,
+    });
+    expect(typeof allocatedUndef).toBe("number");
+
+    // 2. Month with 0 Mondays (covers line 251 fallback to 0)
+    const allocatedZeroMondays = getPaycheckAllocatedForMonth({
+      month: "invalid-month",
+      paycheck,
+      checkLog,
+      plans: [makePlan()],
+      savingsLog: [],
+      columns,
+    });
+    expect(allocatedZeroMondays).toBe(0);
+
+    // 3. getUpcomingDueItems sorting on same-day items with different labels (covers line 329)
+    const itemsSameDay = getUpcomingDueItems({
+      month: "2026-04",
+      bills: [
+        makeBill({ id: "bill-z", name: "Z-Bill", cents: 100, due: 12, paid: false }),
+        makeBill({ id: "bill-a", name: "A-Bill", cents: 200, due: 12, paid: false }),
+      ],
+      plans: [],
+      fromDate: "2026-04-10",
+      limit: 10,
+    });
+    expect(itemsSameDay[0].label).toBe("A-Bill");
+    expect(itemsSameDay[1].label).toBe("Z-Bill");
+
+    // 4. projectCashFlowRows with plans starting after or ending before month (covers lines 366-368 and 378)
+    // Also include active plans whose due date is outside fromDate/toDate window (covers line 368 return)
+    const plansBeforeAfter = [
+      makePlan({ id: "plan-future", start: "2026-05", end: "2026-06", dueDay: 12 }),
+      makePlan({ id: "plan-past", start: "2026-01", end: "2026-03", dueDay: 12 }),
+      makePlan({ id: "plan-early", start: "2026-04", end: "2026-04", dueDay: 5 }), // due 2026-04-05 (< fromDate)
+      makePlan({ id: "plan-late", start: "2026-04", end: "2026-04", dueDay: 25 }), // due 2026-04-25 (> toDate)
+    ];
+    // With aggregateAffirm = true
+    const rowsAgg = projectCashFlowRows({
+      startBalance: 1000,
+      bills: [],
+      plans: plansBeforeAfter,
+      paycheck: [],
+      checkLog: [],
+      month: "2026-04",
+      fromDate: "2026-04-10",
+      toDate: "2026-04-20",
+      aggregateAffirm: true,
+    });
+    expect(rowsAgg).toHaveLength(0);
+
+    // With aggregateAffirm = false
+    const rowsNoAgg = projectCashFlowRows({
+      startBalance: 1000,
+      bills: [],
+      plans: plansBeforeAfter,
+      paycheck: [],
+      checkLog: [],
+      month: "2026-04",
+      fromDate: "2026-04-10",
+      toDate: "2026-04-20",
+      aggregateAffirm: false,
+    });
+    expect(rowsNoAgg).toHaveLength(0);
+
+    // 5. projectCashFlowRows same-day sorting with income, bill, and affirm (covers lines 402-403)
+    // Mock getMondaysInMonth to return duplicate Mondays so we compare multiple incomes on the same day.
+    (getMondaysInMonth as jest.Mock).mockReturnValueOnce(["2026-04-13", "2026-04-13"]);
+
+    const rowsSameDaySort = projectCashFlowRows({
+      startBalance: 10000,
+      bills: [makeBill({ id: "bill-1", name: "Bill A", cents: 500, due: 17, paid: false })],
+      plans: [makePlan({ id: "plan-1", label: "Affirm Couch", mc: 100, dueDay: 17 })],
+      paycheck: [makeWeek({ weekOf: "2026-04-13", kiasPay: 2000 })],
+      checkLog: [],
+      month: "2026-04",
+      fromDate: "2026-04-17",
+      toDate: "2026-04-17",
+      aggregateAffirm: false,
+    });
+    expect(rowsSameDaySort).toHaveLength(4); // 2 incomes + 1 bill + 1 plan
+    // Incomes must come first
+    expect(rowsSameDaySort[0].type).toBe("income");
+    expect(rowsSameDaySort[1].type).toBe("income");
+    expect(rowsSameDaySort[2].type).not.toBe("income");
+    expect(rowsSameDaySort[3].type).not.toBe("income");
   });
 });

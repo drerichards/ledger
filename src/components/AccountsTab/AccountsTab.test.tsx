@@ -380,4 +380,32 @@ describe("AccountsTab — BillGroup collapse toggle", () => {
     expect(getKiaHeader()).toHaveTextContent("▼");
     expect(getOtherHeader()).toHaveTextContent("▼");
   });
+
+  it("from Kia-only, clicking Kia swaps to Other-only (handleKiasToggle swap branch)", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
+    renderTab({ bills });
+    fireEvent.click(getOtherHeader()); // collapse Other → Kia-only
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("►");
+    fireEvent.click(getKiaHeader()); // Kia is sole-open → swap to Other-only
+    expect(getKiaHeader()).toHaveTextContent("►");
+    expect(getOtherHeader()).toHaveTextContent("▼");
+  });
+
+  it("from Other-only, clicking Other swaps to Kia-only (handleOtherToggle swap branch)", () => {
+    const bills = [
+      makeBill({ id: "kia-1", group: "kias_pay" }),
+      makeBill({ id: "other-1", group: "other_income", name: "Affirm Bill" }),
+    ];
+    renderTab({ bills });
+    fireEvent.click(getKiaHeader()); // collapse Kia → Other-only
+    expect(getKiaHeader()).toHaveTextContent("►");
+    expect(getOtherHeader()).toHaveTextContent("▼");
+    fireEvent.click(getOtherHeader()); // Other is sole-open → swap to Kia-only
+    expect(getKiaHeader()).toHaveTextContent("▼");
+    expect(getOtherHeader()).toHaveTextContent("►");
+  });
 });

@@ -67,6 +67,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Reserve room for the scrollbar and keep row text off it (no flush touch). */
+  padding-right: var(--space-2);
+  scrollbar-gutter: stable;
 }
 
 .bill {
