@@ -134,6 +134,27 @@ describe("loadState", () => {
     expect(localStorageMock.getItem("ledger-dummy-reset-v1")).toBe("1");
   });
 
+  it("prevents migration wipe on first reload after starting a clean device (regression F1)", () => {
+    localStorageMock.removeItem(STORAGE_KEY);
+    localStorageMock.removeItem("ledger-dummy-reset-v1");
+
+    // 1. Clean load (no raw)
+    const state1 = loadState();
+    expect(localStorageMock.getItem("ledger-dummy-reset-v1")).toBe("1");
+
+    // 2. User adds a goal and saves it
+    const modifiedState = {
+      ...state1,
+      goals: [{ id: "user-goal-1", label: "My Goal", targetCents: 50000, targetDate: "2026-12", createdAt: "2026-06-12" }],
+    };
+    saveState(modifiedState);
+
+    // 3. Subsequent load preserves the goal and does not run reset again
+    const state2 = loadState();
+    expect(state2.goals).toHaveLength(1);
+    expect(state2.goals[0].id).toBe("user-goal-1");
+  });
+
   it("preserves new-shape SavingsEntry records that already have id", () => {
     setRaw({
       ...INITIAL_STATE,

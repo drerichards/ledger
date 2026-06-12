@@ -190,61 +190,67 @@ export function AccountsTab({
     const groups = Array.from(container.querySelectorAll<HTMLElement>("[data-acc-group]"));
     if (groups.length === 0) return;
 
-    const GAP = 8; // matches .billGroups gap (--space-2)
-    const stageH = container.clientHeight - GAP * (groups.length - 1);
-    const info = groups.map((el) => {
-      const chrome = Array.from(el.querySelectorAll<HTMLElement>("[data-acc-chrome]")).reduce(
-        (sum, c) => sum + c.offsetHeight,
-        0,
-      );
-      const list = el.querySelector<HTMLElement>("[data-acc-list]");
-      return { el, open: el.dataset.accOpen === "true", chrome, content: chrome + (list?.scrollHeight ?? 0) };
-    });
-
-    // Every group's chrome (header + subtotal bar) is reserved FIRST so its
-    // subtotal is always on-screen; collapsed groups take only their chrome.
-    // Open groups then share the remaining height in proportion to how much
-    // content each wants. Targets always sum to exactly stageH, so no group's
-    // box (and therefore no subtotal bar) is ever pushed below the stage — the
-    // rows scroll inside each open group instead.
-    const openCount = info.filter((g) => g.open).length;
-
-    let targets: number[];
-    if (openCount > 1) {
-      // Multiple groups open → each gets an EQUAL share of the stage (50/50 for
-      // two). Rows scroll inside; chrome (header + subtotal) is always visible.
-      const share = stageH / openCount;
-      targets = info.map((g) => (g.open ? share : g.chrome));
-      // Collapsed groups still need their chrome; take it from the open shares.
-      const collapsedChrome = info.reduce((sum, g) => sum + (g.open ? 0 : g.chrome), 0);
-      if (collapsedChrome > 0) {
-        const perOpen = collapsedChrome / openCount;
-        targets = info.map((g) => (g.open ? share - perOpen : g.chrome));
-      }
-    } else {
-      // One (or zero) group open → it sizes to its content, the collapsed
-      // sibling takes its chrome plus any leftover as a peek of rows.
-      const totalChrome = info.reduce((sum, g) => sum + g.chrome, 0);
-      targets = info.map((g) => {
-        if (!g.open) return g.chrome;
-        return Math.min(g.content, stageH - (totalChrome - g.chrome));
+    const runLayout = () => {
+      const GAP = 8; // matches .billGroups gap (--space-2)
+      const stageH = container.clientHeight - GAP * (groups.length - 1);
+      const info = groups.map((el) => {
+        const chrome = Array.from(el.querySelectorAll<HTMLElement>("[data-acc-chrome]")).reduce(
+          (sum, c) => sum + c.offsetHeight,
+          0,
+        );
+        const list = el.querySelector<HTMLElement>("[data-acc-list]");
+        return { el, open: el.dataset.accOpen === "true", chrome, content: chrome + (list?.scrollHeight ?? 0) };
       });
-      const leftover = stageH - targets.reduce((sum, h) => sum + h, 0);
-      if (leftover > 0) {
-        const closedIdx = info.findIndex((g) => !g.open);
-        targets[closedIdx >= 0 ? closedIdx : info.length - 1] += leftover;
-      }
-    }
 
-    const animate = !firstLayout.current;
-    firstLayout.current = false;
-    info.forEach((g, i) => {
-      if (!animate) g.el.style.transition = "none";
-      g.el.style.height = `${Math.max(0, targets[i])}px`;
-      if (!animate) requestAnimationFrame(() => {
-        g.el.style.transition = "";
+      // Every group's chrome (header + subtotal bar) is reserved FIRST so its
+      // subtotal is always on-screen; collapsed groups take only their chrome.
+      // Open groups then share the remaining height in proportion to how much
+      // content each wants. Targets always sum to exactly stageH, so no group's
+      // box (and therefore no subtotal bar) is ever pushed below the stage — the
+      // rows scroll inside each open group instead.
+      const openCount = info.filter((g) => g.open).length;
+
+      let targets: number[];
+      if (openCount > 1) {
+        // Multiple groups open → each gets an EQUAL share of the stage (50/50 for
+        // two). Rows scroll inside; chrome (header + subtotal) is always visible.
+        const share = stageH / openCount;
+        targets = info.map((g) => (g.open ? share : g.chrome));
+        // Collapsed groups still need their chrome; take it from the open shares.
+        const collapsedChrome = info.reduce((sum, g) => sum + (g.open ? 0 : g.chrome), 0);
+        if (collapsedChrome > 0) {
+          const perOpen = collapsedChrome / openCount;
+          targets = info.map((g) => (g.open ? share - perOpen : g.chrome));
+        }
+      } else {
+        // One (or zero) group open → it sizes to its content, the collapsed
+        // sibling takes its chrome plus any leftover as a peek of rows.
+        const totalChrome = info.reduce((sum, g) => sum + g.chrome, 0);
+        targets = info.map((g) => {
+          if (!g.open) return g.chrome;
+          return Math.min(g.content, stageH - (totalChrome - g.chrome));
+        });
+        const leftover = stageH - targets.reduce((sum, h) => sum + h, 0);
+        if (leftover > 0) {
+          const closedIdx = info.findIndex((g) => !g.open);
+          targets[closedIdx >= 0 ? closedIdx : info.length - 1] += leftover;
+        }
+      }
+
+      const animate = !firstLayout.current;
+      firstLayout.current = false;
+      info.forEach((g, i) => {
+        if (!animate) g.el.style.transition = "none";
+        g.el.style.height = `${Math.max(0, targets[i])}px`;
+        if (!animate) requestAnimationFrame(() => {
+          g.el.style.transition = "";
+        });
       });
-    });
+    };
+
+    runLayout();
+    window.addEventListener("resize", runLayout);
+    return () => window.removeEventListener("resize", runLayout);
   }, [kiasOpen, otherOpen, viewMonth, bills]);
 
   return (

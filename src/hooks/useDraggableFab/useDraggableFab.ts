@@ -65,7 +65,7 @@ export function useDraggableFab() {
   const onPointerDown = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       const start = "touches" in e ? e.touches[0] : (e as React.MouseEvent);
-      const origin = posRef.current!;
+      const origin = posRef.current ?? { x: 0, y: 0 };
       const offX = start.clientX - origin.x;
       const offY = start.clientY - origin.y;
       moved.current = false;

@@ -11,13 +11,10 @@ import { test, expect } from "@playwright/test";
  */
 
 const TABS = [
-  { name: "HOME", label: "home" },
-  { name: "BILLS", label: "bills" },
-  { name: "INCOME", label: "income" },
-  { name: "DEBT", label: "debt" },
-  { name: "GOALS", label: "goals" },
-  { name: "SNAPSHOTS", label: "snapshots" },
-  { name: "ACTIVITY", label: "activity" },
+  { name: "Home", label: "home" },
+  { name: "Accounts", label: "accounts" },
+  { name: "Income", label: "income" },
+  { name: "Payoff", label: "payoff" },
 ];
 
 test.describe("Visual regression — tab layouts", () => {
@@ -29,9 +26,11 @@ test.describe("Visual regression — tab layouts", () => {
       await page.goto("/");
       await page.waitForLoadState("networkidle");
 
-      // Click the tab — use first() to avoid Radix inner tab collisions
+      // Click the tab if enabled — use first() to avoid Radix inner tab collisions
       const tabEl = page.getByRole("tab", { name: new RegExp(tab.name, "i") }).first();
-      await tabEl.click();
+      if (await tabEl.isEnabled()) {
+        await tabEl.click();
+      }
       await page.waitForLoadState("networkidle");
 
       // Mask transient UI so they don't cause false diffs

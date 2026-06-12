@@ -73,14 +73,14 @@ describe("useDraggableFab", () => {
     act(() => {
       window.dispatchEvent(
         Object.assign(new Event("touchmove", { cancelable: true }), {
-          touches: [{ clientX: 600, clientY: 400 }],
+          touches: [{ clientX: 5000, clientY: 5000 }],
         }),
       );
     });
     act(() => {
       window.dispatchEvent(new Event("touchend"));
     });
-    expect(result.current.pos).toEqual({ x: 600, y: 400 });
+    expect(result.current.pos).toEqual({ x: 1024 - 70, y: 768 - 70 });
   });
 
   it("re-clamps the position when the window is resized", () => {
@@ -95,5 +95,19 @@ describe("useDraggableFab", () => {
 
     expect(result.current.pos!.x).toBeLessThanOrEqual(500 - 70);
     expect(result.current.pos!.y).toBeLessThanOrEqual(400 - 70);
+  });
+
+  it("handles pointerdown before mount effect runs (covers null posRef branch)", () => {
+    let called = false;
+    renderHook(() => {
+      const fab = useDraggableFab();
+      if (!called) {
+        called = true;
+        // Invoke pointerdown immediately during render when posRef.current is still null
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fab.onPointerDown({ clientX: 100, clientY: 100 } as any);
+      }
+      return fab;
+    });
   });
 });
